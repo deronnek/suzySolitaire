@@ -9,5 +9,11 @@
 #import <UIKit/UIKit.h>
 
 @interface ssViewController : UIViewController
+@property bool do_init_table;
+@property(nonatomic, copy) NSString *restorationIdentifier;
+
+- (void)update_bucks;
+- (void)update_wins;
+- (void)enable_undo;
 
 @end

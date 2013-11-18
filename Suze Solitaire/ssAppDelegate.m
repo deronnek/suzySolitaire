@@ -7,12 +7,42 @@
 //
 
 #import "ssAppDelegate.h"
+#import "ssViewController.h"
 
 @implementation ssAppDelegate
+
+NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
+    
+    //NSLog(@"KDR didFinishLaunching called");
+	// Set the view controller as the window's root view controller and display.
+    //self.window.rootViewController = self.viewController;
+    //[self.window makeKeyAndVisible];
+     
+    //NSLog(@"KDR didFinishLaunching finished");
+    
+    if (!self.window) {
+        
+        UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        
+        // The blue color is just to make it obvious if our view didn't load properly.
+        // It can be removed when you are finished debugging.
+        window.backgroundColor = [UIColor blueColor];
+        
+        UIViewController *root = // However you create your root.
+        
+        window.rootViewController = root;
+        window.restorationIdentifier = NSStringFromClass([window class]);
+        
+        self.window = window;
+    }
+    
+    //[self commonInitializationLaunching:launchOptions];
+    [self.window makeKeyAndVisible];
+
     return YES;
 }
 							
@@ -41,6 +71,49 @@
 - (void)applicationWillTerminate:(UIApplication *)application
 {
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+- (BOOL)application:(UIApplication *)application shouldSaveApplicationState:(NSCoder *)coder
+{
+    return YES;
+}
+
+- (BOOL)application:(UIApplication *)application shouldRestoreApplicationState:(NSCoder *)coder
+{
+    return YES;
+}
+
+- (void)application:(UIApplication *)application willEncodeRestorableStateWithCoder:(NSCoder *)coder {
+    [coder encodeObject:self.window.rootViewController forKey:AppDelegateRootVCKey];
+}
+
+- (void)application:(UIApplication *)application didDecodeRestorableStateWithCoder:(NSCoder *)coder {
+    
+    // Grabs the preserved root view controller.
+    UIViewController * vc = [coder decodeObjectForKey:AppDelegateRootVCKey];
+    
+    if (vc) {
+        UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        window.rootViewController = vc;
+        window.restorationIdentifier = NSStringFromClass([window class]);
+        
+        // The green color is just to make it obvious if our view didn't load properly.
+        // It can be removed when you are finished debugging.
+        window.backgroundColor = [UIColor greenColor];
+        
+        self.window = window;
+    }
+}
+
+
+- (UIViewController *)application:(UIApplication *)application viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents coder:(NSCoder *)coder
+{
+    /*
+    self.viewController.do_init_table = 1;
+    NSLog(@"KDR viewControllerWithRestorationIdentifierPath %d",self.viewController.do_init_table);
+*/
+    
+    return nil;
 }
 
 @end
