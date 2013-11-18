@@ -17,12 +17,24 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *undo_button;
 @property (weak, nonatomic) IBOutlet UISwitch *autocomplete;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *help_button;
+@property (weak) UIPopoverController *myPopover;
 
 
 @end
 
 @implementation ssViewController
 
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    self.myPopover = [(UIStoryboardPopoverSegue *)segue popoverController];
+}
+
+- (BOOL)shouldPerformSegueWithIdentifier:(NSString *)identifier sender:(id)sender {
+    if (self.myPopover)
+        return NO;
+    else
+        return YES;
+}
 
 - (IBAction)help_tapped:(id)sender {
     NSLog(@"Help tapped");
