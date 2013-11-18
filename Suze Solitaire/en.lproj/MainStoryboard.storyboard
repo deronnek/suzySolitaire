@@ -47,20 +47,20 @@
                                     </barButtonItem>
                                 </items>
                             </toolbar>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" misplaced="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mPQ-ke-cA5">
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mPQ-ke-cA5">
                                 <rect key="frame" x="277" y="31" width="65" height="21"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="65" id="3Vy-AJ-VE4"/>
-                                    <constraint firstAttribute="width" constant="110" id="nl7-u1-U6Y"/>
+                                    <constraint firstAttribute="width" constant="65" id="nl7-u1-U6Y"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" misplaced="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GBX-Bs-yaG">
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GBX-Bs-yaG">
                                 <rect key="frame" x="370" y="31" width="66" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="101" id="2z0-MT-4Gj"/>
+                                    <constraint firstAttribute="width" constant="66" id="2z0-MT-4Gj"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -94,7 +94,7 @@
                             <constraint firstItem="h5i-pc-UTX" firstAttribute="leading" secondItem="Zlv-wH-8Fq" secondAttribute="trailing" constant="8" symbolic="YES" id="F7y-ku-NdQ"/>
                             <constraint firstItem="RmG-yI-gJt" firstAttribute="top" secondItem="dh2-lg-h7d" secondAttribute="bottom" constant="20" symbolic="YES" id="HI9-yL-uYx"/>
                             <constraint firstItem="Zlv-wH-8Fq" firstAttribute="top" secondItem="mPQ-ke-cA5" secondAttribute="top" id="NeH-fo-Mmt"/>
-                            <constraint firstItem="GBX-Bs-yaG" firstAttribute="leading" secondItem="mPQ-ke-cA5" secondAttribute="trailing" constant="8" symbolic="YES" id="OWt-A7-oMR"/>
+                            <constraint firstItem="GBX-Bs-yaG" firstAttribute="leading" secondItem="mPQ-ke-cA5" secondAttribute="trailing" constant="28" id="OWt-A7-oMR"/>
                             <constraint firstItem="RmG-yI-gJt" firstAttribute="leading" secondItem="5" secondAttribute="leading" id="aQH-sy-5T4"/>
                             <constraint firstItem="Zlv-wH-8Fq" firstAttribute="leading" secondItem="GBX-Bs-yaG" secondAttribute="trailing" constant="16" id="hQ0-Iq-7eI"/>
                             <constraint firstItem="Zlv-wH-8Fq" firstAttribute="top" secondItem="h5i-pc-UTX" secondAttribute="top" id="rVb-mN-hJ4"/>

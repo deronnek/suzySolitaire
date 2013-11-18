@@ -31,10 +31,12 @@ typedef enum {
 @property NSString *card_name;
 @property UIImage *face_image;
 @property UIImage *back_image;
+@property CGLayerRef card_layer;
 @property CGRect rect;
 @property CGPoint xy_loc;
 @property int z_loc;
 @property CGPoint saved_pos;
+@property BOOL loaded;
 @property card *card_parent;
 @property (nonatomic, strong) NSString *identifier;
 
@@ -42,9 +44,8 @@ typedef enum {
 -(void)set_pos :(int)x :(int)y;
 -(void)cancel_move;
 -(void)save_pos;
--(void)display_card;
--(void)draw_self_and_parent;
 -(void)draw_card;
+-(void)draw_self_and_parent;
 - (void)resize:(int)width :(int)height;
 -(BOOL)change_stack:(card_stack *)from_stack :(card_stack *)to_stack;
 

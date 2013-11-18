@@ -184,21 +184,31 @@
         UIRectFrame([self rect]);
     }
     else {
-        if(self.stack_type == cardstack || self.stack_type == suitstack) {
+        // If there were an easy way to just draw the border that would be better,
+        // but there really isn't, especially considering you have may have to draw
+        // any card in the stack at any point (can grab any one)
+        if(self.stack_type == cardstack) {
             for(card *card in self.cards) {
-                [card display_card];
+                [card draw_card];
             }
+        }
+        else if(self.stack_type == suitstack) {
+            // Draw only bottom and top card on suitstacks  (will draw the same card twice if only one exists)
+            card *card = [self.cards objectAtIndex:0];
+            [card draw_card];
+            card = [self.cards objectAtIndex:[self.cards count]-1];
+            [card draw_card];
         }
         else {
             // Draw only top 2 cards in other decks
             if([self.cards count]>2) {
                 card *card = [self.cards objectAtIndex:[self.cards count]-2];
-                [card display_card];
+                [card draw_card];
                 card = [self.cards objectAtIndex:[self.cards count]-1];
-                [card display_card];
+                [card draw_card];
             } else {
                 for(card* card in self.cards) {
-                    [card display_card];
+                    [card draw_card];
                 }
             }
         }

@@ -168,7 +168,7 @@
     int toprow_spacer = card_height/1.4;
     int second_spacer = card_height*2.1;
     
-    //NSLog(@"Card width: %d %d %d",screen_width,card_width,card_height);
+    NSLog(@"Card width: %d %d %d",screen_width,card_width,card_height);
     
     self.backgroundImage = [UIImage imageNamed:@"background.png"];
     
@@ -788,9 +788,15 @@
                 
             }
             else {
-                [self setNeedsDisplayInRect:self.active_card.rect];
+                // When canceling a stack drag, make sure you clean up everything
+                CGRect rect;
+                rect = self.active_card.rect;
+                rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+                [self setNeedsDisplayInRect:rect];
+                
                 [self.active_card cancel_move];
                 [self setNeedsDisplayInRect:self.active_card_source_stack.rect];
+
             }
             
         }
@@ -861,6 +867,8 @@
     }
 }
 
+// I don't like the design of this code; card_put_up actually increments the score.
+// accept_card_move should just be the test without that side effect.
 -(BOOL)accept_card_move: (card_stack *)from :(card_stack *)to :(card *)onTopOfCard
 {
     /* Debug: allow all moves */
@@ -905,6 +913,7 @@
             [self card_put_up];
             return true;
         }
+        // Corner cases
         if(([to.cards count] != 0) && (self.active_card.suit == onTopOfCard.suit) && (self.active_card.rank == onTopOfCard.rank+1 || (self.active_card.rank == 1 && onTopOfCard.rank == 13))) {
             [self card_put_up];
             return true;

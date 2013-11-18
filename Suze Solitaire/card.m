@@ -60,8 +60,17 @@
 
         self.rect        = rect;
         self.card_parent = nil;
+        
+        //CGContextRef context  = UIGraphicsGetCurrentContext();
+        //CGSize size           = CGSizeMake((CGFloat)width, (CGFloat)height);
+        //self.card_layer       = CGLayerCreateWithContext(context, size, NULL);
+        //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
+        
+        // this just draws the image into the layer, not onto the screen (I think)
+        //CGContextDrawImage(context, (CGRect){ point, self.face_image.size }, self.face_image.CGImage);
+        
         // create a unique identifier for this object, helps with state restoration
-        NSUUID *uuid = [[NSUUID alloc] init];
+        NSUUID *uuid    = [[NSUUID alloc] init];
         self.identifier = [uuid UUIDString];
     }
     return self;
@@ -77,17 +86,6 @@
 {
     _rect.size.width  = width;
     _rect.size.height = height;
-}
-
-- (void)draw_card
-{
-    if(self.face_up){
-        [self.face_image drawInRect:self.rect];
-    }
-    else {
-        [self.back_image drawInRect:self.rect];
-    }
-    
 }
 
 // we are being created based on what was archived earlier
@@ -120,10 +118,24 @@
     [self.card_parent cancel_move];
 }
 
--(void)display_card
+-(void)draw_card
 {
+    NSLog(@"Called draw_card");
+    /* if(!self.loaded) {
+        CGContextRef context  = UIGraphicsGetCurrentContext();
+        NSLog(@"X: %f Y: %f Width: %f Height: %f",self.rect.origin.x,self.rect.origin.y,self.rect.size.width, self.rect.size.height);
+        CGSize size           = CGSizeMake(self.rect.size.width, self.rect.size.height);
+        self.card_layer       = CGLayerCreateWithContext(context, size, NULL);
+        CGContextDrawImage(context, (CGRect){ self.rect.origin, size }, self.face_image.CGImage);
+        self.loaded = true;
+        NSLog(@"Called draw_card");
+    } */
+    
     if(self.face_up) {
+        //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
+        //CGContextDrawLayerInRect(layerCtx, self.rect, self.card_layer);
         [self.face_image drawInRect:self.rect];
+        //CGContextDrawLayerAtPoint(CGLayerGetContext(self.card_layer), self.rect.origin, self.card_layer);
     }
     else {
         [self.back_image drawInRect:self.rect];

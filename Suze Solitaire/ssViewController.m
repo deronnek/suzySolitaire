@@ -161,7 +161,7 @@
     [self update_losses];
     [self update_bucks];
     [mv init_table];
-    //[mv init_table_trivial];
+    //[mv init_table_trivial]; mv.autocomplete = false;
 
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     tapGesture.numberOfTapsRequired = 2;
