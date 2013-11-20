@@ -24,6 +24,7 @@
 -(id)initWithData:(int)x :(int)y :(int)width :(int)height :(card_stack_type)type
 {
     //self = [super init];
+    //NSLog(@"Initializing card stack");
     int capacity=52;
     if(type == fub || type == suitstack) {
         capacity = 13;
@@ -34,6 +35,10 @@
     
     // Set card overlap here
     self.card_slice_height = 30;
+    
+    if(type == fub) {
+        self.card_slice_height = 2;
+    }
     
     self.cards = [[NSMutableArray alloc] initWithCapacity:capacity];
     self.stack_type = type;
@@ -111,7 +116,7 @@
     
     //NSLog(@"Adding card to stack with %d",[self.cards count]);
     // Handle visual stacking here by adjusting y value
-    if (self.stack_type == cardstack && [self.cards count] > 0) {
+    if ((self.stack_type == cardstack || self.stack_type == fub) && [self.cards count] > 0) {
         pos.y = self.rect.origin.y + (self.card_slice_height*[self.cards count]-1);
         //NSLog(@"KDR adjusting y value");
     }
@@ -122,16 +127,14 @@
     
     if(self.stack_type == suitstack && [self.cards count] == 1) {
         [self set_pos:self.rect.origin.x:self.rect.origin.y+self.card_slice_height];
-    
-        [toadd set_pos:pos.x:pos.y+self.card_slice_height];
-    
+        //[toadd set_pos:pos.x:pos.y+self.card_slice_height];
+        pos.y = pos.y + self.card_slice_height;
     }
-    else {
-        [toadd set_pos:pos.x:pos.y];
-    }
+    [toadd setSaved_cap:self.card_slice_height];
+    [toadd set_pos:pos.x:pos.y];
     
     // If the stack is to be shown, make rect larger
-    if((self.stack_type == cardstack && [self.cards count] > 0) || (self.stack_type == suitstack && [self.cards count] == 1)) {
+    if(((self.stack_type == cardstack || self.stack_type == fub) && [self.cards count] > 0) || (self.stack_type == suitstack && [self.cards count] == 1)) {
         CGRect rec = [self rect];
         rec.size = CGSizeMake(rec.size.width, rec.size.height + self.card_slice_height);
         [self setRect:rec];
@@ -189,6 +192,21 @@
         // any card in the stack at any point (can grab any one)
         if(self.stack_type == cardstack) {
             for(card *card in self.cards) {
+                [card draw_card];
+            }
+        }
+        else if(self.stack_type == fub) {
+            if([self.cards count] > 2) {
+                for(card *card in self.cards) {
+                    [card draw_cap];
+                }
+            }
+            if([self.cards count] > 1) {
+                card *card = [self.cards objectAtIndex:[self.cards count]-2];
+                [card draw_card];
+            }
+            if([self.cards count] > 0) {
+                card *card = [self.cards objectAtIndex:[self.cards count]-1];
                 [card draw_card];
             }
         }

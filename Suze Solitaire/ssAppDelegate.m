@@ -80,7 +80,7 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
 
 - (BOOL)application:(UIApplication *)application shouldRestoreApplicationState:(NSCoder *)coder
 {
-    return NO;
+    return YES;
 }
 
 - (void)application:(UIApplication *)application willEncodeRestorableStateWithCoder:(NSCoder *)coder {

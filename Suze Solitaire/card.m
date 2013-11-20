@@ -28,12 +28,13 @@
                                      @"identifier", nil];
 }
 
--(id)initWithData:(card_suit)suit :(int)rank :(NSString *)face_image_file :(NSString *)back_image_file :(int)x :(int)y :(int)z :(int)width :(int)height
+-(id)initWithData:(card_suit)suit :(int)rank :(NSString *)face_image_file :(NSString *)back_image_file :(NSString *)cap_image_file :(int)x :(int)y :(int)z :(int)width :(int)height
 {
     self = [super init];
     if(self) {
         self.face_image = [UIImage imageNamed:face_image_file];
         self.back_image = [UIImage imageNamed:back_image_file];
+        self.cap_image  = [UIImage imageNamed:cap_image_file];
         
         //NSLog(@"height: %d width: %d",height,width);
         
@@ -134,12 +135,21 @@
     if(self.face_up) {
         //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
         //CGContextDrawLayerInRect(layerCtx, self.rect, self.card_layer);
+        
         [self.face_image drawInRect:self.rect];
         //CGContextDrawLayerAtPoint(CGLayerGetContext(self.card_layer), self.rect.origin, self.card_layer);
     }
     else {
         [self.back_image drawInRect:self.rect];
     }
+}
+-(void)draw_cap
+{
+    CGRect caprect;
+    caprect.origin      = self.rect.origin;
+    caprect.size.width  = self.rect.size.width;
+    caprect.size.height = self.saved_cap*2;
+    [self.cap_image drawInRect:caprect];
 }
 
 -(void)set_pos:(int)x :(int)y
@@ -151,8 +161,7 @@
     rect.origin = point;
 	self.rect   = rect;
     
-    int cap = 30;
-    [self.card_parent set_pos:x:y+cap];
+    [self.card_parent set_pos:x:y+self.saved_cap];
 }
 
 - (void)save_pos

@@ -92,7 +92,15 @@
     // Draw background image
     //[self.backgroundImage drawInRect:self.bounds];
     //[self.backgroundImage drawInRect:rect];
-    
+    if(self.just_won) {
+        for(card_stack* cs in self.suitstacks)
+        {
+            for(card *card in cs.cards) {
+                [card draw_card];
+            }
+        }
+    }
+    else {
     // Draw initial card stacks
     for(card_stack* cs in self.cardstacks)
     {
@@ -125,12 +133,9 @@
         //CGContextRestoreGState(context);
         
 	}
-    else {
-    
     }
-    
     NSLog(@"Called drawRect");
-	
+
 }
 
 - (void)init_table
@@ -152,6 +157,9 @@
 */
     //NSLog(@"KDR init_table called");
     //int screen_width = self.bounds.size.width;
+    ssViewController *myController = (ssViewController *)[self firstAvailableUIViewController];
+    [myController disable_undo];
+    
     int screen_width = CGRectGetWidth(self.bounds);
     //int screenHeight = self.bounds.size.height;
     NSLog(@"KDR screen width: %d",screen_width);
@@ -414,7 +422,8 @@
     
     for (int i=1; i<=13; i++) {
         NSString* face_img = [NSString stringWithFormat:@"s.club%d.png",i];
-        card *acard = [[card alloc] initWithData:Clubs:i:face_img:back_img:0:0:i:width:height];
+        NSString* cap_img = [NSString stringWithFormat:@"c.club%d.png",i];
+        card *acard = [[card alloc] initWithData:Clubs:i:face_img:back_img:cap_img:0:0:i:width:height];
          [acard setColor:Black];
         [self.cards addObject:acard];
         acard = nil;
@@ -422,7 +431,8 @@
     
     for (int i=1; i<=13; i++) {
         NSString* face_img = [NSString stringWithFormat:@"s.diamond%d.png",i];
-        card *acard = [[card alloc] initWithData:Diamonds:i:face_img:back_img:0:0:i:width:height];
+        NSString* cap_img = [NSString stringWithFormat:@"c.diamond%d.png",i];
+        card *acard = [[card alloc] initWithData:Diamonds:i:face_img:back_img:cap_img:0:0:i:width:height];
         [acard setColor:Red];
         [self.cards addObject:acard];
         acard = nil;
@@ -430,7 +440,8 @@
 
     for (int i=1; i<=13; i++) {
         NSString* face_img = [NSString stringWithFormat:@"s.heart%d.png",i];
-        card *acard = [[card alloc] initWithData:Hearts:i:face_img:back_img:0:0:i:width:height];
+        NSString* cap_img = [NSString stringWithFormat:@"c.heart%d.png",i];
+        card *acard = [[card alloc] initWithData:Hearts:i:face_img:back_img:cap_img:0:0:i:width:height];
         [acard setColor:Red];
         [self.cards addObject:acard];
         acard = nil;
@@ -438,7 +449,8 @@
 
     for (int i=1; i<=13; i++) {
         NSString* face_img = [NSString stringWithFormat:@"s.spade%d.png",i];
-        card *acard = [[card alloc] initWithData:Spades:i:face_img:back_img:0:0:i:width:height];
+        NSString* cap_img = [NSString stringWithFormat:@"c.spade%d.png",i];
+        card *acard = [[card alloc] initWithData:Spades:i:face_img:back_img:cap_img:0:0:i:width:height];
         [acard setColor:Black];
         [self.cards addObject:acard];
         acard = nil;
@@ -609,7 +621,8 @@
 -(void)run_victory
 {
     if(!self.just_won) {
-        self.score += 500;
+        self.active_card = nil;
+        self.score += 250;
         self.wins++;
         ssViewController * myController = (ssViewController *)[self firstAvailableUIViewController];
         if(myController != nil) {
@@ -620,6 +633,41 @@
         else {
             NSLog(@"KDR COULD NOT OBTAIN CONTROLLER");
         }
+        // Visual "reward" for winning
+        
+        int offset = 75;
+        int stacknum = 0;
+        for(card_stack *cs in self.suitstacks) {
+            int cardnum  = 0;
+            for(card *card in cs.cards) {
+                float x = (cardnum*card.rect.size.width*0.735)+10;
+                float y = offset+(stacknum*card.rect.size.height);
+                CGRect rect = card.rect;
+                CGPoint point;
+                point.x = x;
+                point.y = y;
+                rect.origin = point;
+                
+                card.rect   = rect;
+                card.card_parent  = nil;
+                
+                int screen_width  = CGRectGetWidth(self.bounds);
+                int screen_height = CGRectGetHeight(self.bounds);
+                if(x> screen_width || y>screen_height) {
+                    NSLog(@"KDR OUT OF BOUNDS!!!!!!!!!!!!!");
+                }
+                NSLog(@"x: %f y %f height: %f stacknum: %d",x, y,card.rect.size.height,stacknum);
+                
+
+                [self setNeedsDisplayInRect:rect];
+                
+//                sleep(1);
+                
+                cardnum++;
+            }
+            stacknum++;
+        }
+        
     }
     self.just_won = 1;
 }
@@ -730,11 +778,23 @@
         cs = [self find_active_stack:point];
     }
 
+    ssViewController *myController = (ssViewController *)[self firstAvailableUIViewController];
     
     //[self.active_card cancel_move];
     //[self setNeedsDisplay];
     if(cs) {
         if(cs.stack_type == deck) {
+            
+                // When canceling a stack drag, make sure you clean up everything
+                CGRect rect;
+                rect = self.active_card.rect;
+                rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+                [self setNeedsDisplayInRect:rect];
+                
+                [self.active_card cancel_move];
+                [self setNeedsDisplayInRect:self.active_card_source_stack.rect];
+
+        
             NSLog(@"KDR Tapped deck");
             if([self.deck.cards count] == 0) {
                 NSLog(@"KDR out of cards");
@@ -754,6 +814,7 @@
                     [[self.deal.cards lastObject] setFace_up:true];
                 }
             }
+            [myController disable_undo];
             self.active_card = NULL;
             // Refresh the appropriate rectangles
             
@@ -773,10 +834,14 @@
                 //[self.active_card_source_stack remove_card:self.active_card];
                 
                 self.active_card_dest_stack = cs;
-                ssViewController *myController = (ssViewController *)[self firstAvailableUIViewController];
+                
                 [myController enable_undo];
                 [self setNeedsDisplayInRect:self.active_card.rect];
                 
+                CGRect rect;
+                rect = self.active_card.rect;
+                rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+                [self setNeedsDisplayInRect:rect];
 
                 
                 [self.active_card change_stack:self.active_card_source_stack:cs];
@@ -786,8 +851,10 @@
                 }
                 [self setNeedsDisplayInRect:cs.rect];
                 
+                       
             }
             else {
+                NSLog(@"KDR YEP 0");
                 // When canceling a stack drag, make sure you clean up everything
                 CGRect rect;
                 rect = self.active_card.rect;
@@ -801,12 +868,14 @@
             
         }
         else {
+             NSLog(@"KDR YEP 1");
             [self setNeedsDisplayInRect:self.active_card.rect];
             [self.active_card cancel_move];
             [self setNeedsDisplayInRect:self.active_card_source_stack.rect];
         }
     }
     else {
+         NSLog(@"KDR YEP 2");
         // Not dropped on a stack; put it back where it was
         [self setNeedsDisplayInRect:self.active_card.rect];
         [self.active_card cancel_move];
@@ -865,6 +934,8 @@
     else {
         NSLog(@"Keep playing :)");
     }
+    // Why did I do this?
+    //self.active_card = NULL;
 }
 
 // I don't like the design of this code; card_put_up actually increments the score.
@@ -882,6 +953,9 @@
         return false;
     
     if(to.stack_type == deal)
+        return false;
+    
+    if(to.stack_type == deck)
         return false;
     
     if(to.stack_type == cardstack) {
@@ -1008,6 +1082,23 @@
             if([self accept_card_move:source_stack :_suitstacks[i] :topCard]) {
                 [self.active_card change_stack:source_stack :self.suitstacks[i]];
                 [self setNeedsDisplay];
+                // Check for victory
+                bool won = true;
+                // Check to see if we've just won
+                for(int i=0; i<[self.suitstacks count]; i++) {
+                    card_stack *test = (card_stack *)self.suitstacks[i];
+                    if([test.cards count] != 13) {
+                        won = false;
+                    }
+                }
+                if(won == true) {
+                    NSLog(@"You've won!");
+                    [self run_victory];
+                }
+                else {
+                    NSLog(@"Keep playing :)");
+                }
+
                 break;
             }
         }

@@ -26,24 +26,24 @@
 
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    CGSize popsize;
+    popsize.height = 225;
+    popsize.width  = 720;
     self.myPopover = [(UIStoryboardPopoverSegue *)segue popoverController];
+    [self.myPopover setPopoverContentSize:popsize animated:true];
 }
 
 - (BOOL)shouldPerformSegueWithIdentifier:(NSString *)identifier sender:(id)sender {
-    if (self.myPopover)
+    if (self.myPopover) {
+        [self.myPopover dismissPopoverAnimated:YES];
         return NO;
-    else
+    }
+    else {
         return YES;
-}
-
-- (IBAction)help_tapped:(id)sender {
-    NSLog(@"Help tapped");
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"How to play" message:@"Move cards to upper stacks, make bucks.  Keep autobucks on for easymode." delegate:nil cancelButtonTitle:@"Dismiss" otherButtonTitles:nil];
-    [alert show];
+    }
 }
 
 - (IBAction)autocomplete_change:(id)sender {
-    NSLog(@"Switched");
     UISwitch *autocomplete = (UISwitch *)sender;
     mainView *mv = (mainView *)self.view;
     
@@ -52,7 +52,6 @@
 }
 
 - (IBAction)start_new_game:(id)sender {
-    NSLog(@"new game button tapped");
     // KDR I'm hoping I don't need to free self.cards and whatever else--that just calling init_table
     // will cause the "automatic reference counter" to free whatever I've overwritten.
     // However, I'm not particularly confident about this.
@@ -106,6 +105,10 @@
 
 - (void)enable_undo {
     _undo_button.enabled = true;
+}
+
+- (void)disable_undo {
+    _undo_button.enabled = false;
 }
 
 - (void)update_ac_switch {
@@ -172,8 +175,8 @@
     [self update_wins];
     [self update_losses];
     [self update_bucks];
-    [mv init_table];
-    //[mv init_table_trivial]; mv.autocomplete = false;
+    //[mv init_table];
+    [mv init_table_trivial]; mv.autocomplete = true;
 
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     tapGesture.numberOfTapsRequired = 2;

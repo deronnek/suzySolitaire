@@ -15,5 +15,6 @@
 - (void)update_bucks;
 - (void)update_wins;
 - (void)enable_undo;
+- (void)disable_undo;
 
 @end
