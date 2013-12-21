@@ -34,9 +34,9 @@
     self = [super init];
     if(self) {
         
-        self.face_image = [self.face_image initWithImage:[UIImage imageNamed:face_image_file]];
-        self.back_image = [self.back_image initWithImage:[UIImage imageNamed:back_image_file]];
-        self.cap_image  = [self.cap_image  initWithImage:[UIImage imageNamed:cap_image_file]];
+        self.face_image = [UIImage imageNamed:face_image_file];
+        self.back_image = [UIImage imageNamed:back_image_file];
+        self.cap_image  = [UIImage imageNamed:cap_image_file];
         
         //NSLog(@"height: %d width: %d",height,width);
         
@@ -79,13 +79,11 @@
     return self;
 }
 
-/*
 - (void)draw_self_and_parent
 {
     [self draw_card];
     [self.card_parent draw_self_and_parent];
 }
- */
 
 - (void)resize:(int)width :(int)height
 {
@@ -122,7 +120,7 @@
     [self set_pos:self.saved_pos.x:self.saved_pos.y];
     [self.card_parent cancel_move];
 }
-/*
+
 -(void)draw_card
 {
     NSLog(@"Called draw_card");
@@ -147,7 +145,7 @@
     caprect.size.height = self.saved_cap*2;
     [self.cap_image drawInRect:caprect];
 }
-*/
+
 -(void)set_pos:(int)x :(int)y
 {
     CGRect rect = self.rect;

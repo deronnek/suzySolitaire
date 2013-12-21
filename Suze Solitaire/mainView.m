@@ -76,7 +76,7 @@
     // Drawing code
 }
 */
-/*
+
 -(void)drawRect:(CGRect)rect
 {
     //NSLog(@"KDR drawRect called deck has %d score: %d",[self.deck.cards count],self.score);
@@ -137,7 +137,7 @@
     NSLog(@"Called drawRect");
 
 }
- */
+
 
 - (void)init_table
 {

@@ -29,9 +29,9 @@ typedef enum {
 @property card_suit suit;
 @property BOOL face_up;
 @property NSString *card_name;
-@property UIImageView *face_image;
-@property UIImageView *back_image;
-@property UIImageView *cap_image;
+@property UIImage *face_image;
+@property UIImage *back_image;
+@property UIImage *cap_image;
 //@property CGLayerRef card_layer;
 @property CGRect rect;
 @property CGPoint xy_loc;
@@ -46,9 +46,9 @@ typedef enum {
 -(void)set_pos :(int)x :(int)y;
 -(void)cancel_move;
 -(void)save_pos;
-//-(void)draw_card;
-//-(void)draw_cap;
-//-(void)draw_self_and_parent;
+-(void)draw_card;
+-(void)draw_cap;
+-(void)draw_self_and_parent;
 - (void)resize:(int)width :(int)height;
 -(BOOL)change_stack:(card_stack *)from_stack :(card_stack *)to_stack;
 
