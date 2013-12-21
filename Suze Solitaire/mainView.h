@@ -31,6 +31,7 @@
 @property int wins;
 @property int losses;
 @property bool autocomplete;
+@property int deck_just_tapped;
 @property int just_won;
 
 @property    (nonatomic, retain) NSMutableArray *cards; // Initial deck to pull from when setting up a game
@@ -43,8 +44,10 @@
 @property    CGPoint prev_point;
 
 -(void)init_table;
+-(void)undo_deck_tap;
 -(void)redraw_table;
 -(void)init_table_trivial;
+-(void)init_table_debug;
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event;
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;

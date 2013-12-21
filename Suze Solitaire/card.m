@@ -20,6 +20,7 @@
                                      @"card_name",
                                      @"face_image",
                                      @"back_image",
+                                     @"cap_image",
                                      @"rect",
                                      @"xy_loc",
                                      @"z_loc",
@@ -32,9 +33,10 @@
 {
     self = [super init];
     if(self) {
-        self.face_image = [UIImage imageNamed:face_image_file];
-        self.back_image = [UIImage imageNamed:back_image_file];
-        self.cap_image  = [UIImage imageNamed:cap_image_file];
+        
+        self.face_image = [self.face_image initWithImage:[UIImage imageNamed:face_image_file]];
+        self.back_image = [self.back_image initWithImage:[UIImage imageNamed:back_image_file]];
+        self.cap_image  = [self.cap_image  initWithImage:[UIImage imageNamed:cap_image_file]];
         
         //NSLog(@"height: %d width: %d",height,width);
         
@@ -77,11 +79,13 @@
     return self;
 }
 
+/*
 - (void)draw_self_and_parent
 {
     [self draw_card];
     [self.card_parent draw_self_and_parent];
 }
+ */
 
 - (void)resize:(int)width :(int)height
 {
@@ -118,19 +122,11 @@
     [self set_pos:self.saved_pos.x:self.saved_pos.y];
     [self.card_parent cancel_move];
 }
-
+/*
 -(void)draw_card
 {
     NSLog(@"Called draw_card");
-    /* if(!self.loaded) {
-        CGContextRef context  = UIGraphicsGetCurrentContext();
-        NSLog(@"X: %f Y: %f Width: %f Height: %f",self.rect.origin.x,self.rect.origin.y,self.rect.size.width, self.rect.size.height);
-        CGSize size           = CGSizeMake(self.rect.size.width, self.rect.size.height);
-        self.card_layer       = CGLayerCreateWithContext(context, size, NULL);
-        CGContextDrawImage(context, (CGRect){ self.rect.origin, size }, self.face_image.CGImage);
-        self.loaded = true;
-        NSLog(@"Called draw_card");
-    } */
+
     
     if(self.face_up) {
         //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
@@ -151,7 +147,7 @@
     caprect.size.height = self.saved_cap*2;
     [self.cap_image drawInRect:caprect];
 }
-
+*/
 -(void)set_pos:(int)x :(int)y
 {
     CGRect rect = self.rect;

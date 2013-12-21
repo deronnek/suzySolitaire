@@ -27,7 +27,7 @@
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     CGSize popsize;
-    popsize.height = 225;
+    popsize.height = 275;
     popsize.width  = 720;
     self.myPopover = [(UIStoryboardPopoverSegue *)segue popoverController];
     [self.myPopover setPopoverContentSize:popsize animated:true];
@@ -81,6 +81,7 @@
     [self update_wins];
     [self update_losses];
     
+    mv.active_card = nil;
     [mv setNeedsDisplay];
 }
 
@@ -92,14 +93,18 @@
     //[mv find_card_for_suitstack];  // For testing functions
     
     NSLog(@"Active card: %@ %@ %@",mv.active_card,mv.active_card_dest_stack,mv.active_card_source_stack);
-    
-    // Make sure we subtract bucks if a move to a suitstack is being undone
-    if(mv.active_card_dest_stack.stack_type == suitstack) {
-        mv.score -= 5;
-        [self update_bucks];
+    /* We should only get to this point without an active card if the deck tap is being undone */
+    if(mv.deck_just_tapped) {
+        [mv undo_deck_tap];
     }
-    
-    [mv.active_card change_stack:mv.active_card_dest_stack:mv.active_card_source_stack];
+    else {
+        // Make sure we subtract bucks if a move to a suitstack is being undone
+        if(mv.active_card_dest_stack.stack_type == suitstack) {
+            mv.score -= 5;
+            [self update_bucks];
+        }
+        [mv.active_card change_stack:mv.active_card_dest_stack:mv.active_card_source_stack];
+    }
     [mv setNeedsDisplay];
 }
 
@@ -167,16 +172,18 @@
     NSLog(@"Deck has %d",[mv.deck.cards count]);
     
     //if(self.do_init_table) {
-   
-    mv.score = -45;
+
+    mv.score  = -45;
     mv.wins   = 0;
     mv.losses = 0;
     mv.autocomplete = true;
+
     [self update_wins];
     [self update_losses];
     [self update_bucks];
-    //[mv init_table];
-    [mv init_table_trivial]; mv.autocomplete = true;
+    [mv init_table];
+    //[mv init_table_trivial]; mv.autocomplete = true;
+    //[mv init_table_debug];
 
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     tapGesture.numberOfTapsRequired = 2;

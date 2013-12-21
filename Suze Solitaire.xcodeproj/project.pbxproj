@@ -143,6 +143,7 @@
 		0B82558C175B7D2C0064579C /* cardback.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B82558B175B7D2C0064579C /* cardback.png */; };
 		0B8255F9175BD52C0064579C /* card.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8255F8175BD52C0064579C /* card.m */; };
 		0B8255FF175CB9F40064579C /* card_stack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8255FE175CB9F40064579C /* card_stack.m */; };
+		0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BB464A6183D690D00EE4F5D /* retina_icon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -303,6 +304,7 @@
 		0B8255F8175BD52C0064579C /* card.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card.m; sourceTree = "<group>"; };
 		0B8255FD175CB9F40064579C /* card_stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card_stack.h; sourceTree = "<group>"; };
 		0B8255FE175CB9F40064579C /* card_stack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card_stack.m; sourceTree = "<group>"; };
+		0BB464A6183D690D00EE4F5D /* retina_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = retina_icon.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -385,6 +387,7 @@
 		0B825557175B7C310064579C /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				0BB464A6183D690D00EE4F5D /* retina_icon.png */,
 				0B07AAF3183D199F001B67FC /* c.spade1.png */,
 				0B07AAF4183D199F001B67FC /* c.spade2.png */,
 				0B07AAF5183D199F001B67FC /* c.spade3.png */,
@@ -612,6 +615,7 @@
 				0B07AB0C183D199F001B67FC /* c.spade13.png in Resources */,
 				0B82555B175B7C310064579C /* InfoPlist.strings in Resources */,
 				0B73B8A5182C4F8300F4151B /* s.diamond4.png in Resources */,
+				0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */,
 				0B73B891182C4F8300F4151B /* s.Club_ace.png in Resources */,
 				0B73B8C1182C4F8300F4151B /* s.spade5.png in Resources */,
 				0B73B8A6182C4F8300F4151B /* s.diamond5.png in Resources */,

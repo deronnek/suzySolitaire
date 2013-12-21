@@ -39,6 +39,9 @@
     if(type == fub) {
         self.card_slice_height = 2;
     }
+    if(type == deal) {
+        self.card_slice_height = 2;
+    }
     
     self.cards = [[NSMutableArray alloc] initWithCapacity:capacity];
     self.stack_type = type;
@@ -116,7 +119,7 @@
     
     //NSLog(@"Adding card to stack with %d",[self.cards count]);
     // Handle visual stacking here by adjusting y value
-    if ((self.stack_type == cardstack || self.stack_type == fub) && [self.cards count] > 0) {
+    if ((self.stack_type == cardstack || self.stack_type == fub || self.stack_type == deal) && [self.cards count] > 0) {
         pos.y = self.rect.origin.y + (self.card_slice_height*[self.cards count]-1);
         //NSLog(@"KDR adjusting y value");
     }
@@ -134,7 +137,7 @@
     [toadd set_pos:pos.x:pos.y];
     
     // If the stack is to be shown, make rect larger
-    if(((self.stack_type == cardstack || self.stack_type == fub) && [self.cards count] > 0) || (self.stack_type == suitstack && [self.cards count] == 1)) {
+    if(((self.stack_type == cardstack || self.stack_type == fub || self.stack_type==deal) && [self.cards count] > 0) || (self.stack_type == suitstack && [self.cards count] == 1)) {
         CGRect rec = [self rect];
         rec.size = CGSizeMake(rec.size.width, rec.size.height + self.card_slice_height);
         [self setRect:rec];
@@ -161,10 +164,7 @@
 
 - (void)remove_card:(card *)card
 {
-    
-    
     // make rect smaller
-    
     if((self.stack_type == cardstack) && [self.cards count] > 1) {
         CGRect rec = [self rect];
         rec.size = CGSizeMake(rec.size.width, rec.size.height - self.card_slice_height);
@@ -195,7 +195,7 @@
                 [card draw_card];
             }
         }
-        else if(self.stack_type == fub) {
+        else if(self.stack_type == fub || self.stack_type == deal) {
             if([self.cards count] > 2) {
                 for(card *card in self.cards) {
                     [card draw_cap];

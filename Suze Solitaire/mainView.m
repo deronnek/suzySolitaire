@@ -76,7 +76,7 @@
     // Drawing code
 }
 */
-
+/*
 -(void)drawRect:(CGRect)rect
 {
     //NSLog(@"KDR drawRect called deck has %d score: %d",[self.deck.cards count],self.score);
@@ -137,6 +137,7 @@
     NSLog(@"Called drawRect");
 
 }
+ */
 
 - (void)init_table
 {
@@ -414,6 +415,94 @@
     
     
     
+}
+
+- (void)init_table_debug
+{
+    
+    int screen_width = CGRectGetWidth(self.bounds);
+    self.restorationIdentifier = @"mainView";
+    
+    if (self.cards != nil)
+        return;
+    
+    int card_width = screen_width / 10;
+    int card_height = card_width * 1.55;
+    
+    self.backgroundImage = [UIImage imageNamed:@"background.png"];
+    
+    // Create cards
+    self.cards =  [[NSMutableArray alloc] init];
+    [self create_cards:card_width:card_height];
+    //[self.cards shuffle];
+    
+    // Array for the suit stacks
+    self.suitstacks = [[NSMutableArray alloc] initWithCapacity:4];
+    self.cardstacks = [[NSMutableArray alloc] initWithCapacity:4];
+    
+    /* The creation of the various stacks is organized from the top of the window to the bottom, then left to right. */
+    
+    // Create the face up blind
+    
+    self.fub = [[card_stack alloc] initWithData:card_width/5:card_height:card_width:card_height:fub];
+    /*
+     for(int i=0; i<13; i++) {
+     card* card = [self get_random_card];
+     [card setFace_up:true];
+     [self.fub add_card:card];
+     card = nil;
+     }
+     */
+    
+    // Create the deck
+    self.deck = [[card_stack alloc] initWithData:card_width/5:card_height*2.5:card_width:card_height:deck];
+    
+    // Create the deal
+    self.deal = [[card_stack alloc] initWithData:card_width+(card_width/5)+20:card_height*2.5:card_width:card_height:deal];
+    
+    // Create four suit stacks and cardstacks
+    for(int i=0; i<4; i++) {
+        card_stack *asuitstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):card_height:card_width:card_height:suitstack];
+        for(int j=0; j<10; j++) {
+            card* card = [self get_next_card];
+            
+            [card setFace_up:true];
+            [asuitstack add_card:card];
+            self.suit_stack_starter = card.rank;
+            card = nil;
+        }
+        [self.suitstacks addObject:asuitstack];
+        asuitstack = nil;
+        
+        card_stack *acardstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):card_height*2.5:card_width:card_height:cardstack];
+        
+        
+        card* topcard    = [self get_next_card];
+        card* middlecard = [self get_next_card];
+        card* bottomcard = [self get_next_card];
+        
+        [topcard setFace_up:true];
+        [middlecard setFace_up:true];
+        [bottomcard setFace_up:true];
+        if(i==2) {
+            [self.fub add_card:topcard];
+            [acardstack add_card:bottomcard];
+            [acardstack add_card:middlecard];
+        }
+        else if(i==3) {
+            [self.deal add_card:topcard];
+            [acardstack add_card:bottomcard];
+            [acardstack add_card:middlecard];
+        }
+        else {
+            [acardstack add_card:bottomcard];
+            [acardstack add_card:middlecard];
+            [acardstack add_card:topcard];
+        }
+        
+        [self.cardstacks addObject:acardstack];
+        acardstack = nil;
+    }
 }
 
 -(void)create_cards:(int)width :(int)height
@@ -728,8 +817,6 @@
 
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
-   
-    
 	if (self.active_card && self.active_card_source_stack.stack_type != deck)
 	{
         UITouch* touch = [touches anyObject];
@@ -762,20 +849,67 @@
         //[self setNeedsDisplay];
 	}
 }
-
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+- (void)undo_deck_tap
 {
+    NSLog(@"KDR Undoing deck tap");
+    if([self.deal.cards count] == 0) {
+        /* Move everything from the deck back to the deal */
+        int deck_count =[self.deck.cards count];
+        for(int i=0; i<deck_count; i++) {
+            [self.deal add_card:[self.deck get_top_card]];
+            [[self.deal.cards lastObject] setFace_up:true];
+        }
+        [self setNeedsDisplayInRect:self.deal.rect];
+    }
+    else {
+        /* Take the top 3 cards from the deal and move them to the deck */
+        int deal_count = [self.deal.cards count];
+        for(int i=0; i<self.deck_just_tapped && i<deal_count; i++) {
+            [self.deck add_card:[self.deal get_top_card]];
+            [[self.deck.cards lastObject] setFace_up:false];
+        }
+    }
+    //[myController disable_undo];
+    self.active_card = NULL;
+    // Refresh the appropriate rectangles
+    
+    [self setNeedsDisplayInRect:self.deck.rect];
+    
+    if([self.deal.cards count] == 0) {
+        [self setNeedsDisplayInRect:self.deal.rect];
+    }
+    /*
+    if([self.deck.cards count] == 0) {
+        // Reset the size of the rectangle for the deal
+        CGRect rec = [self.deal rect];
+        rec.size = CGSizeMake(rec.size.width, self.deck.rect.size.height);
+        [self.deal setRect:rec];
+        [self setNeedsDisplayInRect:self.deal.rect];
+    }
+    */
+    //[self setNeedsDisplay];
+    NSLog(@"Deck has %d cards",[self.deck.cards count]);
+    NSLog(@"Deal has %d cards",[self.deal.cards count]);
+
+}
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    if(self.just_won)
+        return;
+    
     //NSLog(@"Called touchesEnded");
         //CGPoint point  = [touch locationInView:self];
     //card_stack *cs = [self find_active_stack:point];
     
     card_stack *cs = [self find_active_stack_rect:self.active_card.rect];
-    
+    bool emptystack = false;
     // If the deck is empty, we have to be able to detect a click on it with no card
     if(!cs) {
         UITouch* touch = [touches anyObject];
         CGPoint point  = [touch locationInView:self];
         cs = [self find_active_stack:point];
+        emptystack = true;
     }
 
     ssViewController *myController = (ssViewController *)[self firstAvailableUIViewController];
@@ -783,7 +917,7 @@
     //[self.active_card cancel_move];
     //[self setNeedsDisplay];
     if(cs) {
-        if(cs.stack_type == deck) {
+        if(cs.stack_type == deck && (self.active_card_source_stack.stack_type == deck || [self.deck.cards count] == 0)) {
             
                 // When canceling a stack drag, make sure you clean up everything
                 CGRect rect;
@@ -805,16 +939,20 @@
                     [[self.deck.cards lastObject] setFace_up:false];
                 }
                 [self setNeedsDisplayInRect:self.deck.rect];
+                
+
             }
             else {
-                /* Take the top 3 cards from the deck and move them to the deal */
+                /* Take up to 3 cards from the deck and move them to the deal */
                 int deck_count = [self.deck.cards count];
+                self.deck_just_tapped = 0;
                 for(int i=0; i<3 && i<deck_count; i++) {
                     [self.deal add_card:[self.deck get_top_card]];
                     [[self.deal.cards lastObject] setFace_up:true];
+                    self.deck_just_tapped++;
                 }
             }
-            [myController disable_undo];
+            [myController enable_undo];
             self.active_card = NULL;
             // Refresh the appropriate rectangles
             
@@ -823,6 +961,15 @@
             if([self.deck.cards count] == 0) {
                 [self setNeedsDisplayInRect:self.deck.rect];
             }
+            
+            if([self.deal.cards count] == 0) {
+                // Reset the size of the rectangle for the deal
+                CGRect rec = [self.deal rect];
+                rec.size = CGSizeMake(rec.size.width, self.deck.rect.size.height);
+                [self.deal setRect:rec];
+                [self setNeedsDisplayInRect:self.deal.rect];
+            }
+            
             //[self setNeedsDisplay];
             NSLog(@"Deck has %d cards",[self.deck.cards count]);
             NSLog(@"Deal has %d cards",[self.deal.cards count]);
@@ -850,7 +997,7 @@
                     [self setNeedsDisplayInRect:self.active_card_source_stack.rect];
                 }
                 [self setNeedsDisplayInRect:cs.rect];
-                
+                self.deck_just_tapped = 0;
                        
             }
             else {
@@ -938,7 +1085,7 @@
     //self.active_card = NULL;
 }
 
-// I don't like the design of this code; card_put_up actually increments the score.
+// I don't like how I designed this code; card_put_up actually increments the score.
 // accept_card_move should just be the test without that side effect.
 -(BOOL)accept_card_move: (card_stack *)from :(card_stack *)to :(card *)onTopOfCard
 {
@@ -946,7 +1093,7 @@
     //return true;
     
     // Once cards are in the suitstacks, they're there for good
-    if (from.stack_type == suitstack)
+    if (from.stack_type == suitstack || from.stack_type == deck)
         return false;
     
     if(to == from)
@@ -966,7 +1113,8 @@
             }
             else if([self.fub.cards count] == 0){
                 // face up blind is empty; only allow cards of the appropriate rank
-                if(self.active_card.rank == self.suit_stack_starter-1 || (self.suit_stack_starter == 13 && self.active_card.rank == 1)) {
+                // suit stack starter minus one, or king if ace is starter
+                if(self.active_card.rank == self.suit_stack_starter-1 || (self.suit_stack_starter == 1 && self.active_card.rank == 13)) {
                     return true;
                 }
             }
