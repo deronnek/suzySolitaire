@@ -198,6 +198,7 @@
         card* card = [self get_random_card];
         [card setFace_up:true];
         [self.fub add_card:card];
+        
         card = nil;
     }
 
@@ -817,10 +818,20 @@
 
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
+    ssViewController *vc = (ssViewController *)[self firstAvailableUIViewController];
+    
+    
+    
+    UITouch* touch = [touches anyObject];
+    CGPoint point  = [touch locationInView:self];
+    
+    if(CGRectContainsPoint([vc.cardback frame], point)) {
+        vc.cardback.center = point;
+    }
+
 	if (self.active_card && self.active_card_source_stack.stack_type != deck)
 	{
-        UITouch* touch = [touches anyObject];
-        CGPoint point  = [touch locationInView:self];
+        
 		[self.active_card set_pos:point.x - self.xCap:point.y - self.yCap];
 		
         //[self setNeedsDisplay];
@@ -846,8 +857,9 @@
         rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
         
         [self setNeedsDisplayInRect:rect];
+        
         //[self setNeedsDisplay];
-	}
+    }
 }
 - (void)undo_deck_tap
 {

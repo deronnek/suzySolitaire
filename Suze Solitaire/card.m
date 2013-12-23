@@ -33,11 +33,13 @@
 {
     self = [super init];
     if(self) {
+        self = [self initWithImage:[UIImage imageNamed:face_image_file]];
         
+/*
         self.face_image = [UIImage imageNamed:face_image_file];
         self.back_image = [UIImage imageNamed:back_image_file];
         self.cap_image  = [UIImage imageNamed:cap_image_file];
-        
+*/
         //NSLog(@"height: %d width: %d",height,width);
         
         if(suit == Spades || suit == Clubs) {
@@ -55,11 +57,14 @@
         CGPoint point;
         point.x = x;
         point.y = y;
+        [self setCenter:point];
         
         CGRect rect;
         rect.origin      = point;
         rect.size.width  = width;
         rect.size.height = height;
+        
+        [self setFrame:rect];
 
         self.rect        = rect;
         self.card_parent = nil;
@@ -71,7 +76,7 @@
         
         // this just draws the image into the layer, not onto the screen (I think)
         //CGContextDrawImage(context, (CGRect){ point, self.face_image.size }, self.face_image.CGImage);
-        
+ 
         // create a unique identifier for this object, helps with state restoration
         NSUUID *uuid    = [[NSUUID alloc] init];
         self.identifier = [uuid UUIDString];
@@ -130,11 +135,13 @@
         //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
         //CGContextDrawLayerInRect(layerCtx, self.rect, self.card_layer);
         
-        [self.face_image drawInRect:self.rect];
+        //[self.face_image drawInRect:self.rect];
+        [self setHidden:false];
+        
         //CGContextDrawLayerAtPoint(CGLayerGetContext(self.card_layer), self.rect.origin, self.card_layer);
     }
     else {
-        [self.back_image drawInRect:self.rect];
+        //[self.back_image drawInRect:self.rect];
     }
 }
 -(void)draw_cap

@@ -22,7 +22,8 @@ typedef enum {
 
 @class card_stack;
 
-@interface card : NSObject
+//@interface card : NSObject
+@interface card: UIImageView
 
 @property card_color color;
 @property int rank;

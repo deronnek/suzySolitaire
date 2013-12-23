@@ -11,6 +11,8 @@
 @interface ssViewController : UIViewController
 @property bool do_init_table;
 @property(nonatomic, copy) NSString *restorationIdentifier;
+@property (strong, nonatomic) IBOutlet UIImageView *cardback;
+
 
 - (void)update_bucks;
 - (void)update_wins;
