@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <QuartzCore/QuartzCore.h>
 #import "card.h"  
 
 typedef enum {
@@ -19,7 +20,7 @@ typedef enum {
 
 
 
-@interface card_stack : NSObject
+@interface card_stack : UIImageView
 
 @property NSMutableArray *cards;
 @property CGRect rect;

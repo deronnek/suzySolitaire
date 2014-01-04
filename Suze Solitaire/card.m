@@ -57,7 +57,12 @@
         CGPoint point;
         point.x = x;
         point.y = y;
-        [self setCenter:point];
+        
+
+        
+        NSLog(@"point: %d %d",x,y);
+        
+        
         
         CGRect rect;
         rect.origin      = point;
@@ -65,8 +70,8 @@
         rect.size.height = height;
         
         [self setFrame:rect];
+        [self setUserInteractionEnabled:true];
 
-        self.rect        = rect;
         self.card_parent = nil;
         
         //CGContextRef context  = UIGraphicsGetCurrentContext();
@@ -92,8 +97,12 @@
 
 - (void)resize:(int)width :(int)height
 {
-    _rect.size.width  = width;
-    _rect.size.height = height;
+    CGRect rect = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
+    [self setFrame:rect];
+    
+    //_rect.size.wig.size setWidth:width];
+    //self.frame.size.height = height;
+    //[self setFrame:_rect];
 }
 
 // we are being created based on what was archived earlier
@@ -144,6 +153,7 @@
         //[self.back_image drawInRect:self.rect];
     }
 }
+/*
 -(void)draw_cap
 {
     CGRect caprect;
@@ -152,22 +162,29 @@
     caprect.size.height = self.saved_cap*2;
     [self.cap_image drawInRect:caprect];
 }
+*/
 
 -(void)set_pos:(int)x :(int)y
 {
-    CGRect rect = self.rect;
+    CGRect rect = self.frame;
 	CGPoint point;
 	point.x = x;
 	point.y = y;
     rect.origin = point;
-	self.rect   = rect;
+	//self.rect   = rect;
+    self.frame  = rect;
+    
+    //point.x += self.rect.size.width/2;
+    //point.y += self.rect.size.height/2;
+    
+    [self setCenter:point];
     
     [self.card_parent set_pos:x:y+self.saved_cap];
 }
 
 - (void)save_pos
 {
-    self.saved_pos = self.rect.origin;
+    self.saved_pos = self.frame.origin;
     [self.card_parent save_pos];
 }
 
@@ -176,8 +193,9 @@
 {
     if (from_stack != to_stack){
         
-        [to_stack add_card:self];
         [from_stack remove_card:self];
+        [to_stack add_card:self];
+        
         
         // Clean parent card reference
         card* last = [from_stack.cards lastObject];

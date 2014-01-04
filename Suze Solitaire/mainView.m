@@ -77,6 +77,7 @@
 }
 */
 
+/*
 -(void)drawRect:(CGRect)rect
 {
     //NSLog(@"KDR drawRect called deck has %d score: %d",[self.deck.cards count],self.score);
@@ -137,7 +138,7 @@
     NSLog(@"Called drawRect");
 
 }
-
+*/
 
 - (void)init_table
 {
@@ -170,21 +171,33 @@
     if (self.cards != nil)
         return;
     
-    int card_width = screen_width / 10;
+    int card_width  = screen_width / 10;
     int card_height = card_width * 1.55;
     //int cap = (screen_width - card_width*7) / 8;
     
+    /*
     int toprow_spacer = card_height/1.4;
     int second_spacer = card_height*2.1;
+     */
+    
+    int toprow_spacer = 0;
+    int second_spacer = 0;
     
     NSLog(@"Card width: %d %d %d",screen_width,card_width,card_height);
     
     self.backgroundImage = [UIImage imageNamed:@"background.png"];
     
-    // Create cards
+    // Create card views
     self.cards =  [[NSMutableArray alloc] init];
     [self create_cards:card_width:card_height];
     [self.cards shuffle];
+    
+    // Associate them with the main view
+    /*
+    for(int i=0; i<[self.cards count]; i++) {
+        [self addSubview:self.cards[i]];
+    }
+     */
     
     // Array for the suit stacks
     self.suitstacks = [[NSMutableArray alloc] initWithCapacity:4];
@@ -204,7 +217,7 @@
 
     // Create four suit stacks
     for(int i=0; i<4; i++) {
-        card_stack *asuitstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):toprow_spacer:card_width:card_height:suitstack];
+        card_stack *asuitstack = [[card_stack alloc] initWithData:(i*card_width+(i*50)):toprow_spacer:card_width:card_height:suitstack];
         if(i==0) {
             card* card = [self get_random_card];
             [card setFace_up:true];
@@ -213,6 +226,7 @@
             card = nil;
         }
         [self.suitstacks addObject:asuitstack];
+        [self addSubview:asuitstack];
         asuitstack = nil;
     }
     
@@ -225,11 +239,11 @@
     }
     
     // Create the deal
-    self.deal = [[card_stack alloc] initWithData:card_width+(card_width/5)+20:second_spacer:card_width:card_height:deal];
+    self.deal = [[card_stack alloc] initWithData:0:0:card_width:card_height:deal];
 
     // Create four card stacks
     for(int i=0; i<4; i++) {
-        card_stack *acardstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):second_spacer:card_width:card_height:cardstack];
+        card_stack *acardstack = [[card_stack alloc] initWithData:0:second_spacer:card_width:card_height:cardstack];
         
         card* card = [self get_random_card];
         [card setFace_up:true];
@@ -237,8 +251,14 @@
         card = nil;
         
         [self.cardstacks addObject:acardstack];
+        [self addSubview:acardstack];
         acardstack = nil;
     }
+    
+    [self addSubview:self.deck];
+    [self addSubview:self.deal];
+    [self addSubview:self.fub];
+    
 }
 
 - (void)redraw_table
@@ -251,8 +271,10 @@
     
     int card_width = screen_width / 10;
     int card_height = card_width * 1.55;
+    
     int toprow_spacer = card_height/1.4;
     int second_spacer = card_height*2.1;
+     
 
     //int cap = (screen_width - card_width*7) / 8;
     
@@ -271,20 +293,29 @@
     }
      */
     
+    
     [_fub resize:card_width/5:toprow_spacer:card_width:card_height];
+    _fub.layer.borderWidth = 1;
+    _fub.layer.borderColor = [[UIColor whiteColor] CGColor];
+
     
     // Resize the four suit stacks
     for(int i=0; i<4; i++) {
-        [_suitstacks[i] resize:card_width*4+(i*card_width+(i*50)):toprow_spacer:card_width:card_height];
-        
+        [_suitstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):toprow_spacer:card_width:card_height];
      }
     
     [_deck resize:card_width/5:second_spacer:card_width:card_height];
     
+    _deck.layer.borderWidth = 2;
+    _deck.layer.borderColor = [[UIColor redColor] CGColor];
+    
     [_deal resize:card_width+(card_width/5)+20:second_spacer:card_width:card_height];
     
+    _deal.layer.borderWidth = 2;
+    _deal.layer.borderColor = [[UIColor blackColor] CGColor];
+    
     for(int i=0; i<4; i++) {
-        [_cardstacks[i] resize:card_width*4+(i*card_width+(i*50)):second_spacer:card_width:card_height];
+        [_cardstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):second_spacer:card_width:card_height];
     }
     
     
@@ -313,7 +344,7 @@
         acardstack = nil;
     }
      */
-    [self setNeedsDisplay];
+    //[self setNeedsDisplay];
 }
 
 - (void)init_table_trivial
@@ -730,15 +761,15 @@
         for(card_stack *cs in self.suitstacks) {
             int cardnum  = 0;
             for(card *card in cs.cards) {
-                float x = (cardnum*card.rect.size.width*0.735)+10;
-                float y = offset+(stacknum*card.rect.size.height);
-                CGRect rect = card.rect;
+                float x = (cardnum*card.frame.size.width*0.735)+10;
+                float y = offset+(stacknum*card.frame.size.height);
+                CGRect rect = card.frame;
                 CGPoint point;
                 point.x = x;
                 point.y = y;
                 rect.origin = point;
                 
-                card.rect   = rect;
+                [card setFrame:rect];
                 card.card_parent  = nil;
                 
                 int screen_width  = CGRectGetWidth(self.bounds);
@@ -746,7 +777,7 @@
                 if(x> screen_width || y>screen_height) {
                     NSLog(@"KDR OUT OF BOUNDS!!!!!!!!!!!!!");
                 }
-                NSLog(@"x: %f y %f height: %f stacknum: %d",x, y,card.rect.size.height,stacknum);
+                //NSLog(@"x: %f y %f height: %f stacknum: %d",x, y,card.rect.size.height,stacknum);
                 
 
                 [self setNeedsDisplayInRect:rect];
@@ -774,8 +805,8 @@
     
     if(self.active_card) {
         NSLog(@"Tapped: rank: %d suit: %u",self.active_card.rank,self.active_card.suit);
-        self.xCap = point.x - self.active_card.rect.origin.x;
-        self.yCap = point.y - self.active_card.rect.origin.y;
+        self.xCap = point.x - self.active_card.frame.origin.x;
+        self.yCap = point.y - self.active_card.frame.origin.y;
     }
     
     /*
@@ -850,11 +881,11 @@
          */
         
         CGRect rect;
-        rect = self.active_card.rect;
+        rect = self.active_card.frame;
         rect.origin.x -= x;
         rect.origin.y -= y;
         rect.size.width += x*2;
-        rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+        rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
         
         [self setNeedsDisplayInRect:rect];
         
@@ -914,7 +945,7 @@
         //CGPoint point  = [touch locationInView:self];
     //card_stack *cs = [self find_active_stack:point];
     
-    card_stack *cs = [self find_active_stack_rect:self.active_card.rect];
+    card_stack *cs = [self find_active_stack_rect:self.active_card.frame];
     bool emptystack = false;
     // If the deck is empty, we have to be able to detect a click on it with no card
     if(!cs) {
@@ -933,8 +964,8 @@
             
                 // When canceling a stack drag, make sure you clean up everything
                 CGRect rect;
-                rect = self.active_card.rect;
-                rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+                rect = self.active_card.frame;
+                rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
                 [self setNeedsDisplayInRect:rect];
                 
                 [self.active_card cancel_move];
@@ -995,11 +1026,11 @@
                 self.active_card_dest_stack = cs;
                 
                 [myController enable_undo];
-                [self setNeedsDisplayInRect:self.active_card.rect];
+                [self setNeedsDisplayInRect:self.active_card.frame];
                 
                 CGRect rect;
-                rect = self.active_card.rect;
-                rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+                rect = self.active_card.frame;
+                rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
                 [self setNeedsDisplayInRect:rect];
 
                 
@@ -1016,8 +1047,8 @@
                 NSLog(@"KDR YEP 0");
                 // When canceling a stack drag, make sure you clean up everything
                 CGRect rect;
-                rect = self.active_card.rect;
-                rect.size.height = self.bounds.size.height-self.active_card.rect.origin.y+45;
+                rect = self.active_card.frame;
+                rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
                 [self setNeedsDisplayInRect:rect];
                 
                 [self.active_card cancel_move];
@@ -1028,7 +1059,7 @@
         }
         else {
              NSLog(@"KDR YEP 1");
-            [self setNeedsDisplayInRect:self.active_card.rect];
+            [self setNeedsDisplayInRect:self.active_card.frame];
             [self.active_card cancel_move];
             [self setNeedsDisplayInRect:self.active_card_source_stack.rect];
         }
@@ -1036,7 +1067,7 @@
     else {
          NSLog(@"KDR YEP 2");
         // Not dropped on a stack; put it back where it was
-        [self setNeedsDisplayInRect:self.active_card.rect];
+        [self setNeedsDisplayInRect:self.active_card.frame];
         [self.active_card cancel_move];
         [self setNeedsDisplayInRect:self.active_card_source_stack.rect];
         

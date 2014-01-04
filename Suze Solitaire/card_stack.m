@@ -7,6 +7,7 @@
 //
 
 #import "card_stack.h"
+#import "QuartzCore/QuartzCore.h"
 
 @implementation card_stack
 
@@ -25,6 +26,27 @@
 {
     //self = [super init];
     //NSLog(@"Initializing card stack");
+    CGPoint point;
+    point.x = x;
+    point.y = y;
+    
+    CGRect rect;
+    rect.origin      = point;
+    rect.size.width  = width;
+    rect.size.height = height;
+    self.rect        = rect;
+    
+    NSLog(@"Stack point: %d %d",x,y);
+    
+    point.x += width/2;
+    point.y += height/2;
+    //rect.origin = point;
+    self = [self initWithFrame:rect];
+    [self setCenter:point];
+    [self setUserInteractionEnabled:true];
+    
+
+
     int capacity=52;
     if(type == fub || type == suitstack) {
         capacity = 13;
@@ -46,15 +68,8 @@
     self.cards = [[NSMutableArray alloc] initWithCapacity:capacity];
     self.stack_type = type;
     
-    CGPoint point;
-    point.x = x;
-    point.y = y;
+
     
-    CGRect rect;
-    rect.origin      = point;
-    rect.size.width  = width;
-    rect.size.height = height;
-    self.rect        = rect;
     
     return self;
 }
@@ -70,7 +85,7 @@
     rect.origin      = point;
     rect.size.width  = width;
     rect.size.height = height;
-    self.rect        = rect;
+    self.frame        = rect;
     
     // Set card sizes by copying, removing everything then
     // resizing and adding back
@@ -158,6 +173,7 @@
     
     // Card ownership is transfered to array
     [self.cards addObject:toadd];
+    [self addSubview:toadd];
     
     //NSLog(@"Stack now has %d",[self.cards count]);
 }
@@ -172,9 +188,72 @@
     }
     
     [self.cards removeObject:card];
+    // KDR a little awkward that I send a message to the card to remove itself from us, effectively
+    [card removeFromSuperview];
 }
 
+-(void)display_card_stack:(CGRect)rect
+{
+    // Do not draw deck if not really needed
+    if(!CGRectIntersectsRect(rect,self.rect)) {
+        return;
+    }
+    
+    if([self.cards count] == 0) {
+        [[UIColor whiteColor] set];
+        UIRectFrame([self rect]);
+    }
+    else {
+        // If there were an easy way to just draw the border that would be better,
+        // but there really isn't, especially considering you have may have to draw
+        // any card in the stack at any point (can grab any one)
+        if(self.stack_type == cardstack) {
+            for(card *card in self.cards) {
+                [card draw_card];
+            }
+        }
+        else if(self.stack_type == fub || self.stack_type == deal) {
+            if([self.cards count] > 2) {
+                for(card *card in self.cards) {
+                    //[card draw_cap];
+                }
+            }
+            if([self.cards count] > 1) {
+                card *card = [self.cards objectAtIndex:[self.cards count]-2];
+                [card draw_card];
+            }
+            if([self.cards count] > 0) {
+                card *card = [self.cards objectAtIndex:[self.cards count]-1];
+                [card draw_card];
+            }
+        }
+        else if(self.stack_type == suitstack) {
+            // Draw only bottom and top card on suitstacks  (will draw the same card twice if only one exists)
+            card *card = [self.cards objectAtIndex:0];
+            [card draw_card];
+            card = [self.cards objectAtIndex:[self.cards count]-1];
+            [card draw_card];
+        }
+        else {
+            // Draw only top 2 cards in other decks
+            if([self.cards count]>2) {
+                card *card = [self.cards objectAtIndex:[self.cards count]-2];
+                [card draw_card];
+                card = [self.cards objectAtIndex:[self.cards count]-1];
+                [card draw_card];
+            } else {
+                for(card* card in self.cards) {
+                    [card draw_card];
+                }
+            }
+        }
+        
+    }
+}
+
+
 // KDR this may *still* need attention
+/*
 -(void)display_card_stack:(CGRect)rect
 {
     // Do not draw deck if not really needed
@@ -233,6 +312,7 @@
 
     }
 }
+ */
 
 - (card *)get_top_card
 {
@@ -250,7 +330,7 @@
     // Don't bother checking all rectangles in a stack when only the top card is visible
     if(self.stack_type == deck || self.stack_type == deal || self.stack_type == fub) {
         card *card = [self.cards lastObject];
-        if (CGRectContainsPoint(card.rect,point)) {
+        if (CGRectContainsPoint(card.frame,point)) {
             if (activeCard==nil) {
                 activeCard = card;
             }
@@ -262,7 +342,8 @@
     }
     else {
         for(card *card in self.cards) {
-            if (CGRectContainsPoint(card.rect,point)) {
+            
+            if (CGRectContainsPoint(card.frame,point)) {
                 if (activeCard==nil) {
                     activeCard = card;
                 }

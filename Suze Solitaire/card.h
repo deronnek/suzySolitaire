@@ -34,7 +34,7 @@ typedef enum {
 @property UIImage *back_image;
 @property UIImage *cap_image;
 //@property CGLayerRef card_layer;
-@property CGRect rect;
+//@property CGRect rect;
 @property CGPoint xy_loc;
 @property int z_loc;
 @property CGPoint saved_pos;
@@ -48,7 +48,7 @@ typedef enum {
 -(void)cancel_move;
 -(void)save_pos;
 -(void)draw_card;
--(void)draw_cap;
+//-(void)draw_cap;
 -(void)draw_self_and_parent;
 - (void)resize:(int)width :(int)height;
 -(BOOL)change_stack:(card_stack *)from_stack :(card_stack *)to_stack;
