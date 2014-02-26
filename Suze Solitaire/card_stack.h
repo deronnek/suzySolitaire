@@ -20,10 +20,10 @@ typedef enum {
 
 
 
-@interface card_stack : UIImageView
+@interface card_stack : UIView
 
 @property NSMutableArray *cards;
-@property CGRect rect;
+//@property CGRect rect;
 @property card_stack_type stack_type;
 @property int card_slice_height;
 @property int stack_z;
@@ -35,6 +35,7 @@ typedef enum {
 - (void)add_card:(card *)toadd;
 - (void)remove_card:(card *)card;
 - (void)display_card_stack:(CGRect)rect;
+- (void)makeSubViewsOfCards;
 
 - (card *)get_card_at_pos:(CGPoint)point;
 - (card *)get_top_card;

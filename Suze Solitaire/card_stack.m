@@ -14,10 +14,11 @@
 - (NSArray *)keysForEncoding;
 {
     return [NSArray arrayWithObjects:@"cards",
-            @"rect",
             @"stack_type",
             @"card_slice_height",
             @"stack_z",
+            @"frame",
+            @"restorationIdentifier",
             @"identifier", nil];
 }
 
@@ -34,9 +35,9 @@
     rect.origin      = point;
     rect.size.width  = width;
     rect.size.height = height;
-    self.rect        = rect;
+    self.frame        = rect;
     
-    NSLog(@"Stack point: %d %d",x,y);
+    //NSLog(@"Stack point: %d %d",x,y);
     
     point.x += width/2;
     point.y += height/2;
@@ -45,6 +46,9 @@
     [self setCenter:point];
     [self setUserInteractionEnabled:true];
     
+    NSUUID *uuid    = [[NSUUID alloc] init];
+    self.identifier = [uuid UUIDString];
+    self.restorationIdentifier = self.identifier;
 
 
     int capacity=52;
@@ -85,14 +89,16 @@
     rect.origin      = point;
     rect.size.width  = width;
     rect.size.height = height;
-    self.frame        = rect;
+    self.frame       = rect;
+    
+    
     
     // Set card sizes by copying, removing everything then
     // resizing and adding back
     NSMutableArray *cards_old = [_cards copy];
     [_cards removeAllObjects];
     for(int i=0; i<[cards_old count]; i++) {
-        [cards_old[i] resize:width:height];
+        [cards_old[i] resize:x:y:width:height];
         [self add_card:cards_old[i]];
     }
 }
@@ -111,6 +117,14 @@
     return self;
 }
 
+- (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder
+{
+    for (NSString *key in self.keysForEncoding)
+    {
+        [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
+    }
+}
+
 // we are asked to be archived, encode all our data
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
@@ -120,44 +134,71 @@
     }
 }
 
+- (void)encodeRestorableStateWithCoder:(NSCoder *)aCoder
+{
+    for (NSString *key in self.keysForEncoding)
+    {
+        [aCoder encodeObject:[self valueForKey:key] forKey:key];
+    }
+}
+
 - (void)set_pos:(int)x :(int)y
 {
-    _rect.origin.x = x;
-    _rect.origin.y = y;
+    
+    CGRect rect = self.frame;
+	CGPoint point;
+	point.x = x;
+	point.y = y;
+    rect.origin = point;
+    self.frame  = rect;
+    
+    //point.x += self.rect.size.width/2;
+    //point.y += self.rect.size.height/2;
+    
+    //[self setCenter:point];
 }
 
 - (void)add_card:(card *)toadd
 {
-    // Set card new position
+    // Set card new position.  Remember: the position of a subview is relative to its super view
     CGPoint pos;
-    pos.x = self.rect.origin.x;
+    pos.x = 0;
     
-    //NSLog(@"Adding card to stack with %d",[self.cards count]);
+    if(self.stack_type == deck) {
+        [toadd setImage:toadd.back_image];
+    }
+    else {
+        [toadd setImage:toadd.face_image];
+    }
+    
+    //NSLog(@"\n\n\nAdding card to stack with %d\n\n\n",[self.cards count]);
     // Handle visual stacking here by adjusting y value
     if ((self.stack_type == cardstack || self.stack_type == fub || self.stack_type == deal) && [self.cards count] > 0) {
-        pos.y = self.rect.origin.y + (self.card_slice_height*[self.cards count]-1);
+        pos.y = (self.card_slice_height*[self.cards count]-1);
         //NSLog(@"KDR adjusting y value");
     }
     else {
-        pos.y = self.rect.origin.y;
+        pos.y = 0;
     }
     
     
-    if(self.stack_type == suitstack && [self.cards count] == 1) {
-        [self set_pos:self.rect.origin.x:self.rect.origin.y+self.card_slice_height];
+    //if(self.stack_type == suitstack && [self.cards count] == 1) {
+    if(self.stack_type == suitstack && [self.cards count] > 0) {
+        //[self set_pos:self.frame.origin.x:self.frame.origin.y+self.card_slice_height];
         //[toadd set_pos:pos.x:pos.y+self.card_slice_height];
         pos.y = pos.y + self.card_slice_height;
     }
+    
     [toadd setSaved_cap:self.card_slice_height];
     [toadd set_pos:pos.x:pos.y];
     
     // If the stack is to be shown, make rect larger
     if(((self.stack_type == cardstack || self.stack_type == fub || self.stack_type==deal) && [self.cards count] > 0) || (self.stack_type == suitstack && [self.cards count] == 1)) {
-        CGRect rec = [self rect];
+        CGRect rec = self.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height + self.card_slice_height);
-        [self setRect:rec];
+        [self setFrame:rec];
     }
-    
+    //NSLog(@"\n\n\n KDR KDR TEST KDR KDR KDR\n\n\n");
     // Set deck info to card
     //[card setDeck:self];
     
@@ -171,23 +212,39 @@
         child_card.card_parent = toadd;
     }
     
+    // If we're adding a card, we have at least one and don't want the border
+    self.layer.BorderWidth = 0;
+
     // Card ownership is transfered to array
     [self.cards addObject:toadd];
+    [toadd setExclusiveTouch:true];
     [self addSubview:toadd];
     
     //NSLog(@"Stack now has %d",[self.cards count]);
+}
+
+- (void)makeSubViewsOfCards
+{
+    for(card *c in self.cards) {
+        [self addSubview:c];
+    }
 }
 
 - (void)remove_card:(card *)card
 {
     // make rect smaller
     if((self.stack_type == cardstack) && [self.cards count] > 1) {
-        CGRect rec = [self rect];
+        CGRect rec = self.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height - self.card_slice_height);
-        [self setRect:rec];
+        [self setFrame:rec];
     }
-    
+
     [self.cards removeObject:card];
+    
+    if([self.cards count] == 0) {
+        self.layer.BorderWidth = 1;
+        self.layer.borderColor = [[UIColor whiteColor] CGColor];
+    }
     // KDR a little awkward that I send a message to the card to remove itself from us, effectively
     [card removeFromSuperview];
 }
@@ -195,13 +252,13 @@
 -(void)display_card_stack:(CGRect)rect
 {
     // Do not draw deck if not really needed
-    if(!CGRectIntersectsRect(rect,self.rect)) {
+    if(!CGRectIntersectsRect(rect,self.frame)) {
         return;
     }
     
     if([self.cards count] == 0) {
-        [[UIColor whiteColor] set];
-        UIRectFrame([self rect]);
+        self.layer.BorderWidth = 1;
+        self.layer.borderColor = [[UIColor whiteColor] CGColor];
     }
     else {
         // If there were an easy way to just draw the border that would be better,

@@ -59,15 +59,35 @@
     mainView *mv = (mainView *)self.view;
 
     mv.cards = nil;
+
+    // Remove all cards
+    [[mv.deck subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    [[mv.deal subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    [[mv.fub  subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    for(int i=0; i<4; i++) {
+        [[mv.suitstacks[i]  subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+        [[mv.cardstacks[i]  subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    }
     
-    /*
-     self.deck  = nil;
-     self.deal  = nil;
-     self.cardstacks = nil;
-     self.suitstacks = nil;
-     self.fub        = nil;
-     */
+    // Remove card stacks
+    [mv.deck removeFromSuperview];
+    [mv.deal removeFromSuperview];
+    [mv.fub  removeFromSuperview];
+    for(int i=0; i<4; i++) {
+        [mv.suitstacks[i] removeFromSuperview];
+        [mv.cardstacks[i] removeFromSuperview];
+    }
     
+    if(mv.just_won) {
+        // Have to get rid of the cards differently if we just won
+        NSArray *viewsToRemove = [mv subviews];
+        for (UIView *v in viewsToRemove) {
+            if([v isKindOfClass:[card class]]) {
+                [v removeFromSuperview];
+            }
+        }
+    }
+
     [mv init_table];
     
     mv.score -= 45;
@@ -82,7 +102,7 @@
     [self update_losses];
     
     mv.active_card = nil;
-    [mv setNeedsDisplay];
+    [mv redraw_table];
 }
 
 
@@ -105,7 +125,7 @@
         }
         [mv.active_card change_stack:mv.active_card_dest_stack:mv.active_card_source_stack];
     }
-    [mv setNeedsDisplay];
+    //[mv setNeedsDisplay];
 }
 
 - (void)enable_undo {
@@ -140,7 +160,7 @@
     else {
         [self.bucks_counter setTextColor:[UIColor blackColor]];
     }
-    [mv setNeedsDisplay];
+    //[mv setNeedsDisplay];
 }
 
 - (void)update_wins {
@@ -287,6 +307,7 @@
      */
 }
 
+
 -(void)decodeRestorableStateWithCoder:(NSCoder *)coder
 {
     
@@ -306,10 +327,11 @@
     mv.yCap         = [coder decodeIntForKey:@"yCap"];
     mv.autocomplete = [coder decodeBoolForKey:@"autocomplete"];
     mv.suit_stack_starter = [coder decodeIntForKey:@"suit_stack_starter"];
-    
+
     mv.cards      = [coder decodeObjectForKey:@"cards"];
     mv.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
     mv.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
+
     mv.fub        = [coder decodeObjectForKey:@"fub"];
     mv.deck       = [coder decodeObjectForKey:@"deck"];
     mv.deal       = [coder decodeObjectForKey:@"deal"];
@@ -320,6 +342,49 @@
     [self update_losses];
     [self update_ac_switch];
     
+    [mv addSubview:mv.deck];
+    [mv addSubview:mv.deal];
+    [mv addSubview:mv.fub];
+
+    
+    int numberOfSuitstacks = 0;
+    for(UIView *s in mv.suitstacks) {
+        [mv addSubview:s];
+        numberOfSuitstacks++;
+    }
+    NSLog(@"Number of suitstacks: %d",numberOfSuitstacks);
+    /*
+    for(int i=numberOfSuitstacks; i<4; i++) {
+        card_stack *cs = [card_stack alloc];
+        [mv.cardstacks addObject:cs];
+        [mv addSubview:cs];
+    } */
+    
+    
+    
+    int numberOfCardstacks = 0;
+    for(UIView *s in mv.cardstacks) {
+        [mv addSubview:s];
+        numberOfCardstacks++;
+    }
+    NSLog(@"Number of cardstacks: %d",numberOfCardstacks);
+    /*
+    for(int i=numberOfCardstacks; i<4; i++) {
+        card_stack *cs = [card_stack alloc];
+        [mv.suitstacks addObject:cs];
+        [mv addSubview:cs];
+    }
+     */
+    NSLog(@"made it HERE");
+    
+    NSArray *viewsToRestore = [mv subviews];
+    for (card_stack *v in viewsToRestore) {
+        if([v isKindOfClass:[card_stack class]]) {
+            [v makeSubViewsOfCards];
+        }
+    }
+
+    //[[mv subviews] makeObjectsPerformSelector:@selector(makeSubViewsOfCards)];
     
     // Even if we call init_table here it doesn't set things up properly.
     // self.view pointer is different?

@@ -50,7 +50,7 @@ typedef enum {
 -(void)draw_card;
 //-(void)draw_cap;
 -(void)draw_self_and_parent;
-- (void)resize:(int)width :(int)height;
+- (void)resize:(int)x :(int)y :(int)width :(int)height;
 -(BOOL)change_stack:(card_stack *)from_stack :(card_stack *)to_stack;
 
 @end

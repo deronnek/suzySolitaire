@@ -41,7 +41,7 @@
 @property    (nonatomic, retain) card_stack     *deck;
 @property    (nonatomic, retain) card_stack     *deal;
 @property    int suit_stack_starter;
-@property    CGPoint prev_point;
+//@property    CGPoint prev_point;
 
 -(void)init_table;
 -(void)undo_deck_tap;

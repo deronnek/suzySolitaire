@@ -21,11 +21,12 @@
                                      @"face_image",
                                      @"back_image",
                                      @"cap_image",
-                                     @"rect",
+                                     @"frame",
                                      @"xy_loc",
                                      @"z_loc",
                                      @"saved_pos",
                                      @"card_parent",
+                                     @"restorationIdentifier",
                                      @"identifier", nil];
 }
 
@@ -35,9 +36,10 @@
     if(self) {
         self = [self initWithImage:[UIImage imageNamed:face_image_file]];
         
-/*
+
         self.face_image = [UIImage imageNamed:face_image_file];
         self.back_image = [UIImage imageNamed:back_image_file];
+        /*
         self.cap_image  = [UIImage imageNamed:cap_image_file];
 */
         //NSLog(@"height: %d width: %d",height,width);
@@ -58,33 +60,24 @@
         point.x = x;
         point.y = y;
         
-
-        
-        NSLog(@"point: %d %d",x,y);
-        
-        
-        
         CGRect rect;
         rect.origin      = point;
         rect.size.width  = width;
         rect.size.height = height;
+        self.frame       = rect;
         
-        [self setFrame:rect];
+        //point.x += width/2;
+        //point.y += height/2;
+
+        [self setCenter: point];
         [self setUserInteractionEnabled:true];
 
         self.card_parent = nil;
         
-        //CGContextRef context  = UIGraphicsGetCurrentContext();
-        //CGSize size           = CGSizeMake((CGFloat)width, (CGFloat)height);
-        //self.card_layer       = CGLayerCreateWithContext(context, size, NULL);
-        //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
-        
-        // this just draws the image into the layer, not onto the screen (I think)
-        //CGContextDrawImage(context, (CGRect){ point, self.face_image.size }, self.face_image.CGImage);
- 
         // create a unique identifier for this object, helps with state restoration
         NSUUID *uuid    = [[NSUUID alloc] init];
         self.identifier = [uuid UUIDString];
+        self.restorationIdentifier = self.identifier;
     }
     return self;
 }
@@ -95,14 +88,22 @@
     [self.card_parent draw_self_and_parent];
 }
 
-- (void)resize:(int)width :(int)height
+- (void)resize:(int)x :(int)y :(int)width :(int)height
 {
-    CGRect rect = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
-    [self setFrame:rect];
+    //CGRect rect = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
+    //[self setFrame:rect];
+    CGPoint point;
+    point.x = x;
+    point.y = y;
     
+    CGRect rect;
+    rect.origin      = point;
+    rect.size.width  = width;
+    rect.size.height = height;
+    self.frame       = rect;
+
     //_rect.size.wig.size setWidth:width];
     //self.frame.size.height = height;
-    //[self setFrame:_rect];
 }
 
 // we are being created based on what was archived earlier
@@ -119,10 +120,26 @@
     return self;
 }
 
+- (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder
+{
+    for (NSString *key in self.keysForEncoding)
+    {
+        [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
+    }
+}
+
 // we are asked to be archived, encode all our data
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
 	for (NSString *key in self.keysForEncoding)
+    {
+        [aCoder encodeObject:[self valueForKey:key] forKey:key];
+    }
+}
+
+- (void)encodeRestorableStateWithCoder:(NSCoder *)aCoder
+{
+    for (NSString *key in self.keysForEncoding)
     {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];
     }
@@ -171,13 +188,13 @@
 	point.x = x;
 	point.y = y;
     rect.origin = point;
-	//self.rect   = rect;
     self.frame  = rect;
+    [self setFrame:rect];
     
-    //point.x += self.rect.size.width/2;
-    //point.y += self.rect.size.height/2;
+    //point.x += self.frame.size.width/4;
+    //point.y += self.frame.size.height/4;
     
-    [self setCenter:point];
+    //[self setCenter:point];
     
     [self.card_parent set_pos:x:y+self.saved_cap];
 }
@@ -195,7 +212,6 @@
         
         [from_stack remove_card:self];
         [to_stack add_card:self];
-        
         
         // Clean parent card reference
         card* last = [from_stack.cards lastObject];
