@@ -187,7 +187,7 @@
     mainView *mv = (mainView *)self.view;
     NSLog(@"mainView in viewDidLoad is %p",mv);
     
-    NSLog(self.do_init_table ? @"do_init table is Yes" : @" do_init table is No");
+    NSLog(self.do_init_table ? @"do_init table is YES" : @" do_init table is NO");
 
     //NSLog(@"Deck has %d",[mv.deck.cards count]);
     
@@ -300,12 +300,14 @@
     [coder encodeInt:((mainView *)self.view).yCap  forKey:@"yCap"];
     [coder encodeInt:((mainView *)self.view).suit_stack_starter  forKey:@"suit_stack_starter"];
     
+    /*
     [coder encodeObject:((mainView *)self.view).cards forKey:@"cards"];
     [coder encodeObject:((mainView *)self.view).suitstacks forKey:@"suitstacks"];
     [coder encodeObject:((mainView *)self.view).cardstacks forKey:@"cardstacks"];
     [coder encodeObject:((mainView *)self.view).fub forKey:@"fub"];
     [coder encodeObject:((mainView *)self.view).deck forKey:@"deck"];
     [coder encodeObject:((mainView *)self.view).deal forKey:@"deal"];
+     */
     
     /*
     mainView *mv = (mainView *)self.view;
@@ -346,9 +348,9 @@
     //mv.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
     //mv.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
 
-    mv.fub        = [coder decodeObjectForKey:@"fub"];
-    mv.deck       = [coder decodeObjectForKey:@"deck"];
-    mv.deal       = [coder decodeObjectForKey:@"deal"];
+    //mv.fub        = [coder decodeObjectForKey:@"fub"];
+    //mv.deck       = [coder decodeObjectForKey:@"deck"];
+    //mv.deal       = [coder decodeObjectForKey:@"deal"];
     
     NSLog(@"Fub: %@",mv.fub);
     
@@ -357,9 +359,9 @@
     [self update_losses];
     [self update_ac_switch];
     
-    [mv addSubview:mv.deck];
-    [mv addSubview:mv.deal];
-    [mv addSubview:mv.fub];
+    //[mv addSubview:mv.deck];
+    //[mv addSubview:mv.deal];
+    //[mv addSubview:mv.fub];
      
     int i = 0;
     for(UIView *s in [mv subviews]) {

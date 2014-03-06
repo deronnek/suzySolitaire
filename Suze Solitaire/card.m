@@ -125,6 +125,12 @@
 - (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder
 {
     NSLog(@"Card being DECODED under stack %u",((card_stack *)[self superview]).stack_type);
+    NSArray *syms = [NSThread  callStackSymbols];
+    if ([syms count] > 1) {
+        NSLog(@"<%@ %p> %@ - caller: %@ ", [self class], self, NSStringFromSelector(_cmd),[syms objectAtIndex:1]);
+    } else {
+        NSLog(@"<%@ %p> %@", [self class], self, NSStringFromSelector(_cmd));
+    }
     [super decodeRestorableStateWithCoder:aDecoder];
     for (NSString *key in self.keysForEncoding)
     {
@@ -144,6 +150,12 @@
 
 - (void)encodeRestorableStateWithCoder:(NSCoder *)aCoder
 {
+    NSArray *syms = [NSThread  callStackSymbols];
+    if ([syms count] > 1) {
+        NSLog(@"<%@ %p> %@ - caller: %@ ", [self class], self, NSStringFromSelector(_cmd),[syms objectAtIndex:1]);
+    } else {
+        NSLog(@"<%@ %p> %@", [self class], self, NSStringFromSelector(_cmd));
+    }
     NSLog(@"Card being encoded under stack %u",((card_stack *)[self superview]).stack_type);
     [super encodeRestorableStateWithCoder:aCoder];
     for (NSString *key in self.keysForEncoding)
