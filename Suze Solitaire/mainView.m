@@ -142,6 +142,7 @@
 
 - (void)init_table
 {
+    NSLog(@"\n\n\nDON'T BE FOOLED INIT_TABLE CALLED\n\n\n");
     /*
     
     NSURL *dataFileURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SavedData"];
@@ -164,12 +165,14 @@
     
     int screen_width = CGRectGetWidth(self.bounds);
     //int screenHeight = self.bounds.size.height;
-    NSLog(@"KDR screen width: %d",screen_width);
+    NSLog(@"KDR init_table screen width: %d",screen_width);
     
     self.restorationIdentifier = @"mainView";
     
-    if (self.cards != nil)
+    if (self.cards != nil) {
+        NSLog(@"KDR already have cards!");
         return;
+    }
     
     int card_width  = screen_width / 10;
     int card_height = card_width * 1.55;
@@ -304,9 +307,9 @@
     
     [_fub resize:card_width/5:toprow_spacer:card_width:card_height];
     //_fub.layer.borderWidth = 1;
-    //_fub.layer.borderColor = [[UIColor whiteColor] CGColor];
+    //_fub.layer.borderColor = [[UIColor orangeColor] CGColor];
 
-    
+    NSLog(@"before suit stacks");
     // Resize the four suit stacks
     for(int i=0; i<4; i++) {
         [_suitstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):toprow_spacer:card_width:card_height];
@@ -324,6 +327,7 @@
     //_deal.layer.borderWidth = 2;
     //_deal.layer.borderColor = [[UIColor blackColor] CGColor];
     
+    NSLog(@"Before card stacks");
     for(int i=0; i<4; i++) {
         [_cardstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):second_spacer:card_width:card_height];
         //((card_stack *)_cardstacks[i]).layer.borderWidth = 2;
@@ -821,7 +825,7 @@
         for(card_stack *cs in self.suitstacks) {
             int cardnum  = 0;
             for(card *card in cs.cards) {
-                [card removeFromSuperview];
+                [card removeFromSuperview];  // not necessary I believe; a view can only have one superview
                 [self addSubview:card];
                 card.card_parent = nil;
                 float x = (cardnum*card.frame.size.width*0.735)+10;

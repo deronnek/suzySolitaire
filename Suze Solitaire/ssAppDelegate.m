@@ -105,15 +105,15 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
     }
 }
 
-
+/*
 - (UIViewController *)application:(UIApplication *)application viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents coder:(NSCoder *)coder
 {
-    /*
+    
     self.viewController.do_init_table = 1;
     NSLog(@"KDR viewControllerWithRestorationIdentifierPath %d",self.viewController.do_init_table);
-*/
+
     
     return nil;
 }
-
+*/
 @end

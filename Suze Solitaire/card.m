@@ -18,10 +18,9 @@
                                      @"suit",
                                      @"face_up",
                                      @"card_name",
-                                     @"face_image",
-                                     @"back_image",
+                                     //@"face_image",
+                                     //@"back_image",
                                      @"cap_image",
-                                     @"frame",
                                      @"xy_loc",
                                      @"z_loc",
                                      @"saved_pos",
@@ -74,10 +73,13 @@
 
         self.card_parent = nil;
         
-        // create a unique identifier for this object, helps with state restoration
+        // create a unique identifier for this object, used in state restoration
         NSUUID *uuid    = [[NSUUID alloc] init];
         self.identifier = [uuid UUIDString];
-        self.restorationIdentifier = self.identifier;
+        
+        //self.restorationIdentifier = @"mainview/cardstack/card";
+        self.restorationIdentifier = [[self superview] restorationIdentifier];
+        [self.restorationIdentifier stringByAppendingString:self.identifier];
     }
     return self;
 }
@@ -122,6 +124,8 @@
 
 - (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder
 {
+    NSLog(@"Card being DECODED under stack %u",((card_stack *)[self superview]).stack_type);
+    [super decodeRestorableStateWithCoder:aDecoder];
     for (NSString *key in self.keysForEncoding)
     {
         [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
@@ -131,6 +135,7 @@
 // we are asked to be archived, encode all our data
 - (void)encodeWithCoder:(NSCoder *)aCoder
 {
+    
 	for (NSString *key in self.keysForEncoding)
     {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];
@@ -139,6 +144,8 @@
 
 - (void)encodeRestorableStateWithCoder:(NSCoder *)aCoder
 {
+    NSLog(@"Card being encoded under stack %u",((card_stack *)[self superview]).stack_type);
+    [super encodeRestorableStateWithCoder:aCoder];
     for (NSString *key in self.keysForEncoding)
     {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];

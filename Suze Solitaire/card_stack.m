@@ -17,7 +17,6 @@
             @"stack_type",
             @"card_slice_height",
             @"stack_z",
-            @"frame",
             @"restorationIdentifier",
             @"identifier", nil];
 }
@@ -48,8 +47,8 @@
     
     NSUUID *uuid    = [[NSUUID alloc] init];
     self.identifier = [uuid UUIDString];
-    self.restorationIdentifier = self.identifier;
-
+    self.restorationIdentifier = [NSString stringWithFormat:@"mainView/%d-cardstack-",type];
+    self.restorationIdentifier = [self.restorationIdentifier stringByAppendingString:self.identifier];
 
     int capacity=52;
     if(type == fub || type == suitstack) {
@@ -71,9 +70,6 @@
     
     self.cards = [[NSMutableArray alloc] initWithCapacity:capacity];
     self.stack_type = type;
-    
-
-    
     
     return self;
 }
@@ -106,6 +102,7 @@
 // we are being created based on what was archived earlier
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
+    NSLog(@"card_stack initWithCoder called");
     self = [super init];
     if (self)
     {
@@ -119,10 +116,14 @@
 
 - (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder
 {
+    NSLog(@"card_stack decodeRestorableStateWithCoder called!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    [super decodeRestorableStateWithCoder:aDecoder];
     for (NSString *key in self.keysForEncoding)
     {
         [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
     }
+    NSLog(@"card_stack superview: %@",[self superview]);
+    //NSLog(@"card_stack card[0]: %@",self.cards[0]);
 }
 
 // we are asked to be archived, encode all our data
@@ -136,6 +137,8 @@
 
 - (void)encodeRestorableStateWithCoder:(NSCoder *)aCoder
 {
+    NSLog(@"card_stack encodeRestorableStateWithCoder called for type %u",self.stack_type);
+    [super encodeRestorableStateWithCoder:aCoder];
     for (NSString *key in self.keysForEncoding)
     {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];
@@ -218,6 +221,10 @@
     // Card ownership is transfered to array
     [self.cards addObject:toadd];
     [toadd setExclusiveTouch:true];
+    
+    // Update restoration identifier to be mainview/cardstack/card
+    [toadd setRestorationIdentifier:[NSString stringWithFormat:@"%@/%@", self.restorationIdentifier, toadd.identifier]];
+    //NSLog(@"Setting card restoration identifier: %@",toadd.restorationIdentifier);
     [self addSubview:toadd];
     
     //NSLog(@"Stack now has %d",[self.cards count]);
@@ -226,6 +233,7 @@
 - (void)makeSubViewsOfCards
 {
     for(card *c in self.cards) {
+        //NSLog(@"KDR adding card view as subview to stack type %u",self.stack_type);
         [self addSubview:c];
     }
 }
@@ -375,7 +383,7 @@
 {
     card* top = nil;
     top = [self.cards lastObject];
-    [self.cards removeObject:top];
+    [self remove_card:top];
     return top;
 }
 

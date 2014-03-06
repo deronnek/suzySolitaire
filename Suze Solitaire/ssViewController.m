@@ -189,19 +189,14 @@
     
     NSLog(self.do_init_table ? @"do_init table is Yes" : @" do_init table is No");
 
-    NSLog(@"Deck has %d",[mv.deck.cards count]);
+    //NSLog(@"Deck has %d",[mv.deck.cards count]);
     
     //if(self.do_init_table) {
 
-    mv.score  = -45;
-    mv.wins   = 0;
-    mv.losses = 0;
-    mv.autocomplete = true;
 
-    [self update_wins];
-    [self update_losses];
-    [self update_bucks];
-    [mv init_table];
+
+    //[mv init_table];
+
     //[mv init_table_trivial]; mv.autocomplete = true;
     //[mv init_table_debug];
 
@@ -217,6 +212,7 @@
         [self update_bucks];
     }
      */
+    self.do_init_table = YES;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -242,11 +238,23 @@
     //NSLog(@"KDR viewWillAppear called init_table is %d",self.do_init_table);
     
     //NSLog(@"KDR self: %@",self.view);
-    //mainView *mv = (mainView *)self.view;
+    mainView *mv = (mainView *)self.view;
     //NSLog(@"KDR view: %@",mv);
     //NSLog(@"KDR score is: %d",mv.score);
-    //[mv init_table];
-     
+    if(self.do_init_table) {
+        mv.score  = -45;
+        mv.wins   = 0;
+        mv.losses = 0;
+        mv.autocomplete = true;
+        
+        [self update_wins];
+        [self update_losses];
+        [self update_bucks];
+        [mv init_table];
+        
+        self.do_init_table = NO;
+    }
+    
 
 }
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
@@ -277,6 +285,10 @@
     NSLog(@"KDR encoding state");
     [super encodeRestorableStateWithCoder:coder ];
     
+    for(UIView *v in [self.view subviews]) {
+        NSLog(@"at encoding time, %@",v);
+    }
+    
     //[coder encodeObject:(mainView *)self.view forKey:@"mainView"];
     
     [coder encodeInt:((mainView *)self.view).score forKey:@"score"];
@@ -302,9 +314,10 @@
 
     
     //card_stack *deck = mv.deck;
-     
-    [super encodeRestorableStateWithCoder:coder];
      */
+    //[super encodeRestorableStateWithCoder:coder];
+     
+    NSLog(@"KDR State encoded");
 }
 
 
@@ -329,13 +342,15 @@
     mv.suit_stack_starter = [coder decodeIntForKey:@"suit_stack_starter"];
 
     mv.cards      = [coder decodeObjectForKey:@"cards"];
-    mv.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
-    mv.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
+    
+    //mv.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
+    //mv.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
 
     mv.fub        = [coder decodeObjectForKey:@"fub"];
     mv.deck       = [coder decodeObjectForKey:@"deck"];
     mv.deal       = [coder decodeObjectForKey:@"deal"];
     
+    NSLog(@"Fub: %@",mv.fub);
     
     [self update_bucks];
     [self update_wins];
@@ -345,37 +360,89 @@
     [mv addSubview:mv.deck];
     [mv addSubview:mv.deal];
     [mv addSubview:mv.fub];
+     
+    int i = 0;
+    for(UIView *s in [mv subviews]) {
+        NSLog(@"Subview %d %@",i,s);
+    }
+    /*
+    [mv.cardstacks removeAllObjects];
+    [mv.suitstacks removeAllObjects];
 
+    int suitstack_number = 0;
+    int cardstack_number = 0;
+    for(UIView *s in [mv subviews]) {
+        NSLog(@"Subview %d %@",i,s);
+        
+        if([s isKindOfClass:[card_stack class]]) {
+            NSString *stack_type = [s.restorationIdentifier substringWithRange:NSMakeRange(9,1)];
+            if([stack_type isEqualToString:@"0"]) {
+                mv.fub = (card_stack *)s;
+                [mv.fub.cards removeAllObjects]; // Necessary because init table gets called before we get here.  (bug/hack, really)
+                for(UIImageView *c in [mv.fub subviews]) {
+                    //NSLog(@"Subview of fub: %@",c.restorationIdentifier);
+                    [mv.fub.cards addObject:c];
+                }
+            }
+            else if([stack_type isEqualToString:@"1"]) {
+                [mv.suitstacks addObject:s];
+                for(UIImageView *c in [s subviews]) {
+                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
+                    [((card_stack *)mv.suitstacks[suitstack_number]).cards addObject:c];
+                }
+                suitstack_number++;
+                
+            }
+            else if([stack_type isEqualToString:@"2"]) {
+                                [mv.cardstacks addObject:s];
+                for(UIImageView *c in [mv.deck subviews]) {
+                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
+                    [mv.deck.cards addObject:c];
+                }
+
+            }
+            else if([stack_type isEqualToString:@"3"]) {
+                mv.deck = (card_stack *)s;
+                [mv.deck.cards removeAllObjects];
+                for(UIImageView *c in [mv.deck subviews]) {
+                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
+                    [mv.deck.cards addObject:c];
+                }
+                 NSLog(@"Deck at decode time has %d cards",[((card_stack *)s).cards count]);
+            }
+            else if([stack_type isEqualToString:@"4"]) {
+                mv.deal = (card_stack *)s;
+                // No need to remove cards from deal as init_table doesn't produce any
+                NSLog(@"Deal at decode time has %d cards",[((card_stack *)s).cards count]);
+                for(UIImageView *c in [mv.deck subviews]) {
+                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
+                    [mv.deck.cards addObject:c];
+                }
+
+            }
+
+        }
+        
+        i++;
+    }
     
+  
     int numberOfSuitstacks = 0;
     for(UIView *s in mv.suitstacks) {
-        [mv addSubview:s];
+        //[mv addSubview:s];
         numberOfSuitstacks++;
     }
     NSLog(@"Number of suitstacks: %d",numberOfSuitstacks);
-    /*
-    for(int i=numberOfSuitstacks; i<4; i++) {
-        card_stack *cs = [card_stack alloc];
-        [mv.cardstacks addObject:cs];
-        [mv addSubview:cs];
-    } */
-    
-    
     
     int numberOfCardstacks = 0;
     for(UIView *s in mv.cardstacks) {
-        [mv addSubview:s];
+        //[mv addSubview:s];
         numberOfCardstacks++;
     }
     NSLog(@"Number of cardstacks: %d",numberOfCardstacks);
-    /*
-    for(int i=numberOfCardstacks; i<4; i++) {
-        card_stack *cs = [card_stack alloc];
-        [mv.suitstacks addObject:cs];
-        [mv addSubview:cs];
-    }
-     */
+    
     NSLog(@"made it HERE");
+     
     
     NSArray *viewsToRestore = [mv subviews];
     for (card_stack *v in viewsToRestore) {
@@ -383,22 +450,23 @@
             [v makeSubViewsOfCards];
         }
     }
+    
 
     //[[mv subviews] makeObjectsPerformSelector:@selector(makeSubViewsOfCards)];
     
     // Even if we call init_table here it doesn't set things up properly.
     // self.view pointer is different?
-/*
+
     NSLog(@"KDR score is %d",mv.score);
     NSLog(@"KDR deck has %d",[mv.deck.cards count]);
-  */
-    /*
+  
+    
     NSURL *dataFileURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SavedData"];
     self.view = [NSKeyedUnarchiver unarchiveObjectWithFile:[dataFileURL path]];
 
-     */
+     
     
-    /*
+    
     if([coder containsValueForKey:@"mainview"]) {
         NSLog(@"KDR decoding state: %@",self.view);
         self.do_init_table = false;
