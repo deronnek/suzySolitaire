@@ -34,7 +34,6 @@ typedef enum {
 - (void)set_pos:(int)x :(int)y;
 - (void)add_card:(card *)toadd;
 - (void)remove_card:(card *)card;
-- (void)display_card_stack:(CGRect)rect;
 - (void)makeSubViewsOfCards;
 
 - (card *)get_card_at_pos:(CGPoint)point;

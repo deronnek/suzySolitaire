@@ -6,8 +6,8 @@
 //  Copyright (c) 2013 Kevin DeRonne. All rights reserved.
 //
 
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 
-@interface Suze_SolitaireTests : SenTestCase
+@interface Suze_SolitaireTests : XCTestCase
 
 @end

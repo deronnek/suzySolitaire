@@ -128,7 +128,6 @@
 		0B825567175B7C310064579C /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825566175B7C310064579C /* Default-568h@2x.png */; };
 		0B82556A175B7C310064579C /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0B825568175B7C310064579C /* MainStoryboard.storyboard */; };
 		0B82556D175B7C310064579C /* ssViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B82556C175B7C310064579C /* ssViewController.m */; };
-		0B825575175B7C310064579C /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825574175B7C310064579C /* SenTestingKit.framework */; };
 		0B825576175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825577175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B82557F175B7C310064579C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B82557D175B7C310064579C /* InfoPlist.strings */; };
@@ -279,8 +278,7 @@
 		0B825569175B7C310064579C /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard.storyboard; sourceTree = "<group>"; };
 		0B82556B175B7C310064579C /* ssViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssViewController.h; sourceTree = "<group>"; };
 		0B82556C175B7C310064579C /* ssViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ssViewController.m; sourceTree = "<group>"; };
-		0B825573175B7C310064579C /* Suze SolitaireTests.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Suze SolitaireTests.octest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0B825574175B7C310064579C /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		0B825573175B7C310064579C /* Suze SolitaireTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Suze SolitaireTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B82557C175B7C310064579C /* Suze SolitaireTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Suze SolitaireTests-Info.plist"; sourceTree = "<group>"; };
 		0B82557E175B7C310064579C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		0B825580175B7C310064579C /* Suze_SolitaireTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Suze_SolitaireTests.h; sourceTree = "<group>"; };
@@ -308,7 +306,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B825575175B7C310064579C /* SenTestingKit.framework in Frameworks */,
 				0B825576175B7C310064579C /* UIKit.framework in Frameworks */,
 				0B825577175B7C310064579C /* Foundation.framework in Frameworks */,
 			);
@@ -331,7 +328,7 @@
 			isa = PBXGroup;
 			children = (
 				0B82554C175B7C310064579C /* Suze Solitaire.app */,
-				0B825573175B7C310064579C /* Suze SolitaireTests.octest */,
+				0B825573175B7C310064579C /* Suze SolitaireTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -342,7 +339,6 @@
 				0B825550175B7C310064579C /* UIKit.framework */,
 				0B825552175B7C310064579C /* Foundation.framework */,
 				0B825554175B7C310064579C /* CoreGraphics.framework */,
-				0B825574175B7C310064579C /* SenTestingKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -548,8 +544,8 @@
 			);
 			name = "Suze SolitaireTests";
 			productName = "Suze SolitaireTests";
-			productReference = 0B825573175B7C310064579C /* Suze SolitaireTests.octest */;
-			productType = "com.apple.product-type.bundle";
+			productReference = 0B825573175B7C310064579C /* Suze SolitaireTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -558,6 +554,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = ss;
+				LastTestingUpgradeCheck = 0510;
 				LastUpgradeCheck = 0450;
 				ORGANIZATIONNAME = "Kevin DeRonne";
 				TargetAttributes = {
@@ -879,15 +876,15 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SDKROOT)/Developer/Library/Frameworks\"",
-					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
+					"\\\"$(SDKROOT)/Developer/Library/Frameworks\\\"",
+					"\\\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\\\"",
+					"$(inherited)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
-				WRAPPER_EXTENSION = octest;
 			};
 			name = Debug;
 		};
@@ -896,15 +893,15 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"$(SDKROOT)/Developer/Library/Frameworks\"",
-					"\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\"",
+					"\\\"$(SDKROOT)/Developer/Library/Frameworks\\\"",
+					"\\\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\\\"",
+					"$(inherited)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUNDLE_LOADER)";
-				WRAPPER_EXTENSION = octest;
 			};
 			name = Release;
 		};
