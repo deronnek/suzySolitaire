@@ -79,7 +79,7 @@
         
         //self.restorationIdentifier = @"mainview/cardstack/card";
         self.restorationIdentifier = [[self superview] restorationIdentifier];
-        [self.restorationIdentifier stringByAppendingString:self.identifier];
+        self.restorationIdentifier = [self.restorationIdentifier stringByAppendingString:self.identifier];
     }
     return self;
 }
@@ -157,6 +157,7 @@
         NSLog(@"<%@ %p> %@", [self class], self, NSStringFromSelector(_cmd));
     }
     NSLog(@"Card being encoded under stack %u",((card_stack *)[self superview]).stack_type);
+    
     [super encodeRestorableStateWithCoder:aCoder];
     for (NSString *key in self.keysForEncoding)
     {

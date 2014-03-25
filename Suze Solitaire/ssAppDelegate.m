@@ -13,6 +13,7 @@
 
 NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
 
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
@@ -31,20 +32,21 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
         // The blue color is just to make it obvious if our view didn't load properly.
         // It can be removed when you are finished debugging.
         window.backgroundColor = [UIColor blueColor];
-        
-        UIViewController *root = // However you create your root.
-        
-        window.rootViewController = root;
+        window.rootViewController = [[ssViewController alloc] initWithNibName:@"ViewController" bundle:nil];
         window.restorationIdentifier = NSStringFromClass([window class]);
         
         self.window = window;
     }
+    else {
+        NSLog(@"vc init doesn't get called");
+    }
     
-    //[self commonInitializationLaunching:launchOptions];
+    //[self commonInitWithOptions:launchOptions];
     [self.window makeKeyAndVisible];
 
     return YES;
 }
+
 							
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -87,8 +89,10 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
     [coder encodeObject:self.window.rootViewController forKey:AppDelegateRootVCKey];
 }
 
+/*
 - (void)application:(UIApplication *)application didDecodeRestorableStateWithCoder:(NSCoder *)coder {
     
+    NSLog(@"didDecodeRestorableStateWithCoder");
     // Grabs the preserved root view controller.
     UIViewController * vc = [coder decodeObjectForKey:AppDelegateRootVCKey];
     
@@ -96,24 +100,64 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
         UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
         window.rootViewController = vc;
         window.restorationIdentifier = NSStringFromClass([window class]);
-        
+        [vc decodeRestorableStateWithCoder:coder];
         // The green color is just to make it obvious if our view didn't load properly.
         // It can be removed when you are finished debugging.
         window.backgroundColor = [UIColor greenColor];
         
         self.window = window;
     }
+    else {
+        NSLog(@"Didn't get a view controller?");
+    }
 }
+ */
+/*
+- (void)application:(UIApplication *)application decodeRestorableStateWithCoder:(NSCoder *)coder {
+    
+    NSLog(@"KDR KDR decodeRestorableStateWithCoder");
+    // Grabs the preserved root view controller.
+    UIViewController * vc = [coder decodeObjectForKey:AppDelegateRootVCKey];
+    
+    if (vc) {
+        NSLog(@"GOT A VIEW CONTROLLER");
+        UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        window.rootViewController = vc;
+        window.restorationIdentifier = NSStringFromClass([window class]);
+        [vc decodeRestorableStateWithCoder:coder];
+        // The green color is just to make it obvious if our view didn't load properly.
+        // It can be removed when you are finished debugging.
+        window.backgroundColor = [UIColor greenColor];
+        
+        self.window = window;
+    }
+    else {
+        NSLog(@"Didn't get a view controller?");
+    }
+    card_stack *test = [coder decodeObjectForKey:@"fub"];
+    NSLog(@"KDR test in app delegate: %@",test);
+    
 
+}
+*/
+/*
+- (void)encodeRestorableStateWithCoder:(NSCoder *)coder {
+    
+    [super encodeRestorableStateWithCoder:coder];
+}
+ */
 /*
 - (UIViewController *)application:(UIApplication *)application viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents coder:(NSCoder *)coder
 {
     
     self.viewController.do_init_table = 1;
     NSLog(@"KDR viewControllerWithRestorationIdentifierPath %d",self.viewController.do_init_table);
-
+    UIViewController * vc = [coder decodeObjectForKey:AppDelegateRootVCKey];
     
-    return nil;
+    //card_stack *test = [coder decodeObjectForKey:@"fub"];
+    //NSLog(@"test in app delegate: %@",test);
+    
+    return vc;
 }
-*/
+ */
 @end

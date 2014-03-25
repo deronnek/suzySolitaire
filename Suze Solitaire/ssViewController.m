@@ -45,15 +45,6 @@
     }
 }
 
-#if 0
-- (IBAction)autocomplete_change:(id)sender {
-    UISwitch *autocomplete = (UISwitch *)sender;
-    
-    self.autocomplete = [autocomplete isOn];
-
-}
-#endif
-
 - (IBAction)start_new_game:(id)sender {
     // KDR I'm hoping I don't need to free self.cards and whatever else--that just calling init_table
     // will cause the "automatic reference counter" to free whatever I've overwritten.
@@ -191,7 +182,7 @@
     //int screenHeight = self.bounds.size.height;
     NSLog(@"KDR init_table screen width: %d",screen_width);
     
-    self.restorationIdentifier = @"mainView";
+    self.view.restorationIdentifier = @"mainView";
     
     if (self.cards != nil) {
         NSLog(@"KDR already have cards!");
@@ -392,7 +383,7 @@
 {
     
     int screen_width = CGRectGetWidth(self.view.bounds);
-    self.restorationIdentifier = @"mainView";
+    self.view.restorationIdentifier = @"mainView";
     
     if (self.cards != nil)
         return;
@@ -498,7 +489,7 @@
 {
     
     int screen_width = CGRectGetWidth(self.view.bounds);
-    self.restorationIdentifier = @"mainView";
+    self.view.restorationIdentifier = @"mainView";
     
     if (self.cards != nil)
         return;
@@ -1416,6 +1407,7 @@
 {
     [super viewDidLoad];
     _restorationIdentifier = @"ssViewController";
+    //self.identifier = @"ssViewController";
     self.view.restorationIdentifier = @"mainView";
     
 	// Do any additional setup after loading the view, typically from a nib.
@@ -1453,7 +1445,25 @@
 
 - (void)viewDidAppear:(BOOL)animated {
     NSLog(@"viewDidAppear called");
+    int i = 0;
+    for(UIView *s in [self.view subviews]) {
+        NSLog(@"Subview %d %@",i,s);
+        i++;
+    }
 
+    if(self.do_init_table) {
+        self.score  = -45;
+        self.wins   = 0;
+        self.losses = 0;
+        [self.autocomplete setOn:true];
+        
+        [self update_wins];
+        [self update_losses];
+        [self update_bucks];
+        [self init_table];
+        
+        self.do_init_table = NO;
+    }
     [self redraw_table];
 }
 
@@ -1476,19 +1486,7 @@
 
     //NSLog(@"KDR view: %@",mv);
     //NSLog(@"KDR score is: %d",self.score);
-    if(self.do_init_table) {
-        self.score  = -45;
-        self.wins   = 0;
-        self.losses = 0;
-        [self.autocomplete setOn:true];
-        
-        [self update_wins];
-        [self update_losses];
-        [self update_bucks];
-        [self init_table];
-        
-        self.do_init_table = NO;
-    }
+
     
 
 }
@@ -1517,7 +1515,8 @@
 {
     
     NSLog(@"KDR encoding state");
-    [super encodeRestorableStateWithCoder:coder ];
+    // If you don't call this, decodeRestorableStateWithCoder doesn't get called.
+    //[super encodeRestorableStateWithCoder:coder ];
     
     for(UIView *v in [self.view subviews]) {
         NSLog(@"at encoding time, %@",v);
@@ -1533,15 +1532,13 @@
     [coder encodeInt:self.xCap  forKey:@"xCap"];
     [coder encodeInt:self.yCap  forKey:@"yCap"];
     [coder encodeInt:self.suit_stack_starter  forKey:@"suit_stack_starter"];
+    [coder encodeObject:self.cards forKey:@"cards"];
+    [coder encodeObject:self.suitstacks forKey:@"suitstacks"];
+    [coder encodeObject:self.cardstacks forKey:@"cardstacks"];
+    [coder encodeObject:self.fub forKey:@"fub"];
+    [coder encodeObject:self.deck forKey:@"deck"];
+    [coder encodeObject:self.deal forKey:@"deal"];
     
-    /*
-    [coder encodeObject:((mainView *)self.view).cards forKey:@"cards"];
-    [coder encodeObject:((mainView *)self.view).suitstacks forKey:@"suitstacks"];
-    [coder encodeObject:((mainView *)self.view).cardstacks forKey:@"cardstacks"];
-    [coder encodeObject:((mainView *)self.view).fub forKey:@"fub"];
-    [coder encodeObject:((mainView *)self.view).deck forKey:@"deck"];
-    [coder encodeObject:((mainView *)self.view).deal forKey:@"deal"];
-     */
     
     /*
     mainView *mv = (mainView *)self.view;
@@ -1551,21 +1548,24 @@
     
     //card_stack *deck = mv.deck;
      */
-    //[super encodeRestorableStateWithCoder:coder];
+    [super encodeRestorableStateWithCoder:coder];
      
     NSLog(@"KDR State encoded");
 }
 
 
--(void)decodeRestorableStateWithCoder:(NSCoder *)coder
-{
+-(void)decodeRestorableStateWithCoder:(NSCoder *)coder {
     
     NSLog(@"KDR decoding state");
+    [super decodeRestorableStateWithCoder:coder];
     
     self.do_init_table = true;
-    [super decodeRestorableStateWithCoder:coder];
-
     
+    if([coder containsValueForKey:@"fub"]) {
+        NSLog(@"Fub in coder");
+    }
+    
+     NSLog(@"Fub before decoding: %@",self.fub);
     self.score        = [coder decodeIntForKey:@"score"];
     self.wins         = [coder decodeIntForKey:@"wins"];
     self.losses       = [coder decodeIntForKey:@"losses"];
@@ -1577,12 +1577,12 @@
 
     self.cards      = [coder decodeObjectForKey:@"cards"];
     
-    //self.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
-    //self.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
+    self.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
+    self.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
 
-    //self.fub        = [coder decodeObjectForKey:@"fub"];
-    //self.deck       = [coder decodeObjectForKey:@"deck"];
-    //self.deal       = [coder decodeObjectForKey:@"deal"];
+    self.fub        = [coder decodeObjectForKey:@"fub"];
+    self.deck       = [coder decodeObjectForKey:@"deck"];
+    self.deal       = [coder decodeObjectForKey:@"deal"];
     
     NSLog(@"Fub: %@",self.fub);
     
@@ -1591,14 +1591,17 @@
     [self update_losses];
     [self update_ac_switch];
     
-    //[self addSubview:self.deck];
-    //[self addSubview:self.deal];
-    //[self addSubview:self.fub];
+    [self.view addSubview:self.deck];
+    [self.view addSubview:self.deal];
+    [self.view addSubview:self.fub];
      
     int i = 0;
     for(UIView *s in [self.view subviews]) {
         NSLog(@"Subview %d %@",i,s);
+        i++;
     }
+    
+
     /*
     [self.cardstacks removeAllObjects];
     [self.suitstacks removeAllObjects];

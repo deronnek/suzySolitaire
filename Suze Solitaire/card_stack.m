@@ -139,6 +139,7 @@
 {
     NSLog(@"card_stack encodeRestorableStateWithCoder called for type %u",self.stack_type);
     [super encodeRestorableStateWithCoder:aCoder];
+    
     for (NSString *key in self.keysForEncoding)
     {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];

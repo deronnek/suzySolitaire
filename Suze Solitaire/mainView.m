@@ -77,9 +77,4 @@
 }
 */
 
-- (void)dealloc
-{
-    NSLog(@"KDR dealloc called");
-}
-
 @end

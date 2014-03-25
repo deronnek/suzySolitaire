@@ -11,7 +11,6 @@
 @class ssViewController;
 
 @interface ssAppDelegate : UIResponder <UIApplicationDelegate>
-//@interface ssAppDelegate : NSObject <UIApplicationDelegate>
 
 @property (nonatomic, retain) IBOutlet UIWindow *window;
 @property (nonatomic, retain) IBOutlet ssViewController *viewController;
