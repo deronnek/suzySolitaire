@@ -103,7 +103,7 @@
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
     NSLog(@"card_stack initWithCoder called");
-    self = [super init];
+    self = [super initWithCoder:aDecoder];
     if (self)
     {
         for (NSString *key in self.keysForEncoding)
@@ -124,6 +124,16 @@
     }
     NSLog(@"card_stack superview: %@",[self superview]);
     //NSLog(@"card_stack card[0]: %@",self.cards[0]);
+}
+
+- (void)decodeWithCoder:(NSCoder *)aDecoder
+{
+
+    for (NSString *key in self.keysForEncoding)
+    {
+        [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
+    }
+
 }
 
 // we are asked to be archived, encode all our data

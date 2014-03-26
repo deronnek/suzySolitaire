@@ -14,6 +14,7 @@
 NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
 
 
+/*
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     // Override point for customization after application launch.
@@ -46,7 +47,7 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
 
     return YES;
 }
-
+*/
 							
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -89,7 +90,7 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
     [coder encodeObject:self.window.rootViewController forKey:AppDelegateRootVCKey];
 }
 
-/*
+
 - (void)application:(UIApplication *)application didDecodeRestorableStateWithCoder:(NSCoder *)coder {
     
     NSLog(@"didDecodeRestorableStateWithCoder");
@@ -100,18 +101,19 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
         UIWindow * window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
         window.rootViewController = vc;
         window.restorationIdentifier = NSStringFromClass([window class]);
-        [vc decodeRestorableStateWithCoder:coder];
+        //[vc decodeRestorableStateWithCoder:coder];
         // The green color is just to make it obvious if our view didn't load properly.
         // It can be removed when you are finished debugging.
         window.backgroundColor = [UIColor greenColor];
         
         self.window = window;
+        [self.window makeKeyAndVisible];
     }
     else {
         NSLog(@"Didn't get a view controller?");
     }
 }
- */
+
 /*
 - (void)application:(UIApplication *)application decodeRestorableStateWithCoder:(NSCoder *)coder {
     
@@ -145,7 +147,7 @@ NSString * const AppDelegateRootVCKey = @"AppDelegateRootVCKey";
     
     [super encodeRestorableStateWithCoder:coder];
 }
- */
+*/
 /*
 - (UIViewController *)application:(UIApplication *)application viewControllerWithRestorationIdentifierPath:(NSArray *)identifierComponents coder:(NSCoder *)coder
 {

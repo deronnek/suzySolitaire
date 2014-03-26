@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "card.h"
 #import "card_stack.h"
+#import "ssTest.h"
 
 @interface ssViewController : UIViewController
 @property bool do_init_table;
@@ -32,6 +33,7 @@
 @property int losses;
 @property int deck_just_tapped;
 @property int just_won;
+@property ssTest *mytest;
 
 @property    (nonatomic, retain) NSMutableArray *cards; // Initial deck to pull from when setting up a game
 @property    (nonatomic, retain) NSMutableArray *suitstacks;
@@ -39,6 +41,7 @@
 @property    (nonatomic, retain) card_stack     *fub;
 @property    (nonatomic, retain) card_stack     *deck;
 @property    (nonatomic, retain) card_stack     *deal;
+
 @property    int suit_stack_starter;
 //@property    CGPoint prev_point;
 

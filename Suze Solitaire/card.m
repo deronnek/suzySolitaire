@@ -111,7 +111,8 @@
 // we are being created based on what was archived earlier
 - (id)initWithCoder:(NSCoder *)aDecoder
 {
-    self = [super init];
+    NSLog(@"Card being initialized under stack %u",((card_stack *)[self superview]).stack_type);
+    self = [super initWithCoder:aDecoder];
     if (self)
     {
         for (NSString *key in self.keysForEncoding)
@@ -136,6 +137,16 @@
     {
         [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
     }
+}
+
+- (void)decodeWithCoder:(NSCoder *)aDecoder
+{
+    
+    for (NSString *key in self.keysForEncoding)
+    {
+        [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
+    }
+    
 }
 
 // we are asked to be archived, encode all our data

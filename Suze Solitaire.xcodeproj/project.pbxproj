@@ -64,6 +64,7 @@
 		0B07AB0B183D199F001B67FC /* c.spade12.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B07AAFE183D199F001B67FC /* c.spade12.png */; };
 		0B07AB0C183D199F001B67FC /* c.spade13.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B07AAFF183D199F001B67FC /* c.spade13.png */; };
 		0B08A5B4176E5DD200E431D9 /* NSMutableArray+Shuffling.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */; };
+		0B0F5C7A18E210E200CA3F9A /* ssTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0F5C7918E210E200CA3F9A /* ssTest.m */; };
 		0B490287176CC29000B4CE30 /* UIKitCategories.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B490286176CC29000B4CE30 /* UIKitCategories.m */; };
 		0B4CA1FD18BE6CCB00CF8E6B /* club1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B4CA1E318BE6CCB00CF8E6B /* club1.png */; };
 		0B4CA1FE18BE6CCB00CF8E6B /* club2.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B4CA1E418BE6CCB00CF8E6B /* club2.png */; };
@@ -207,6 +208,8 @@
 		0B07AAFF183D199F001B67FC /* c.spade13.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = c.spade13.png; sourceTree = "<group>"; };
 		0B08A5B2176E5DD200E431D9 /* NSMutableArray+Shuffling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableArray+Shuffling.h"; path = "../NSMutableArray+Shuffling.h"; sourceTree = "<group>"; };
 		0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableArray+Shuffling.m"; path = "../NSMutableArray+Shuffling.m"; sourceTree = "<group>"; };
+		0B0F5C7818E210E200CA3F9A /* ssTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssTest.h; sourceTree = "<group>"; };
+		0B0F5C7918E210E200CA3F9A /* ssTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ssTest.m; sourceTree = "<group>"; };
 		0B490285176CC29000B4CE30 /* UIKitCategories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIKitCategories.h; sourceTree = "<group>"; };
 		0B490286176CC29000B4CE30 /* UIKitCategories.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIKitCategories.m; sourceTree = "<group>"; };
 		0B4CA1E318BE6CCB00CF8E6B /* club1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = club1.png; sourceTree = "<group>"; };
@@ -357,6 +360,8 @@
 				0B8255F8175BD52C0064579C /* card.m */,
 				0B490285176CC29000B4CE30 /* UIKitCategories.h */,
 				0B490286176CC29000B4CE30 /* UIKitCategories.m */,
+				0B0F5C7818E210E200CA3F9A /* ssTest.h */,
+				0B0F5C7918E210E200CA3F9A /* ssTest.m */,
 				0B8255FD175CB9F40064579C /* card_stack.h */,
 				0B8255FE175CB9F40064579C /* card_stack.m */,
 				0B5440DB175FA5BE00231C26 /* mainView.h */,
@@ -734,6 +739,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B0F5C7A18E210E200CA3F9A /* ssTest.m in Sources */,
 				0B82555D175B7C310064579C /* main.m in Sources */,
 				0B825561175B7C310064579C /* ssAppDelegate.m in Sources */,
 				0B82556D175B7C310064579C /* ssViewController.m in Sources */,

@@ -98,7 +98,6 @@
     [self redraw_table];
 }
 
-
 - (IBAction)undo_move:(id)sender {
     
     _undo_button.enabled = false;
@@ -156,9 +155,10 @@
     self.losses_counter.text = [NSString stringWithFormat:@"Losses: %d",self.losses];
 }
 
-- (void)init_table
-{
+- (void)init_table {
     NSLog(@"\n\n\nDON'T BE FOOLED INIT_TABLE CALLED\n\n\n");
+    self.mytest = [[ssTest alloc] init];
+    [self.view addSubview:_mytest.myview];
     /*
      
      NSURL *dataFileURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SavedData"];
@@ -573,8 +573,7 @@
     }
 }
 
--(void)create_cards:(int)width :(int)height
-{
+-(void)create_cards:(int)width :(int)height {
     NSString *back_img = @"cardback.png";
     
     for (int i=1; i<=13; i++) {
@@ -616,8 +615,7 @@
     
 }
 
--(card*)get_random_card
-{
+-(card*)get_random_card {
     card* ret = nil;
     int r = 0;
     
@@ -1396,15 +1394,12 @@
     }
 }
 
-- (void)card_put_up
-{
+- (void)card_put_up{
     self.score += 5;
     [self update_bucks];
 }
 
-
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
     [super viewDidLoad];
     _restorationIdentifier = @"ssViewController";
     //self.identifier = @"ssViewController";
@@ -1431,6 +1426,7 @@
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     tapGesture.numberOfTapsRequired = 2;
     [self.view addGestureRecognizer:tapGesture];
+    [self.view addSubview:self.mytest.myview];
 
     /*
     }
@@ -1444,7 +1440,8 @@
 }
 
 - (void)viewDidAppear:(BOOL)animated {
-    NSLog(@"viewDidAppear called");
+    NSLog(@"viewDidAppear called view: %@",self.view);
+    
     int i = 0;
     for(UIView *s in [self.view subviews]) {
         NSLog(@"Subview %d %@",i,s);
@@ -1452,6 +1449,7 @@
     }
 
     if(self.do_init_table) {
+    //if(0) {
         self.score  = -45;
         self.wins   = 0;
         self.losses = 0;
@@ -1464,7 +1462,8 @@
         
         self.do_init_table = NO;
     }
-    [self redraw_table];
+    //[self redraw_table];
+    
 }
 
 - (void)handleTapGesture:(UITapGestureRecognizer *)sender {
@@ -1478,8 +1477,7 @@
     }
 }
 
-- (void)viewWillAppear:(BOOL)animated
-{
+- (void)viewWillAppear:(BOOL)animated {
     //NSLog(@"KDR viewWillAppear called init_table is %d",self.do_init_table);
     
     //NSLog(@"KDR self: %@",self.view);
@@ -1490,29 +1488,23 @@
     
 
 }
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
-{
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
   // Redraw cards that are already on the table
     NSLog(@"Just rotated");
     [self redraw_table];
 }
 
-- (void)didReceiveMemoryWarning
-{
+- (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
 
 // returns the URL to the application's Documents directory
-- (NSURL *)applicationDocumentsDirectory
-{
+- (NSURL *)applicationDocumentsDirectory {
     return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
-
-
--(void)encodeRestorableStateWithCoder:(NSCoder *)coder
-{
+-(void)encodeRestorableStateWithCoder:(NSCoder *)coder {
     
     NSLog(@"KDR encoding state");
     // If you don't call this, decodeRestorableStateWithCoder doesn't get called.
@@ -1532,13 +1524,17 @@
     [coder encodeInt:self.xCap  forKey:@"xCap"];
     [coder encodeInt:self.yCap  forKey:@"yCap"];
     [coder encodeInt:self.suit_stack_starter  forKey:@"suit_stack_starter"];
+    [coder encodeObject:self.mytest forKey:@"testkey"];
+    
+    //[coder encodeInt:((card *)self.fub.cards[0]).rank forKey:@"fub"];
+    
     [coder encodeObject:self.cards forKey:@"cards"];
     [coder encodeObject:self.suitstacks forKey:@"suitstacks"];
     [coder encodeObject:self.cardstacks forKey:@"cardstacks"];
     [coder encodeObject:self.fub forKey:@"fub"];
     [coder encodeObject:self.deck forKey:@"deck"];
     [coder encodeObject:self.deal forKey:@"deal"];
-    
+
     
     /*
     mainView *mv = (mainView *)self.view;
@@ -1553,19 +1549,18 @@
     NSLog(@"KDR State encoded");
 }
 
-
 -(void)decodeRestorableStateWithCoder:(NSCoder *)coder {
     
     NSLog(@"KDR decoding state");
     [super decodeRestorableStateWithCoder:coder];
     
-    self.do_init_table = true;
+    self.do_init_table = false;
     
     if([coder containsValueForKey:@"fub"]) {
         NSLog(@"Fub in coder");
     }
     
-     NSLog(@"Fub before decoding: %@",self.fub);
+    NSLog(@"Fub before decoding: %@",self.fub);
     self.score        = [coder decodeIntForKey:@"score"];
     self.wins         = [coder decodeIntForKey:@"wins"];
     self.losses       = [coder decodeIntForKey:@"losses"];
@@ -1574,27 +1569,36 @@
     self.yCap         = [coder decodeIntForKey:@"yCap"];
     //self.autocomplete = [coder decodeBoolForKey:@"autocomplete"];
     self.suit_stack_starter = [coder decodeIntForKey:@"suit_stack_starter"];
+    
+    
 
     self.cards      = [coder decodeObjectForKey:@"cards"];
-    
     self.suitstacks = [coder decodeObjectForKey:@"suitstacks"];
     self.cardstacks = [coder decodeObjectForKey:@"cardstacks"];
-
     self.fub        = [coder decodeObjectForKey:@"fub"];
     self.deck       = [coder decodeObjectForKey:@"deck"];
     self.deal       = [coder decodeObjectForKey:@"deal"];
     
-    NSLog(@"Fub: %@",self.fub);
+    
+    self.mytest = [coder decodeObjectForKey:@"testkey"];
+    NSLog(@"view in decode: %@",self.view);
+    NSLog(@"simple int: %d",self.mytest.simple);
+    NSLog(@"test view: %@",self.mytest.myview);
+    
+    NSLog(@"view has image: %@",self.mytest.myview.image);
+    [self.mytest.myview setHidden:false];
+    [self.view addSubview:self.mytest.myview];
     
     [self update_bucks];
     [self update_wins];
     [self update_losses];
     [self update_ac_switch];
     
+    /*
     [self.view addSubview:self.deck];
     [self.view addSubview:self.deal];
     [self.view addSubview:self.fub];
-     
+     */
     int i = 0;
     for(UIView *s in [self.view subviews]) {
         NSLog(@"Subview %d %@",i,s);
