@@ -42,6 +42,10 @@
 @property    (nonatomic, retain) card_stack     *deck;
 @property    (nonatomic, retain) card_stack     *deal;
 
+@property NSMutableArray *viewTagToCard;
+@property NSMutableArray *viewTagToStack;
+
+
 @property    int suit_stack_starter;
 //@property    CGPoint prev_point;
 

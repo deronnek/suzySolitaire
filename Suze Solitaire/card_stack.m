@@ -17,13 +17,11 @@
             @"stack_type",
             @"card_slice_height",
             @"stack_z",
-            @"restorationIdentifier",
-            @"identifier", nil];
+            nil];
 }
 
 
--(id)initWithData:(int)x :(int)y :(int)width :(int)height :(card_stack_type)type
-{
+-(id)initWithData:(int)x :(int)y :(int)width :(int)height :(card_stack_type)type {
     //self = [super init];
     //NSLog(@"Initializing card stack");
     CGPoint point;
@@ -34,21 +32,23 @@
     rect.origin      = point;
     rect.size.width  = width;
     rect.size.height = height;
-    self.frame        = rect;
+    self.view.frame        = rect;
     
     //NSLog(@"Stack point: %d %d",x,y);
     
     point.x += width/2;
     point.y += height/2;
     //rect.origin = point;
-    self = [self initWithFrame:rect];
-    [self setCenter:point];
-    [self setUserInteractionEnabled:true];
+    self.view = [[UIView alloc] initWithFrame:rect];
+    [self.view setCenter:point];
+    [self.view setUserInteractionEnabled:true];
     
     NSUUID *uuid    = [[NSUUID alloc] init];
     self.identifier = [uuid UUIDString];
+    /*
     self.restorationIdentifier = [NSString stringWithFormat:@"mainView/%d-cardstack-",type];
     self.restorationIdentifier = [self.restorationIdentifier stringByAppendingString:self.identifier];
+     */
 
     int capacity=52;
     if(type == fub || type == suitstack) {
@@ -74,8 +74,7 @@
     return self;
 }
 
-- (void)resize:(int)x :(int)y :(int)width :(int)height
-{
+- (void)resize:(int)x :(int)y :(int)width :(int)height {
     // Set the bounds of the box for the stack
     CGPoint point;
     point.x = x;
@@ -85,49 +84,66 @@
     rect.origin      = point;
     rect.size.width  = width;
     rect.size.height = height;
-    self.frame       = rect;
+    self.view.frame  = rect;
     
-    
+    //self.view.layer.borderWidth = 2;
+    //self.view.layer.borderColor = [[UIColor blackColor] CGColor];
     
     // Set card sizes by copying, removing everything then
-    // resizing and adding back
-    NSMutableArray *cards_old = [_cards copy];
-    [_cards removeAllObjects];
-    for(int i=0; i<[cards_old count]; i++) {
-        [cards_old[i] resize:x:y:width:height];
-        [self add_card:cards_old[i]];
+    // resizing and adding back (preserves stacking)  **but not the image now that the view is nested
+    for(int i=0; i<[_cards count]; i++) {
+        if(self.stack_type == cardstack || self.stack_type == fub || self.stack_type == deal) {
+            y = i*self.card_slice_height;
+        }
+        else if(self.stack_type == suitstack && i > 0){
+            y = self.card_slice_height;
+        }
+        else {
+            y = 0;
+        }
+        [_cards[i] resize:0:y:width:height];
+        //NSLog(@"cardimage: %@",[((card *)_cards[i]).view image]);
     }
 }
 
 // we are being created based on what was archived earlier
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
+- (id)initWithCoder:(NSCoder *)aDecoder {
     NSLog(@"card_stack initWithCoder called");
-    self = [super initWithCoder:aDecoder];
+    self = [super init];
     if (self)
     {
-        for (NSString *key in self.keysForEncoding)
-        {
-            [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
+        // Restore the view so we know where this stack is
+        self.view = [[UIView alloc] init];
+        [self.view decodeRestorableStateWithCoder:aDecoder];
+        
+        self.stack_type        = [aDecoder decodeIntForKey:@"stack_type"];
+        self.card_slice_height = [aDecoder decodeIntForKey:@"csh"];
+        self.stack_z           = [aDecoder decodeIntForKey:@"stack_z"];
+        self.cards             = [aDecoder decodeObjectForKey:@"cards"];
+        
+        for(int i=0; i<[self.cards count]; i++) {
+            //NSLog(@"adding subview: %@",((card *)self.cards[i]).view);
+            [self.view addSubview:((card *)self.cards[i]).view];
+            if(self.stack_type == deck) {
+                [((card *)self.cards[i]).view setImage:[UIImage imageNamed:((card *)self.cards[i]).back_image_filename]];
+            }
         }
     }
     return self;
 }
 
-- (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder
-{
+- (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder {
     NSLog(@"card_stack decodeRestorableStateWithCoder called!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    [super decodeRestorableStateWithCoder:aDecoder];
+    //[super decodeRestorableStateWithCoder:aDecoder];
     for (NSString *key in self.keysForEncoding)
     {
         [self setValue:[aDecoder decodeObjectForKey:key] forKey:key];
     }
-    NSLog(@"card_stack superview: %@",[self superview]);
+    NSLog(@"card_stack superview: %@",[self.view superview]);
     //NSLog(@"card_stack card[0]: %@",self.cards[0]);
 }
 
-- (void)decodeWithCoder:(NSCoder *)aDecoder
-{
+- (void)decodeWithCoder:(NSCoder *)aDecoder {
 
     for (NSString *key in self.keysForEncoding)
     {
@@ -136,19 +152,19 @@
 
 }
 
-// we are asked to be archived, encode all our data
-- (void)encodeWithCoder:(NSCoder *)aCoder
-{
-	for (NSString *key in self.keysForEncoding)
-    {
-        [aCoder encodeObject:[self valueForKey:key] forKey:key];
-    }
+// we are asked to be archived; encode all our data
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    [self.view encodeRestorableStateWithCoder:aCoder];
+    [aCoder encodeInt:self.stack_type forKey:@"stack_type"];
+    [aCoder encodeInt:self.card_slice_height forKey:@"csh"];
+    [aCoder encodeInt:self.stack_z  forKey:@"stack_z"];
+    [aCoder encodeObject:self.cards forKey:@"cards"];
 }
 
 - (void)encodeRestorableStateWithCoder:(NSCoder *)aCoder
 {
     NSLog(@"card_stack encodeRestorableStateWithCoder called for type %u",self.stack_type);
-    [super encodeRestorableStateWithCoder:aCoder];
+    //[super encodeRestorableStateWithCoder:aCoder];
     
     for (NSString *key in self.keysForEncoding)
     {
@@ -159,12 +175,12 @@
 - (void)set_pos:(int)x :(int)y
 {
     
-    CGRect rect = self.frame;
+    CGRect rect = self.view.frame;
 	CGPoint point;
 	point.x = x;
 	point.y = y;
     rect.origin = point;
-    self.frame  = rect;
+    self.view.frame  = rect;
     
     //point.x += self.rect.size.width/2;
     //point.y += self.rect.size.height/2;
@@ -179,10 +195,10 @@
     pos.x = 0;
     
     if(self.stack_type == deck) {
-        [toadd setImage:toadd.back_image];
+        [toadd.view setImage:toadd.back_image];
     }
     else {
-        [toadd setImage:toadd.face_image];
+        [toadd.view setImage:toadd.face_image];
     }
     
     //NSLog(@"\n\n\nAdding card to stack with %d\n\n\n",[self.cards count]);
@@ -208,9 +224,9 @@
     
     // If the stack is to be shown, make rect larger
     if(((self.stack_type == cardstack || self.stack_type == fub || self.stack_type==deal) && [self.cards count] > 0) || (self.stack_type == suitstack && [self.cards count] == 1)) {
-        CGRect rec = self.frame;
+        CGRect rec = self.view.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height + self.card_slice_height);
-        [self setFrame:rec];
+        [self.view setFrame:rec];
     }
     //NSLog(@"\n\n\n KDR KDR TEST KDR KDR KDR\n\n\n");
     // Set deck info to card
@@ -221,22 +237,22 @@
     [toadd setZ_loc:self.stack_z];
     
     // Parent card
-    if(self.stack_type != deal && self.stack_type != deck && self.stack_type != fub && [self.cards count]>0 ) {
+    if(self.stack_type != deal && self.stack_type != deck && self.stack_type != fub && [self.cards count] > 0 ) {
         card *child_card = [self.cards lastObject];
         child_card.card_parent = toadd;
     }
     
     // If we're adding a card, we have at least one and don't want the border
-    self.layer.BorderWidth = 0;
+    self.view.layer.BorderWidth = 0;
 
     // Card ownership is transfered to array
     [self.cards addObject:toadd];
-    [toadd setExclusiveTouch:true];
+    [toadd.view setExclusiveTouch:true];
     
     // Update restoration identifier to be mainview/cardstack/card
-    [toadd setRestorationIdentifier:[NSString stringWithFormat:@"%@/%@", self.restorationIdentifier, toadd.identifier]];
+    //[toadd.view setRestorationIdentifier:[NSString stringWithFormat:@"%@/%@", self.restorationIdentifier, toadd.identifier]];
     //NSLog(@"Setting card restoration identifier: %@",toadd.restorationIdentifier);
-    [self addSubview:toadd];
+    [self.view addSubview:toadd.view];
     
     //NSLog(@"Stack now has %d",[self.cards count]);
 }
@@ -245,27 +261,26 @@
 {
     for(card *c in self.cards) {
         //NSLog(@"KDR adding card view as subview to stack type %u",self.stack_type);
-        [self addSubview:c];
+        [self.view addSubview:c.view];
     }
 }
 
-- (void)remove_card:(card *)card
-{
+- (void)remove_card:(card *)card {
     // make rect smaller
     if((self.stack_type == cardstack) && [self.cards count] > 1) {
-        CGRect rec = self.frame;
+        CGRect rec = self.view.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height - self.card_slice_height);
-        [self setFrame:rec];
+        [self.view setFrame:rec];
     }
 
     [self.cards removeObject:card];
     
     if([self.cards count] == 0) {
-        self.layer.BorderWidth = 1;
-        self.layer.borderColor = [[UIColor whiteColor] CGColor];
+        self.view.layer.BorderWidth = 1;
+        self.view.layer.borderColor = [[UIColor whiteColor] CGColor];
     }
     // KDR a little awkward that I send a message to the card to remove itself from us, effectively
-    [card removeFromSuperview];
+    [card.view removeFromSuperview];
 }
 
 
@@ -278,14 +293,13 @@
 }
 
 
-- (card *)get_card_at_pos:(CGPoint)point
-{
+- (card *)get_card_at_pos:(CGPoint)point {
     // Try to find card under (touch) point
     card *activeCard = nil;
     // Don't bother checking all rectangles in a stack when only the top card is visible
     if(self.stack_type == deck || self.stack_type == deal || self.stack_type == fub) {
         card *card = [self.cards lastObject];
-        if (CGRectContainsPoint(card.frame,point)) {
+        if (CGRectContainsPoint(card.view.frame,point)) {
             if (activeCard==nil) {
                 activeCard = card;
             }
@@ -298,7 +312,7 @@
     else {
         for(card *card in self.cards) {
             
-            if (CGRectContainsPoint(card.frame,point)) {
+            if (CGRectContainsPoint(card.view.frame,point)) {
                 if (activeCard==nil) {
                     activeCard = card;
                 }

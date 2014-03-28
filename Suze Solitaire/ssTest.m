@@ -28,6 +28,7 @@
     return self;
 }
 
+// I don't think this was ever called
 - (void)decodeWithCoder:(NSCoder *)aDecoder
 {
     NSLog(@"ssTest decodeWithCoder");

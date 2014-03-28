@@ -20,7 +20,7 @@ typedef enum {
 
 
 
-@interface card_stack : UIView
+@interface card_stack : NSObject
 
 @property NSMutableArray *cards;
 //@property CGRect rect;
@@ -28,6 +28,7 @@ typedef enum {
 @property int card_slice_height;
 @property int stack_z;
 @property (nonatomic, strong) NSString *identifier;
+@property (nonatomic, retain) UIView *view;
 
 - (id)initWithData:(int)x :(int)y :(int)width :(int)height :(card_stack_type)type;
 - (void)resize:(int)x :(int)y :(int)width :(int)height;
