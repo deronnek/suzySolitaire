@@ -43,9 +43,6 @@
                                         <switch key="customView" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" id="hki-rk-g7K">
                                             <rect key="frame" x="703" y="7" width="51" height="31"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                            <connections>
-                                                <action selector="autocomplete_change:" destination="2" eventType="valueChanged" id="GtA-zG-NHg"/>
-                                            </connections>
                                         </switch>
                                     </barButtonItem>
                                 </items>

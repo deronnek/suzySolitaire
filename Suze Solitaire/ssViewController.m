@@ -22,9 +22,100 @@
 @property (weak) UIPopoverController *myPopover;
 
 
+@property bool do_init_table;
+@property(nonatomic, copy) NSString *restorationIdentifier;
+@property (strong, nonatomic) IBOutlet UIImageView *cardback;
+
+// These next two keep the card under the cursor where it's grabbed instead
+// of always at the upper left corner
+@property    int xCap;
+@property    int yCap;
+
+@property    (nonatomic, retain) UIImage* backgroundImage;
+
+// Active card under user touch
+@property    card *active_card;
+@property    card_stack *active_card_source_stack;
+@property    card_stack *active_card_dest_stack;
+
+@property (nonatomic) int score;
+@property (nonatomic) int wins;
+@property (nonatomic) int losses;
+@property int deck_just_tapped;
+@property int just_won;
+@property ssTest *mytest;
+
+@property    (nonatomic, retain) NSMutableArray *cards; // Initial deck to pull from when setting up a game
+@property    (nonatomic, retain) NSMutableArray *suitstacks;
+@property    (nonatomic, retain) NSMutableArray *cardstacks;
+@property    (nonatomic, retain) card_stack     *fub;
+@property    (nonatomic, retain) card_stack     *deck;
+@property    (nonatomic, retain) card_stack     *deal;
+
+@property (nonatomic, strong) NSMutableArray *viewTagToCard;
+@property (nonatomic, strong) NSMutableArray *viewTagToStack;
+
+@property    int suit_stack_starter;
+
+-(void)init_table;
+-(void)undo_deck_tap;
+-(void)redraw_table;
+-(void)init_table_trivial;
+-(void)init_table_debug;
+
+-(card *)find_tapped_card:(CGPoint)point;
+-(void)tryToPutUpCardAtPoint:(CGPoint)point;
+-(card_stack *)find_active_stack:(CGPoint)point;
+-(void)create_cards:(int)width :(int)height;
+-(card *)get_random_card;
+-(BOOL)accept_card_move:(card_stack *)from :(card_stack *)to :(card *)onTopOfCard;
+-(BOOL)find_card_for_suitstack;
+
 @end
 
 @implementation ssViewController
+
+-(NSMutableArray *)viewTagToCard {
+    if(!_viewTagToCard) {
+        _viewTagToCard  = [[NSMutableArray alloc] initWithCapacity:52];
+        for(int i=0; i<52; i++) {
+            [_viewTagToCard  addObject:[NSNull null]];
+        }
+    }
+    return _viewTagToCard;
+}
+
+-(NSMutableArray *)viewTagToStack {
+    if(!_viewTagToStack) {
+        _viewTagToStack = [[NSMutableArray alloc] initWithCapacity:52];
+        for(int i=0; i<52; i++) {
+            [_viewTagToStack addObject:[NSNull null]];
+        }
+    }
+    return _viewTagToStack;
+}
+
+- (void)setWins:(int)wins {
+    _wins = wins;
+    self.wins_counter.text = [NSString stringWithFormat:@"Wins: %d",_wins];
+}
+
+- (void)setScore:(int)score {
+    _score = score;
+    
+    self.bucks_counter.text = [NSString stringWithFormat:@"$%d",_score];
+    if(_score < 0) {
+        [self.bucks_counter setTextColor:[UIColor redColor]];
+    }
+    else {
+        [self.bucks_counter setTextColor:[UIColor blackColor]];
+    }
+}
+
+- (void)setLosses:(int)losses {
+    _losses = losses;
+    self.losses_counter.text = [NSString stringWithFormat:@"Losses: %d",_losses];
+}
 
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
@@ -90,9 +181,6 @@
     else {
         self.losses++;
     }
-    [self update_bucks];
-    [self update_wins];
-    [self update_losses];
     
     self.active_card = nil;
     [self redraw_table];
@@ -113,7 +201,6 @@
         // Make sure we subtract bucks if a move to a suitstack is being undone
         if(self.active_card_dest_stack.stack_type == suitstack) {
             self.score -= 5;
-            [self update_bucks];
         }
         [self change_stack:self.active_card:self.active_card_dest_stack:self.active_card_source_stack];
     }
@@ -131,28 +218,6 @@
     }
      */
     
-}
-
-- (void)update_bucks {
-
-    self.bucks_counter.text = [NSString stringWithFormat:@"$%d",self.score];
-    if(self.score < 0) {
-        [self.bucks_counter setTextColor:[UIColor redColor]];
-    }
-    else {
-        [self.bucks_counter setTextColor:[UIColor blackColor]];
-    }
-
-}
-
-- (void)update_wins {
-
-    self.wins_counter.text = [NSString stringWithFormat:@"Wins: %d",self.wins];
-}
-
-- (void)update_losses {
-
-    self.losses_counter.text = [NSString stringWithFormat:@"Losses: %d",self.losses];
 }
 
 - (void)init_table {
@@ -311,85 +376,50 @@
     int card_width = screen_width / 10;
     int card_height = card_width * 1.55;
     
-    int toprow_spacer = card_height/2.0;
+    int toprow_spacer = (card_height/2.0)+20;
     int second_spacer = card_height*2.0;
     
     
-    //int cap = (screen_width - card_width*7) / 8;
-    
-    //NSLog(@"Card width: %d %d %d",screen_width,card_width,card_height);
-    
-    /* The creation of the various stacks is organized from the top of the window to the bottom, then left to right. */
-    
-    // Create the face up blind
-    /*
-     self.fub = [[card_stack alloc] initWithData:card_width/5:card_height:card_width:card_height:fub];
-     for(int i=0; i<13; i++) {
-     card* card = [self get_random_card];
-     [card setFace_up:true];
-     [self.fub add_card:card];
-     card = nil;
-     }
-     */
-    
-    
     [_fub resize:card_width/5:toprow_spacer:card_width:card_height];
-    //_fub.layer.borderWidth = 1;
-    //_fub.layer.borderColor = [[UIColor orangeColor] CGColor];
+    
+    if([_fub.cards count] == 0) {
+        _fub.view.layer.borderWidth = 1;
+        _fub.view.layer.borderColor = [[UIColor whiteColor] CGColor];
+    }
     
     NSLog(@"before suit stacks");
     // Resize the four suit stacks
     for(int i=0; i<4; i++) {
         [_suitstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):toprow_spacer:card_width:card_height];
-        //((card_stack *)_suitstacks[i]).layer.borderWidth = 2;
-        //((card_stack *)_suitstacks[i]).layer.borderColor = [[UIColor blueColor] CGColor];
+        if([((card_stack *)_suitstacks[i]).cards count] == 0) {
+            ((card_stack *)_suitstacks[i]).view.layer.borderWidth = 1;
+            ((card_stack *)_suitstacks[i]).view.layer.borderColor = [[UIColor whiteColor] CGColor];
+        }
     }
     
     [_deck resize:card_width/5:second_spacer:card_width:card_height];
     
-    //_deck.layer.borderWidth = 2;
-    //_deck.layer.borderColor = [[UIColor redColor] CGColor];
+    if([_deck.cards count] == 0) {
+        _deck.view.layer.borderWidth = 1;
+        _deck.view.layer.borderColor = [[UIColor whiteColor] CGColor];
+    }
     
     [_deal resize:card_width+(card_width/5)+20:second_spacer:card_width:card_height];
     
-    //_deal.layer.borderWidth = 2;
-    //_deal.layer.borderColor = [[UIColor blackColor] CGColor];
+    if([_deal.cards count] == 0) {
+        _deal.view.layer.borderWidth = 1;
+        _deal.view.layer.borderColor = [[UIColor whiteColor] CGColor];
+    }
     
     NSLog(@"Before card stacks");
     for(int i=0; i<4; i++) {
         [_cardstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):second_spacer:card_width:card_height];
-        //((card_stack *)_cardstacks[i]).layer.borderWidth = 2;
-        //((card_stack *)_cardstacks[i]).layer.borderColor = [[UIColor greenColor] CGColor];
-        
+        if([((card_stack *)_cardstacks[i]).cards count] == 0) {
+            ((card_stack *)_cardstacks[i]).view.layer.borderWidth = 1;
+            ((card_stack *)_cardstacks[i]).view.layer.borderColor = [[UIColor whiteColor] CGColor];
+        }
     }
     
-    
-    /*
-     // Create the deck
-     self.deck = [[card_stack alloc] initWithData:card_width/5:card_height*2.5:card_width:card_height:deck];
-     for(int i=0; i<34; i++) {
-     card* card = [self get_random_card];
-     [self.deck add_card:card];
-     card = nil;
-     }
-     
-     // Create the deal
-     self.deal = [[card_stack alloc] initWithData:card_width+(card_width/5)+20:card_height*2.5:card_width:card_height:deal];
-     
-     // Create four card stacks
-     for(int i=0; i<4; i++) {
-     card_stack *acardstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):card_height*2.5:card_width:card_height:cardstack];
-     
-     card* card = [self get_random_card];
-     [card setFace_up:true];
-     [acardstack add_card:card];
-     card = nil;
-     
-     [self.cardstacks addObject:acardstack];
-     acardstack = nil;
-     }
-     */
-    //[self setNeedsDisplay];
 }
 
 // This doesn't work yet with the latest (3/27/2014) code factoring
@@ -832,9 +862,6 @@
         self.score += 250;
         self.wins++;
 
-
-        [self update_bucks];
-        [self update_wins];
         _undo_button.enabled = false;
       
         // Visual "reward" for winning
@@ -1168,7 +1195,7 @@
      }
      */
     // This piece of code makes all possible moves to suitstacks
-    if(self.autocomplete) {
+    if([self.autocomplete isOn]) {
         while([self find_card_for_suitstack]) {}
     }
     
@@ -1411,7 +1438,6 @@
 
 - (void)card_put_up{
     self.score += 5;
-    [self update_bucks];
 }
 
 -(BOOL)change_stack:(card *)acard :(card_stack *)from_stack :(card_stack *)to_stack {
@@ -1462,14 +1488,6 @@
     tapGesture.numberOfTapsRequired = 2;
     [self.view addGestureRecognizer:tapGesture];
 
-    /*
-    }
-    else {
-        [self update_wins];
-        [self update_losses];
-        [self update_bucks];
-    }
-     */
     self.do_init_table = YES;
 }
 
@@ -1478,13 +1496,7 @@
     
 
     if(self.do_init_table) {
-        self.viewTagToCard  = [[NSMutableArray alloc] initWithCapacity:52];
-        self.viewTagToStack = [[NSMutableArray alloc] initWithCapacity:52];
-        
-        for(int i=0; i<52; i++) {
-            [self.viewTagToCard  addObject:[NSNull null]];
-            [self.viewTagToStack addObject:[NSNull null]];
-        }
+
 
     //if(0) {
         self.score  = -45;
@@ -1492,9 +1504,6 @@
         self.losses = 0;
         [self.autocomplete setOn:true];
         
-        [self update_wins];
-        [self update_losses];
-        [self update_bucks];
         [self init_table];
         
         self.do_init_table = NO;
@@ -1636,9 +1645,6 @@
     [self.view addSubview:self.mytest.myview];
     */
     
-    [self update_bucks];
-    [self update_wins];
-    [self update_losses];
     [self update_ac_switch];
     
     NSLog(@"fub: %@",self.fub.view);
@@ -1652,15 +1658,6 @@
         [self.view addSubview:((card_stack *)self.cardstacks[i]).view];
         [self.view addSubview:((card_stack *)self.suitstacks[i]).view];
     }
-
-    self.viewTagToCard  = [[NSMutableArray alloc] initWithCapacity:52];
-    self.viewTagToStack = [[NSMutableArray alloc] initWithCapacity:52];
-    
-    for(int i=0; i<52; i++) {
-        [self.viewTagToCard  addObject:[NSNull null]];
-        [self.viewTagToStack addObject:[NSNull null]];
-    }
-
     
     // Loop over all cards and assign tags to their views, building the viewTagToCard and viewTagToStack
     // arrays in the process.
