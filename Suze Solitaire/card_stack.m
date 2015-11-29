@@ -101,7 +101,7 @@
         else {
             y = 0;
         }
-        [_cards[i] resize:0:y:width:height];
+        [self.cards[i] resize:0:y:width:height];
         //NSLog(@"cardimage: %@",[((card *)_cards[i]).view image]);
     }
 }
@@ -243,7 +243,7 @@
     }
     
     // If we're adding a card, we have at least one and don't want the border
-    self.view.layer.BorderWidth = 0;
+    self.view.layer.borderWidth = 0;
 
     // Card ownership is transfered to array
     [self.cards addObject:toadd];
@@ -276,7 +276,7 @@
     [self.cards removeObject:card];
     
     if([self.cards count] == 0) {
-        self.view.layer.BorderWidth = 1;
+        self.view.layer.borderWidth = 1;
         self.view.layer.borderColor = [[UIColor whiteColor] CGColor];
     }
     // KDR a little awkward that I send a message to the card to remove itself from us, effectively

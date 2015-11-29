@@ -23,7 +23,7 @@
 
 
 @property bool do_init_table;
-@property(nonatomic, copy) NSString *restorationIdentifier;
+@property (nonatomic, copy) NSString *restorationIdentifier;
 @property (strong, nonatomic) IBOutlet UIImageView *cardback;
 
 // These next two keep the card under the cursor where it's grabbed instead
@@ -31,7 +31,7 @@
 @property    int xCap;
 @property    int yCap;
 
-@property    (nonatomic, retain) UIImage* backgroundImage;
+@property (nonatomic, retain) UIImage* backgroundImage;
 
 // Active card under user touch
 @property    card *active_card;
@@ -57,6 +57,7 @@
 
 @property    int suit_stack_starter;
 
+/*
 -(void)init_table;
 -(void)undo_deck_tap;
 -(void)redraw_table;
@@ -70,6 +71,7 @@
 -(card *)get_random_card;
 -(BOOL)accept_card_move:(card_stack *)from :(card_stack *)to :(card *)onTopOfCard;
 -(BOOL)find_card_for_suitstack;
+ */
 
 @end
 
@@ -1274,8 +1276,8 @@
 // I don't like how I designed this code; card_put_up actually increments the score.
 // accept_card_move should just be the test without that side effect.
 -(BOOL)accept_card_move: (card_stack *)from :(card_stack *)to :(card *)onTopOfCard {
-    /* Debug: allow all moves */
-    //return true;
+    /* Debug: allow all moves (autocomplete must be off or this will loop forever) */
+    //[self.autocomplete setOn:NO]; return true;
     
     // Once cards are in the suitstacks, they're there for good
     if (from.stack_type == suitstack || from.stack_type == deck)
@@ -1404,7 +1406,7 @@
 }
 
 -(void)tryToPutUpCardAtPoint:(CGPoint)point {
-    self.active_card         = [self find_tapped_card:point];
+    //self.active_card         = [self find_tapped_card:point];
     card_stack *source_stack = [self find_active_stack:point];
     if(self.active_card) {
         

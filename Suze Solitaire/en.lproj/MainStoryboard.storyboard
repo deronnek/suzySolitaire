@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="5053" systemVersion="12F45" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9060" systemVersion="14F1021" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
     <dependencies>
-        <deployment defaultVersion="1536" identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
     </dependencies>
     <scenes>
         <!--Ss View Controller-->
@@ -41,67 +41,60 @@
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="o0f-gn-vc1"/>
                                     <barButtonItem style="plain" id="kzJ-Um-FQe">
                                         <switch key="customView" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" id="hki-rk-g7K">
-                                            <rect key="frame" x="703" y="7" width="51" height="31"/>
+                                            <rect key="frame" x="699" y="7" width="51" height="31"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         </switch>
                                     </barButtonItem>
                                 </items>
                             </toolbar>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mPQ-ke-cA5">
-                                <rect key="frame" x="277" y="31" width="65" height="21"/>
+                                <rect key="frame" x="220" y="31" width="65" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="65" id="3Vy-AJ-VE4"/>
-                                    <constraint firstAttribute="width" constant="65" id="nl7-u1-U6Y"/>
+                                    <constraint firstAttribute="width" constant="65" id="RUU-j4-GN8"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GBX-Bs-yaG">
-                                <rect key="frame" x="370" y="31" width="66" height="21"/>
+                                <rect key="frame" x="340" y="31" width="88" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="66" id="2z0-MT-4Gj"/>
+                                    <constraint firstAttribute="width" constant="88" id="JYg-xh-HfP"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Zlv-wH-8Fq">
-                                <rect key="frame" x="452" y="31" width="107" height="21"/>
+                                <rect key="frame" x="463" y="31" width="107" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="107" id="v7r-Vm-BUB"/>
+                                    <constraint firstAttribute="width" constant="107" id="6ne-xH-EaD"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Autobucks" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="h5i-pc-UTX">
-                                <rect key="frame" x="567" y="31" width="120" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="120" id="i0C-lJ-m7b"/>
-                                </constraints>
+                                <rect key="frame" x="578" y="31" width="109" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                         </subviews>
                         <color key="backgroundColor" red="0.17948933666150763" green="0.43669327445652173" blue="0.19245184737353235" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="bottom" secondItem="h5i-pc-UTX" secondAttribute="bottom" id="2YR-0d-JKM"/>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="bottom" secondItem="mPQ-ke-cA5" secondAttribute="bottom" id="6Q7-pD-ddP"/>
-                            <constraint firstAttribute="trailing" secondItem="RmG-yI-gJt" secondAttribute="trailing" id="6iI-5J-xUh"/>
-                            <constraint firstItem="h5i-pc-UTX" firstAttribute="leading" secondItem="Zlv-wH-8Fq" secondAttribute="trailing" constant="8" symbolic="YES" id="F7y-ku-NdQ"/>
-                            <constraint firstItem="RmG-yI-gJt" firstAttribute="top" secondItem="dh2-lg-h7d" secondAttribute="bottom" constant="20" symbolic="YES" id="HI9-yL-uYx"/>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="top" secondItem="mPQ-ke-cA5" secondAttribute="top" id="NeH-fo-Mmt"/>
-                            <constraint firstItem="GBX-Bs-yaG" firstAttribute="leading" secondItem="mPQ-ke-cA5" secondAttribute="trailing" constant="28" id="OWt-A7-oMR"/>
-                            <constraint firstItem="RmG-yI-gJt" firstAttribute="leading" secondItem="5" secondAttribute="leading" id="aQH-sy-5T4"/>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="leading" secondItem="GBX-Bs-yaG" secondAttribute="trailing" constant="16" id="hQ0-Iq-7eI"/>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="top" secondItem="h5i-pc-UTX" secondAttribute="top" id="rVb-mN-hJ4"/>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="bottom" secondItem="GBX-Bs-yaG" secondAttribute="bottom" id="tHR-Mq-ybe"/>
-                            <constraint firstAttribute="trailing" secondItem="h5i-pc-UTX" secondAttribute="trailing" constant="81" id="tmo-O4-qOB"/>
-                            <constraint firstItem="mPQ-ke-cA5" firstAttribute="top" secondItem="dh2-lg-h7d" secondAttribute="bottom" constant="11" id="vNB-l0-UhM"/>
-                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="top" secondItem="GBX-Bs-yaG" secondAttribute="top" id="vc8-Fo-nGB"/>
+                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="baseline" secondItem="GBX-Bs-yaG" secondAttribute="baseline" id="Knz-sZ-Hyb"/>
+                            <constraint firstAttribute="trailing" secondItem="h5i-pc-UTX" secondAttribute="trailing" constant="81" id="QYp-zR-v4x"/>
+                            <constraint firstItem="RmG-yI-gJt" firstAttribute="top" secondItem="dh2-lg-h7d" secondAttribute="bottom" id="R0A-fn-r1d"/>
+                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="leading" secondItem="GBX-Bs-yaG" secondAttribute="trailing" constant="35" id="R6O-co-jmV"/>
+                            <constraint firstItem="mPQ-ke-cA5" firstAttribute="baseline" secondItem="GBX-Bs-yaG" secondAttribute="baseline" id="UiR-W5-OBp"/>
+                            <constraint firstItem="mPQ-ke-cA5" firstAttribute="top" secondItem="dh2-lg-h7d" secondAttribute="bottom" constant="11" id="Ymc-4T-iIg"/>
+                            <constraint firstItem="Zlv-wH-8Fq" firstAttribute="baseline" secondItem="h5i-pc-UTX" secondAttribute="baseline" id="ZSY-nD-Hgl"/>
+                            <constraint firstItem="h5i-pc-UTX" firstAttribute="leading" secondItem="Zlv-wH-8Fq" secondAttribute="trailing" constant="8" symbolic="YES" id="d8b-1m-QIg"/>
+                            <constraint firstItem="GBX-Bs-yaG" firstAttribute="centerX" secondItem="RmG-yI-gJt" secondAttribute="centerX" id="eeU-Np-swa"/>
+                            <constraint firstItem="GBX-Bs-yaG" firstAttribute="leading" secondItem="mPQ-ke-cA5" secondAttribute="trailing" constant="55" id="gWq-HB-9NY"/>
+                            <constraint firstAttribute="trailing" secondItem="RmG-yI-gJt" secondAttribute="trailing" id="xXu-dg-y4V"/>
+                            <constraint firstItem="RmG-yI-gJt" firstAttribute="leading" secondItem="5" secondAttribute="leading" id="yca-B2-Jip"/>
                         </constraints>
                     </view>
                     <toolbarItems/>
@@ -133,7 +126,6 @@
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" showsHorizontalScrollIndicator="NO" editable="NO" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zWr-CC-nc6">
                                 <rect key="frame" x="20" y="20" width="728" height="234"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 <string key="text">Rules of play:
 1.   Cards must alternate colors in the lower four stacks and count down.
@@ -161,9 +153,4 @@
             <point key="canvasLocation" x="1088" y="-208"/>
         </scene>
     </scenes>
-    <simulatedMetricsContainer key="defaultSimulatedMetrics">
-        <simulatedStatusBarMetrics key="statusBar"/>
-        <simulatedOrientationMetrics key="orientation"/>
-        <simulatedScreenMetrics key="destination"/>
-    </simulatedMetricsContainer>
 </document>
