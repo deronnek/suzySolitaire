@@ -58,9 +58,6 @@
         rect.size.width  = width;
         rect.size.height = height;
         self.view.frame  = rect;
-        
-        //point.x += width/2;
-        //point.y += height/2;
 
         [self.view setCenter: point];
         [self.view setUserInteractionEnabled:true];
@@ -71,9 +68,6 @@
         NSUUID *uuid    = [[NSUUID alloc] init];
         self.identifier = [uuid UUIDString];
         
-        //self.restorationIdentifier = @"mainview/cardstack/card";
-        //self.restorationIdentifier = [[self superview] restorationIdentifier];
-        //self.restorationIdentifier = [self.restorationIdentifier stringByAppendingString:self.identifier];
     }
     return self;
 }
@@ -85,8 +79,6 @@
 }
 
 - (void)resize:(int)x :(int)y :(int)width :(int)height {
-    //CGRect rect = CGRectMake(self.frame.origin.x, self.frame.origin.y, width, height);
-    //[self setFrame:rect];
     CGPoint point;
     point.x = x;
     point.y = y;
@@ -97,8 +89,6 @@
     rect.size.height = height;
     self.view.frame  = rect;
 
-    //_rect.size.wig.size setWidth:width];
-    //self.frame.size.height = height;
 }
 
 // we are being created based on what was archived earlier
@@ -182,7 +172,7 @@
     }
     NSLog(@"Card being encoded under stack %u",((card_stack *)[self.view superview]).stack_type);
     
-    //[super encodeRestorableStateWithCoder:aCoder];
+
     for (NSString *key in self.keysForEncoding)
     {
         [aCoder encodeObject:[self valueForKey:key] forKey:key];
@@ -201,28 +191,15 @@
 
     
     if(self.face_up) {
-        //CGContextRef layerCtx = CGLayerGetContext(self.card_layer);
-        //CGContextDrawLayerInRect(layerCtx, self.rect, self.card_layer);
-        
-        //[self.face_image drawInRect:self.rect];
         [self.view setHidden:false];
         
-        //CGContextDrawLayerAtPoint(CGLayerGetContext(self.card_layer), self.rect.origin, self.card_layer);
+        
     }
     else {
-        //[self.back_image drawInRect:self.rect];
+    
     }
 }
-/*
--(void)draw_cap
-{
-    CGRect caprect;
-    caprect.origin      = self.rect.origin;
-    caprect.size.width  = self.rect.size.width;
-    caprect.size.height = self.saved_cap*2;
-    [self.cap_image drawInRect:caprect];
-}
-*/
+
 
 -(void)set_pos:(int)x :(int)y
 {
@@ -234,10 +211,6 @@
     self.view.frame  = rect;
     [self.view setFrame:rect];
     
-    //point.x += self.frame.size.width/4;
-    //point.y += self.frame.size.height/4;
-    
-    //[self setCenter:point];
     
     [self.card_parent set_pos:x:y+self.saved_cap];
 }
