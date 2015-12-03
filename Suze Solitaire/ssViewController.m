@@ -151,7 +151,7 @@
         // Have to get rid of the cards differently if we just won
         NSArray *viewsToRemove = [self.view subviews];
         for (UIView *v in viewsToRemove) {
-            if([v isKindOfClass:[card class]]) {
+            if([v isKindOfClass:[UIImageView class]]) {
                 [v removeFromSuperview];
             }
         }
@@ -175,7 +175,7 @@
     
     _undo_button.enabled = false;
     
-    //[mv find_card_for_suitstack];  // For testing functions
+    //[self.find_card_for_suitstack];  // For testing functions by tapping the undo button
     
     NSLog(@"Active card: %@ %@ %@",self.active_card,self.active_card_dest_stack,self.active_card_source_stack);
     /* We should only get to this point without an active card if the deck tap is being undone */
@@ -193,7 +193,6 @@
 
 - (void)update_ac_switch {
     [self.autocomplete setOn:self.autocomplete];
-    
 }
 
 - (void)init_table {
@@ -368,17 +367,18 @@
     
 }
 
-// This doesn't work yet with the latest (3/27/2014) code factoring
 - (void)init_table_trivial {
     
-    int screen_width = CGRectGetWidth(self.view.bounds);
     self.view.restorationIdentifier = @"mainView";
     
     if (self.cards != nil)
         return;
     
-    int card_width = screen_width / 10;
-    int card_height = card_width * 1.55;
+    int card_width = 0;
+    int card_height = 0;
+    
+    int toprow_spacer = 0;
+    int second_spacer = 0;
     
     self.backgroundImage = [UIImage imageNamed:@"background.png"];
     
@@ -398,28 +398,31 @@
     self.fub = [[card_stack alloc] initWithData:card_width/5:card_height:card_width:card_height:fub];
     
     // Create the deck
-    self.deck = [[card_stack alloc] initWithData:card_width/5:card_height*2.5:card_width:card_height:deck];
+    self.deck = [[card_stack alloc] initWithData:card_width/5:second_spacer:card_width:card_height:deck];
     
     // Create the deal
-    self.deal = [[card_stack alloc] initWithData:card_width+(card_width/5)+20:card_height*2.5:card_width:card_height:deal];
+    self.deal = [[card_stack alloc] initWithData:0:0:card_width:card_height:deal];
+    self.deal.view.layer.borderWidth = 1;
+    self.deal.view.layer.borderColor = [[UIColor whiteColor] CGColor];
+
     
     // Create four suit stacks and cardstacks
     for(int i=0; i<4; i++) {
-        card_stack *asuitstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):card_height:card_width:card_height:suitstack];
+        card_stack *asuitstack = [[card_stack alloc] initWithData:(i*card_width+(i*50)):toprow_spacer:card_width:card_height:suitstack];
         for(int j=0; j<10; j++) {
             card* card = [self get_next_card];
-            
             [card setFace_up:true];
             [asuitstack add_card:card];
             self.suit_stack_starter = card.rank;
+            self.viewTagToCard[card.view.tag]  = card;
+            self.viewTagToStack[card.view.tag] = asuitstack;
             card = nil;
         }
         [self.suitstacks addObject:asuitstack];
         [self.view addSubview:asuitstack.view];
         asuitstack = nil;
         
-        card_stack *acardstack = [[card_stack alloc] initWithData:card_width*4+(i*card_width+(i*50)):card_height*2.5:card_width:card_height:cardstack];
-        
+        card_stack *acardstack = [[card_stack alloc] initWithData:0:second_spacer:card_width:card_height:cardstack];
         
         card* topcard    = [self get_next_card];
         card* middlecard = [self get_next_card];
@@ -443,6 +446,15 @@
             [acardstack add_card:middlecard];
             [acardstack add_card:topcard];
         }
+        self.viewTagToCard[topcard.view.tag]  = topcard;
+        self.viewTagToStack[topcard.view.tag] = acardstack;
+        
+        self.viewTagToCard[bottomcard.view.tag]  = bottomcard;
+        self.viewTagToStack[bottomcard.view.tag] = acardstack;
+        
+        self.viewTagToCard[middlecard.view.tag]  = middlecard;
+        self.viewTagToStack[middlecard.view.tag] = acardstack;
+
         
         [self.cardstacks addObject:acardstack];
         [self.view addSubview:acardstack.view];
