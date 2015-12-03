@@ -57,22 +57,6 @@
 
 @property    int suit_stack_starter;
 
-/*
--(void)init_table;
--(void)undo_deck_tap;
--(void)redraw_table;
--(void)init_table_trivial;
--(void)init_table_debug;
-
--(card *)find_tapped_card:(CGPoint)point;
--(void)tryToPutUpCardAtPoint:(CGPoint)point;
--(card_stack *)find_active_stack:(CGPoint)point;
--(void)create_cards:(int)width :(int)height;
--(card *)get_random_card;
--(BOOL)accept_card_move:(card_stack *)from :(card_stack *)to :(card *)onTopOfCard;
--(BOOL)find_card_for_suitstack;
- */
-
 @end
 
 @implementation ssViewController
@@ -206,48 +190,19 @@
         }
         [self change_stack:self.active_card:self.active_card_dest_stack:self.active_card_source_stack];
     }
-    //[mv setNeedsDisplay];
 }
 
 - (void)update_ac_switch {
     [self.autocomplete setOn:self.autocomplete];
-    /*
-    if(mv.autocomplete) {
-        [_autocomplete setOn:YES];
-    }
-    else {
-        [_autocomplete setOn:NO];
-    }
-     */
     
 }
 
 - (void)init_table {
     NSLog(@"\n\n\nDON'T BE FOOLED INIT_TABLE CALLED\n\n\n");
     
-    //self.mytest = [[ssTest alloc] init];
-    //[self.view addSubview:_mytest.myview];
-    /*
-     
-     NSURL *dataFileURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SavedData"];
-     if ([[NSFileManager defaultManager] fileExistsAtPath:[dataFileURL path]])
-     {
-     // saved file exists, load it's content from that path
-     // note: unarchiveObjectWithFile returns an immutable array, we need to make it mutable
-     //
-     _dataArray = [[NSKeyedUnarchiver unarchiveObjectWithFile:[dataFileURL path]] mutableCopy];
-     }
-     else
-     {
-     _dataArray = [[NSMutableArray alloc] init];
-     }
-     */
-    //NSLog(@"KDR init_table called");
-    //int screen_width = self.bounds.size.width;
     _undo_button.enabled = false;
     
     int screen_width = CGRectGetWidth(self.view.bounds);
-    //int screenHeight = self.bounds.size.height;
     NSLog(@"KDR init_table screen width: %d",screen_width);
     
     self.view.restorationIdentifier = @"mainView";
@@ -259,11 +214,6 @@
     
     int card_width  = screen_width / 10;
     int card_height = card_width * 1.55;
-    //int cap = (screen_width - card_width*7) / 8;
-    
-    
-    //int toprow_spacer = card_height/1.4;
-    //int second_spacer = card_height*2.1;
     
     // Since we immediately redraw table, these have no effect
     card_width = 0;
@@ -281,11 +231,6 @@
     [self.cards shuffle];
     
     // Associate them with the main view
-    /*
-     for(int i=0; i<[self.cards count]; i++) {
-     [self addSubview:self.cards[i]];
-     }
-     */
     
     // Array for the suit stacks
     self.suitstacks = [[NSMutableArray alloc] initWithCapacity:4];
@@ -452,14 +397,6 @@
     // Create the face up blind
     
     self.fub = [[card_stack alloc] initWithData:card_width/5:card_height:card_width:card_height:fub];
-    /*
-     for(int i=0; i<13; i++) {
-     card* card = [self get_random_card];
-     [card setFace_up:true];
-     [self.fub add_card:card];
-     card = nil;
-     }
-     */
     
     // Create the deck
     self.deck = [[card_stack alloc] initWithData:card_width/5:card_height*2.5:card_width:card_height:deck];
@@ -518,15 +455,6 @@
     [self.view addSubview:self.fub.view];
     
     
-    /*
-     for(int i=0; i<34; i++) {
-     card* card = [self get_random_card];
-     [self.deck add_card:card];
-     card = nil;
-     }
-     */
-    
-    
     
 }
 
@@ -558,14 +486,6 @@
     // Create the face up blind
     
     self.fub = [[card_stack alloc] initWithData:card_width/5:card_height:card_width:card_height:fub];
-    /*
-     for(int i=0; i<13; i++) {
-     card* card = [self get_random_card];
-     [card setFace_up:true];
-     [self.fub add_card:card];
-     card = nil;
-     }
-     */
     
     // Create the deck
     self.deck = [[card_stack alloc] initWithData:card_width/5:card_height*2.5:card_width:card_height:deck];
@@ -683,66 +603,6 @@
     [self.cards removeObject:ret];
     
     return ret;
-}
-
--(card *)find_tapped_card:(CGPoint)point {
-    
-    NSLog(@"\n\ntried to call find_tapped_card -- too slow to use\n\n");
-    //exit(EXIT_FAILURE);
-    
-    card* card = nil;
-    // Deck
-    card = [self.deck get_card_at_pos:point];
-    if(card) {
-        self.active_card_source_stack = self.deck;
-        return card;
-    }
-    card = nil;
-    
-    // Deal
-    card = [self.deal get_card_at_pos:point];
-    if(card) {
-        self.active_card_source_stack = self.deal;
-        return card;
-    }
-    card = nil;
-    
-    // Cardstacks
-    for(card_stack *cs in self.cardstacks)
-    {
-        card = [cs get_card_at_pos:point];
-        if (card) {
-            
-            self.active_card_source_stack = cs;
-            return card;
-        }
-        card = nil;
-    }
-    
-    // Fub
-    card = [self.fub get_card_at_pos:point];
-    if(card) {
-        
-        self.active_card_source_stack = self.fub;
-        return card;
-    }
-    card = nil;
-    
-    
-    
-    // Suitstacks
-    for(card_stack *cs in self.suitstacks)
-    {
-        card = [cs get_card_at_pos:point];
-        if (card) {
-            
-            self.active_card_source_stack = cs;
-            return card;
-        }
-        card = nil;
-    }
-    
-    return nil;
 }
 
 -(card_stack *)find_active_stack:(CGPoint)point {
@@ -892,12 +752,6 @@
                 if(x> screen_width || y>screen_height) {
                     NSLog(@"KDR OUT OF BOUNDS!!!!!!!!!!!!!");
                 }
-                //NSLog(@"x: %f y %f height: %f stacknum: %d",x, y,card.rect.size.height,stacknum);
-                
-                
-                //[self setNeedsDisplayInRect:rect];
-                
-                //                sleep(1);
                 
                 cardnum++;
             }
@@ -941,8 +795,6 @@
         self.active_card = nil;
     }
     
-    //self.active_card  = [self find_tapped_card:point];
-    
     
     if(self.active_card) {
         //NSLog(@"Tapped: rank: %d suit: %u",self.active_card.rank,self.active_card.suit);
@@ -953,47 +805,12 @@
 }
 
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    //ssViewController *vc = (ssViewController *)[self firstAvailableUIViewController];
-    
-    
-    
+
     UITouch* touch = [touches anyObject];
     CGPoint point  = [touch locationInView:self.view];
     
-    //if(CGRectContainsPoint([vc.cardback frame], point)) {
-    //    vc.cardback.center = point;
-    //}
-    
-	if (self.active_card && (self.just_won || self.active_card_source_stack.stack_type != deck))
-	{
-        
-		[self.active_card set_pos:point.x - self.xCap:point.y - self.yCap];
-		
-        //[self setNeedsDisplay];
-        
-        // Optimize drawing with clipping when user moves cards
-        
-        //int x = ABS(_prev_point.x - point.x) + 45;
-        //int y = ABS(_prev_point.y - point.y) + 45;
-        //_prev_point = point;
-        
-        
-        //  Slower, though possibly smoother, animation
-        /*
-         int x = point.x;
-         int y = point.y;
-         */
-        
-        //CGRect rect;
-        //rect = self.active_card.frame;
-        //rect.origin.x -= x;
-        //rect.origin.y -= y;
-        //rect.size.width += x*2;
-        //rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
-        //self.active_card.frame = rect;
-        //[self setNeedsDisplayInRect:rect];
-        
-        //[self setNeedsDisplay];
+	if (self.active_card && (self.just_won || self.active_card_source_stack.stack_type != deck)) {
+        [self.active_card set_pos:point.x - self.xCap:point.y - self.yCap];
     }
 }
 
@@ -1023,9 +840,7 @@
         emptystack = true;
         NSLog(@"\n\nKDR Couldn't find cs!");
     }
-    
-    //[self.active_card cancel_move];
-    //[self setNeedsDisplay];
+
     if(cs) {
         if(cs.stack_type == deck) {
             NSLog(@"Card dropped on deck");
@@ -1046,16 +861,6 @@
         if(cs.stack_type == deck && (self.active_card_source_stack.stack_type == deck || [self.deck.cards count] == 0)) {
             
             // When canceling a stack drag, make sure you clean up everything
-            /*
-             CGRect rect;
-             rect = self.active_card.frame;
-             rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
-             [self setNeedsDisplayInRect:rect];
-             
-             [self.active_card cancel_move];
-             [self setNeedsDisplayInRect:self.active_card_source_stack.frame];
-             */
-            
             
             NSLog(@"KDR Tapped deck");
             if([self.deck.cards count] == 0) {
@@ -1111,27 +916,14 @@
         else if(cs.stack_type == cardstack || cs.stack_type == suitstack){
             card *dropped_on = [cs.cards lastObject];
             if([self accept_card_move:self.active_card_source_stack :cs :dropped_on]) {
-                //[cs add_card:self.active_card];
-                //[self.active_card_source_stack remove_card:self.active_card];
                 
                 self.active_card_dest_stack = cs;
                 
                 _undo_button.enabled = true;
-                //[self setNeedsDisplayInRect:self.active_card.frame];
-                
-                //CGRect rect;
-                //rect = self.active_card.frame;
-                //rect.size.height = self.bounds.size.height-self.active_card.frame.origin.y+45;
-                //[self setNeedsDisplayInRect:rect];
-                
                 
                 [self change_stack:self.active_card:self.active_card_source_stack:cs];
                 
                 // Redraw the white rectangle if there are no more cards
-                //if([self.active_card_source_stack.cards count] == 0) {
-                //    [self setNeedsDisplayInRect:self.active_card_source_stack.frame];
-                //}
-                //[self setNeedsDisplayInRect:cs.frame];
                 self.deck_just_tapped = 0;
                 
             }
@@ -1141,61 +933,21 @@
                 CGRect rect;
                 rect = self.active_card.view.frame;
                 rect.size.height = self.view.bounds.size.height-self.active_card.view.frame.origin.y+45;
-                //[self setNeedsDisplayInRect:rect];
                 
                 [self.active_card cancel_move];
-                //[self setNeedsDisplayInRect:self.active_card_source_stack.frame];
-                
             }
             
         }
         else {
             NSLog(@"KDR Card Move to invalid stack type");
-            //[self setNeedsDisplayInRect:self.active_card.frame];
             [self.active_card cancel_move];
-            //[self setNeedsDisplayInRect:self.active_card_source_stack.frame];
         }
     }
     else {
         NSLog(@"KDR Card move to nowhere");
         // Not dropped on a stack; put it back where it was
-        //[self setNeedsDisplayInRect:self.active_card.frame];
         [self.active_card cancel_move];
-        //[self setNeedsDisplayInRect:self.active_card_source_stack.frame];
-        
     }
-    /*
-     if (_activeCard)
-     {
-     UITouch* touch = [touches anyObject];
-     CGPoint point = [touch locationInView:self];
-     [_activeCard setPos:point.x - xCap:point.y - yCap];
-     
-     
-     // Change car deck to another
-     Deck* toDeck = [self findActiveDeck:point];
-     if (toDeck) {
-     Card* onTopOfCard = [toDeck getTopCard];
-     BOOL acceptMove = [self acceptCardMove:_activeCard.ownerDeck:toDeck:onTopOfCard];
-     if(acceptMove) {
-     // From deck to new deck
-     BOOL ret = [_activeCard changeDeckTo:_activeCard.ownerDeck:toDeck];
-     if (!ret) {
-     [_activeCard cancelMove];
-     }
-     } else {
-     [_activeCard cancelMove];
-     }
-     } else {
-     [_activeCard cancelMove];
-     }
-     
-     
-     [self setNeedsDisplay];
-     _activeCard = nil;
-     toDeck = nil;
-     }
-     */
     // This piece of code makes all possible moves to suitstacks
     if([self.autocomplete isOn]) {
         while([self find_card_for_suitstack]) {}
@@ -1258,16 +1010,6 @@
     if([self.deal.cards count] == 0) {
         //[self setNeedsDisplayInRect:self.deal.frame];
     }
-    /*
-     if([self.deck.cards count] == 0) {
-     // Reset the size of the rectangle for the deal
-     CGRect rec = [self.deal rect];
-     rec.size = CGSizeMake(rec.size.width, self.deck.rect.size.height);
-     [self.deal setRect:rec];
-     [self setNeedsDisplayInRect:self.deal.rect];
-     }
-     */
-    //[self setNeedsDisplay];
     NSLog(@"Deck has %lu cards",(unsigned long)[self.deck.cards count]);
     NSLog(@"Deal has %lu cards",(unsigned long)[self.deal.cards count]);
     
@@ -1328,33 +1070,6 @@
             return true;
         }
     }
-    
-    /*
-     if (to.deckType != ESource && to.deckType != ETarget)
-     return false;
-     
-     if ([to.cardArray count]>0) {
-     if (to.deckType == ESource) {
-     if(_activeCard.cardType == onTopOfCard.cardType ||
-     onTopOfCard.cardId != _activeCard.cardId+1 ||
-     onTopOfCard.black == _activeCard.black) {
-     return false;
-     }
-     } else if (to.deckType == ETarget) {
-     if(onTopOfCard.cardId+1 != _activeCard.cardId ||
-     onTopOfCard.cardType != _activeCard.cardType) {
-     return false;
-     }
-     }
-     } else {
-     if(_activeCard.cardId != 13 && to.deckType == ESource)
-     return false;
-     
-     if(to.deckType == ETarget && _activeCard.cardId != 1)
-     return false;
-     }
-     */
-    
     return false;
 }
 
@@ -1406,7 +1121,6 @@
 }
 
 -(void)tryToPutUpCardAtPoint:(CGPoint)point {
-    //self.active_card         = [self find_tapped_card:point];
     card_stack *source_stack = [self find_active_stack:point];
     if(self.active_card) {
         
@@ -1438,7 +1152,7 @@
     }
 }
 
-- (void)card_put_up{
+- (void)card_put_up {
     self.score += 5;
 }
 
@@ -1475,17 +1189,6 @@
     
     NSLog(self.do_init_table ? @"do_init table is YES" : @" do_init table is NO");
 
-    //NSLog(@"Deck has %d",[self.deck.cards count]);
-    
-    //if(self.do_init_table) {
-
-
-
-    //[self init_table];
-
-    //[self init_table_trivial]; self.autocomplete = true;
-    //[self init_table_debug];
-
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
     tapGesture.numberOfTapsRequired = 2;
     [self.view addGestureRecognizer:tapGesture];
@@ -1499,8 +1202,6 @@
 
     if(self.do_init_table) {
 
-
-    //if(0) {
         self.score  = -45;
         self.wins   = 0;
         self.losses = 0;
@@ -1534,14 +1235,6 @@
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-    //NSLog(@"KDR viewWillAppear called init_table is %d",self.do_init_table);
-    
-    //NSLog(@"KDR self: %@",self.view);
-
-    //NSLog(@"KDR view: %@",mv);
-    //NSLog(@"KDR score is: %d",self.score);
-
-    
 
 }
 
@@ -1592,15 +1285,6 @@
     [coder encodeObject:self.deck forKey:@"deck"];
     [coder encodeObject:self.deal forKey:@"deal"];
 
-    
-    /*
-    mainView *mv = (mainView *)self.view;
-    NSURL *dataFileURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SavedData"];
-    [NSKeyedArchiver archiveRootObject:mv toFile:[dataFileURL path]];
-
-    
-    //card_stack *deck = mv.deck;
-     */
     [super encodeRestorableStateWithCoder:coder];
      
     NSLog(@"KDR State encoded");
@@ -1641,11 +1325,6 @@
     NSLog(@"view in decode: %@",self.view);
     NSLog(@"simple int: %d",self.mytest.simple);
     NSLog(@"test view: %@",self.mytest.myview);
-    /*
-    NSLog(@"view has image: %@",self.mytest.myview.image);
-    [self.mytest.myview setHidden:false];
-    [self.view addSubview:self.mytest.myview];
-    */
     
     [self update_ac_switch];
     
@@ -1701,127 +1380,5 @@
             tagCount++;
         }
     }
-    
-
-    
-     
-    
-
-    /*
-    [self.cardstacks removeAllObjects];
-    [self.suitstacks removeAllObjects];
-
-    int suitstack_number = 0;
-    int cardstack_number = 0;
-    for(UIView *s in [self subviews]) {
-        NSLog(@"Subview %d %@",i,s);
-        
-        if([s isKindOfClass:[card_stack class]]) {
-            NSString *stack_type = [s.restorationIdentifier substringWithRange:NSMakeRange(9,1)];
-            if([stack_type isEqualToString:@"0"]) {
-                self.fub = (card_stack *)s;
-                [self.fub.cards removeAllObjects]; // Necessary because init table gets called before we get here.  (bug/hack, really)
-                for(UIImageView *c in [self.fub subviews]) {
-                    //NSLog(@"Subview of fub: %@",c.restorationIdentifier);
-                    [self.fub.cards addObject:c];
-                }
-            }
-            else if([stack_type isEqualToString:@"1"]) {
-                [self.suitstacks addObject:s];
-                for(UIImageView *c in [s subviews]) {
-                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
-                    [((card_stack *)self.suitstacks[suitstack_number]).cards addObject:c];
-                }
-                suitstack_number++;
-                
-            }
-            else if([stack_type isEqualToString:@"2"]) {
-                                [self.cardstacks addObject:s];
-                for(UIImageView *c in [self.deck subviews]) {
-                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
-                    [self.deck.cards addObject:c];
-                }
-
-            }
-            else if([stack_type isEqualToString:@"3"]) {
-                self.deck = (card_stack *)s;
-                [self.deck.cards removeAllObjects];
-                for(UIImageView *c in [self.deck subviews]) {
-                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
-                    [self.deck.cards addObject:c];
-                }
-                 NSLog(@"Deck at decode time has %d cards",[((card_stack *)s).cards count]);
-            }
-            else if([stack_type isEqualToString:@"4"]) {
-                self.deal = (card_stack *)s;
-                // No need to remove cards from deal as init_table doesn't produce any
-                NSLog(@"Deal at decode time has %d cards",[((card_stack *)s).cards count]);
-                for(UIImageView *c in [self.deck subviews]) {
-                    //NSLog(@"Subview of deck: %@",c.restorationIdentifier);
-                    [self.deck.cards addObject:c];
-                }
-
-            }
-
-        }
-        
-        i++;
-    }
-    
-  
-    int numberOfSuitstacks = 0;
-    for(UIView *s in self.suitstacks) {
-        //[self addSubview:s];
-        numberOfSuitstacks++;
-    }
-    NSLog(@"Number of suitstacks: %d",numberOfSuitstacks);
-    
-    int numberOfCardstacks = 0;
-    for(UIView *s in self.cardstacks) {
-        //[self addSubview:s];
-        numberOfCardstacks++;
-    }
-    NSLog(@"Number of cardstacks: %d",numberOfCardstacks);
-    
-    NSLog(@"made it HERE");
-     
-    
-    NSArray *viewsToRestore = [self subviews];
-    for (card_stack *v in viewsToRestore) {
-        if([v isKindOfClass:[card_stack class]]) {
-            [v makeSubViewsOfCards];
-        }
-    }
-    
-
-    //[[self subviews] makeObjectsPerformSelector:@selector(makeSubViewsOfCards)];
-    
-    // Even if we call init_table here it doesn't set things up properly.
-    // self.view pointer is different?
-
-    NSLog(@"KDR score is %d",self.score);
-    NSLog(@"KDR deck has %d",[self.deck.cards count]);
-  
-    
-    NSURL *dataFileURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"SavedData"];
-    self.view = [NSKeyedUnarchiver unarchiveObjectWithFile:[dataFileURL path]];
-
-     
-    
-    
-    if([coder containsValueForKey:@"mainview"]) {
-        NSLog(@"KDR decoding state: %@",self.view);
-        self.do_init_table = false;
-        //        mainView *self = (mainView *)self.view;
-     
-        [super decodeRestorableStateWithCoder:coder];
-        //[self.view setNeedsDisplay];
-    }
-    else {
-        self.do_init_table = true;
-    }
-     */
-    //NSLog(@"KDR self.view: %@",self.view);
-    
 }
 @end
