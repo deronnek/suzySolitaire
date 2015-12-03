@@ -22,7 +22,6 @@ typedef enum {
 
 @class card_stack;
 
-//@interface card : NSObject
 @interface card: NSObject
 
 @property card_color color;
@@ -48,10 +47,8 @@ typedef enum {
 -(void)cancel_move;
 -(void)save_pos;
 -(void)draw_card;
-//-(void)draw_cap;
 -(void)draw_self_and_parent;
-- (void)resize:(int)x :(int)y :(int)width :(int)height;
-//-(BOOL)change_stack:(card_stack *)from_stack :(card_stack *)to_stack;
+-(void)resize:(int)x :(int)y :(int)width :(int)height;
 
 @end
 
