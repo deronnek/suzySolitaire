@@ -126,7 +126,6 @@
     // KDR I'm hoping I don't need to free self.cards and whatever else--that just calling init_table
     // will cause the "automatic reference counter" to free whatever I've overwritten.
     // However, I'm not particularly confident about this.
-    
 
     self.cards = nil;
 

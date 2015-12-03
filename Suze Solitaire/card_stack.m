@@ -22,8 +22,7 @@
 
 
 -(id)initWithData:(int)x :(int)y :(int)width :(int)height :(card_stack_type)type {
-    //self = [super init];
-    //NSLog(@"Initializing card stack");
+
     CGPoint point;
     point.x = x;
     point.y = y;
@@ -34,8 +33,6 @@
     rect.size.height = height;
     self.view.frame        = rect;
     
-    //NSLog(@"Stack point: %d %d",x,y);
-    
     point.x += width/2;
     point.y += height/2;
     //rect.origin = point;
@@ -45,10 +42,6 @@
     
     NSUUID *uuid    = [[NSUUID alloc] init];
     self.identifier = [uuid UUIDString];
-    /*
-    self.restorationIdentifier = [NSString stringWithFormat:@"mainView/%d-cardstack-",type];
-    self.restorationIdentifier = [self.restorationIdentifier stringByAppendingString:self.identifier];
-     */
 
     int capacity=52;
     if(type == fub || type == suitstack) {
@@ -133,7 +126,7 @@
 }
 
 - (void)decodeRestorableStateWithCoder:(NSCoder *)aDecoder {
-    NSLog(@"card_stack decodeRestorableStateWithCoder called!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    NSLog(@"card_stack decodeRestorableStateWithCoder called!");
     //[super decodeRestorableStateWithCoder:aDecoder];
     for (NSString *key in self.keysForEncoding)
     {
