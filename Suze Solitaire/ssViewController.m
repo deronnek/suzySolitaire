@@ -48,12 +48,12 @@
 @property    (nonatomic, retain) NSMutableArray *cards; // Initial deck to pull from when setting up a game
 @property    (nonatomic, retain) NSMutableArray *suitstacks;
 @property    (nonatomic, retain) NSMutableArray *cardstacks;
-@property    (nonatomic, retain) card_stack     *fub;
-@property    (nonatomic, retain) card_stack     *deck;
-@property    (nonatomic, retain) card_stack     *deal;
+@property    (nonatomic, retain) card_stack     *fub;  // The "face up blind" stack
+@property    (nonatomic, retain) card_stack     *deck; // The stack from which cards are drawn
+@property    (nonatomic, retain) card_stack     *deal; // The stack containing previously drawn cards
 
-@property (nonatomic, strong) NSMutableArray *viewTagToCard;
-@property (nonatomic, strong) NSMutableArray *viewTagToStack;
+@property (nonatomic, strong) NSMutableArray *viewTagToCard;  // Allows us to quickly figure out which card was tapped
+@property (nonatomic, strong) NSMutableArray *viewTagToStack; // Allows us to quickly figure out which stack was tapped
 
 @property    int suit_stack_starter;
 
@@ -125,7 +125,7 @@
 - (IBAction)start_new_game:(id)sender {
     // KDR I'm hoping I don't need to free self.cards and whatever else--that just calling init_table
     // will cause the "automatic reference counter" to free whatever I've overwritten.
-    // However, I'm not particularly confident about this.
+    // Based on my memory usage not going up substantially with successive "new game" taps, I think I'm good.
 
     self.cards = nil;
 
@@ -157,6 +157,7 @@
         }
     }
 
+    //[self init_table_trivial];
     [self init_table];
     
     self.score -= 45;
@@ -1197,7 +1198,6 @@
     
     NSLog(@"KDR viewDidLoad called");
 
-    
     NSLog(self.do_init_table ? @"do_init table is YES" : @" do_init table is NO");
 
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];

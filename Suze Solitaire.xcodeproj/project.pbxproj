@@ -118,6 +118,7 @@
 		0B4CA24818BE6CEA00CF8E6B /* spade12.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B4CA23C18BE6CEA00CF8E6B /* spade12.png */; };
 		0B4E73991C0B956B008C7B87 /* spade13.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B4E73981C0B956B008C7B87 /* spade13.png */; };
 		0B5440DD175FA5BE00231C26 /* mainView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B5440DC175FA5BE00231C26 /* mainView.m */; };
+		0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */; };
 		0B825551175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825553175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B825555175B7C310064579C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825554175B7C310064579C /* CoreGraphics.framework */; };
@@ -265,6 +266,7 @@
 		0B4E73981C0B956B008C7B87 /* spade13.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spade13.png; sourceTree = "<group>"; };
 		0B5440DB175FA5BE00231C26 /* mainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mainView.h; sourceTree = "<group>"; };
 		0B5440DC175FA5BE00231C26 /* mainView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mainView.m; sourceTree = "<group>"; };
+		0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0B82554C175B7C310064579C /* Suze Solitaire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Suze Solitaire.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B825550175B7C310064579C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		0B825552175B7C310064579C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -291,9 +293,6 @@
 		0B8255F8175BD52C0064579C /* card.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card.m; sourceTree = "<group>"; };
 		0B8255FD175CB9F40064579C /* card_stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card_stack.h; sourceTree = "<group>"; };
 		0B8255FE175CB9F40064579C /* card_stack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card_stack.m; sourceTree = "<group>"; };
-		0BABD12219B8C5D2001FBA81 /* Icon-72.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Icon-72.png"; path = "Suze Solitaire/Icon-72.png"; sourceTree = "<group>"; };
-		0BABD12319B8C5EA001FBA81 /* Icon-72@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Icon-72@2x.png"; path = "Suze Solitaire/Icon-72@2x.png"; sourceTree = "<group>"; };
-		0BABD12419B8C61B001FBA81 /* Icon-76.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Icon-76.png"; path = "Suze Solitaire/Icon-76.png"; sourceTree = "<group>"; };
 		0BB464A6183D690D00EE4F5D /* retina_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = retina_icon.png; sourceTree = "<group>"; };
 		0BCD4CAF18EF236200F4B103 /* iPhoneStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = iPhoneStoryboard.storyboard; path = "Suze Solitaire/iPhoneStoryboard.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -324,9 +323,6 @@
 		0B825541175B7C310064579C = {
 			isa = PBXGroup;
 			children = (
-				0BABD12419B8C61B001FBA81 /* Icon-76.png */,
-				0BABD12319B8C5EA001FBA81 /* Icon-72@2x.png */,
-				0BABD12219B8C5D2001FBA81 /* Icon-72.png */,
 				0BCD4CAF18EF236200F4B103 /* iPhoneStoryboard.storyboard */,
 				0B825568175B7C310064579C /* MainStoryboard.storyboard */,
 				0B825556175B7C310064579C /* Suze Solitaire */,
@@ -358,6 +354,7 @@
 		0B825556175B7C310064579C /* Suze Solitaire */ = {
 			isa = PBXGroup;
 			children = (
+				0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */,
 				0B08A5B2176E5DD200E431D9 /* NSMutableArray+Shuffling.h */,
 				0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */,
 				0B82555F175B7C310064579C /* ssAppDelegate.h */,
@@ -695,6 +692,7 @@
 				0B07AAD2183D1987001B67FC /* c.club10.png in Resources */,
 				0B4CA20B18BE6CCB00CF8E6B /* diamond2.png in Resources */,
 				0B4CA20718BE6CCB00CF8E6B /* club11.png in Resources */,
+				0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */,
 				0B07AAD9183D1987001B67FC /* c.diamond1.png in Resources */,
 				0B4CA20A18BE6CCB00CF8E6B /* diamond1.png in Resources */,
 				0B07AAD8183D1987001B67FC /* c.Default@2x.png in Resources */,
@@ -829,7 +827,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -851,7 +849,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -862,6 +860,8 @@
 		0B825586175B7C310064579C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Brand Assets";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -878,6 +878,8 @@
 		0B825587175B7C310064579C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Brand Assets";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
