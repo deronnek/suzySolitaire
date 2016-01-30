@@ -841,6 +841,7 @@
         UITouch* touchPoint = [touches anyObject];
         CGPoint point       = [touchPoint locationInView:self.view];
         cs = [self find_active_stack:point];
+        NSLog(@"Deck has: %d",[self.deck.cards count]);
     }
     
     bool emptystack = false;
@@ -881,12 +882,12 @@
                 unsigned long deal_count =[self.deal.cards count];
                 for(int i=0; i<deal_count; i++) {
                     card *acard = [self.deal get_top_card];
+                    acard.card_parent = nil;  // Deck cards have no parents.
                     [self.deck add_card:acard];
                     [[self.deck.cards lastObject] setFace_up:false];
                     self.viewTagToStack[acard.view.tag] = self.deck;
                 }
                 //[self setNeedsDisplayInRect:self.deck.frame];
-                
                 
             }
             else {
@@ -894,7 +895,7 @@
                 unsigned long deck_count = [self.deck.cards count];
                 self.deck_just_tapped = 0;
                 for(int i=0; i<3 && i<deck_count; i++) {
-                    card *acard = [self.deck get_top_card];
+                    card *acard   = [self.deck get_top_card];
                     [self.deal add_card:acard];
                     self.viewTagToStack[acard.view.tag] = self.deal;
                     self.deck_just_tapped++;
@@ -991,6 +992,7 @@
         unsigned long deck_count =[self.deck.cards count];
         for(int i=0; i<deck_count; i++) {
             card *acard = [self.deck get_top_card];
+            acard.card_parent = nil;
             [self.deal add_card:acard];
             [[self.deal.cards lastObject] setFace_up:true];
             self.viewTagToStack[acard.view.tag] = self.deal;
@@ -1003,7 +1005,13 @@
         unsigned long deal_count = [self.deal.cards count];
         for(int i=0; i<self.deck_just_tapped && i<deal_count; i++) {
             card *acard = [self.deal get_top_card];
+            // Set child cards of card being moved back to have no parent, so they aren't linked to things in the deck.
+            
             [self.deck add_card:acard];
+            
+            card *child_card = [self.deal.cards lastObject];
+            child_card.card_parent = nil;
+
             [[self.deck.cards lastObject] setFace_up:false];
             self.viewTagToStack[acard.view.tag] = self.deck;
         }
@@ -1216,7 +1224,7 @@
         self.score  = -45;
         self.wins   = 0;
         self.losses = 0;
-        [self.autocomplete setOn:true];
+        [self.autocomplete setOn:false];
         
         [self init_table];
         

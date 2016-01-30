@@ -76,7 +76,20 @@
     CGRect rect;
     rect.origin      = point;
     rect.size.width  = width;
-    rect.size.height = height;
+    if(self.stack_type == deck) {
+        rect.size.height = height;
+    }
+    else if(self.stack_type == deal || self.stack_type == fub || self.stack_type == cardstack) {
+        rect.size.height = height + ([_cards count]-1)*self.card_slice_height;
+    }
+    else if(self.stack_type == suitstack) {
+        if([_cards count] > 1) {
+            rect.size.height = height + self.card_slice_height;
+        }
+        else {
+            rect.size.height = height;
+        }
+    }
     self.view.frame  = rect;
     
     //self.view.layer.borderWidth = 2;
@@ -230,9 +243,15 @@
     [toadd setZ_loc:self.stack_z];
     
     // Parent card
-    if(self.stack_type != deal && self.stack_type != deck && self.stack_type != fub && [self.cards count] > 0 ) {
+    //if(self.stack_type != deal && self.stack_type != deck && self.stack_type != fub && [self.cards count] > 0 ) {
+    // We actually need to set parents for deal and fub so you can't grab cards willy-nilly.  l
+    // deck cards are perfectly aligned so there's no risk for that stack.
+    if(self.stack_type != deck && [self.cards count] > 0) {
         card *child_card = [self.cards lastObject];
         child_card.card_parent = toadd;
+    }
+    if(self.stack_type == deck) {
+        toadd.card_parent = nil;
     }
     
     // If we're adding a card, we have at least one and don't want the border
@@ -259,11 +278,11 @@
 }
 
 - (void)remove_card:(card *)card {
-    // make rect smaller
+    // make rect smaller -- wait do I really need to do this?
     if((self.stack_type == cardstack) && [self.cards count] > 1) {
         CGRect rec = self.view.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height - self.card_slice_height);
-        [self.view setFrame:rec];
+        //[self.view setFrame:rec];
     }
 
     [self.cards removeObject:card];
