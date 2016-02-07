@@ -324,20 +324,25 @@
     int screen_width = CGRectGetWidth(self.view.bounds);
     //int screen_height = CGRectGetHeight(self.view.bounds);
     //int screenHeight = self.bounds.size.height;
-    int toolbarBottom = CGRectGetHeight(self.topToolBar.bounds);
+    int toolbarBottom = CGRectGetHeight(self.topToolBar.bounds)+self.topToolBar.frame.origin.y;
     
-    NSLog(@"Redraw_table called KDR screen width: %d %f",screen_width,self.topToolBar.bounds.origin.y);
+    NSLog(@"Redraw_table called KDR screen width: %d %f",screen_width,self.topToolBar.frame.origin.y);
     
     int card_width  = screen_width / 10;
     int card_height = card_width * 1.55;
     
-    int toprow_spacer = toolbarBottom+40;  // Space from the top of the screen to the first row of cards
-    int second_spacer = toprow_spacer+card_height*1.3+5;
+    int toprow_spacer = toolbarBottom+card_height*0.1;  // Space from the top of the screen to the first row of cards.
+    int second_spacer = toprow_spacer+card_height*1.8; // Space from the top row of cards to the second row
+    
+    if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        second_spacer = toprow_spacer+card_height*1.35;
+    }
+    
     int width_spacer  = card_width/2.0;
     int deal_spacer   = 2*(card_width/5);
     
     
-    [_fub resize:card_width/5:toprow_spacer-15:card_width:card_height];
+    [_fub resize:card_width/5:toprow_spacer:card_width:card_height];  // fub has too many cards and overlaps the deck on the iphone if we don't fudge it a little (hence the -15)
     
     if([_fub.cards count] == 0) {
         _fub.view.layer.borderWidth = 1;
@@ -1050,7 +1055,7 @@
 // accept_card_move should just be the test without that side effect.
 -(BOOL)accept_card_move: (card_stack *)from :(card_stack *)to :(card *)onTopOfCard {
     /* Debug: allow all moves (autocomplete must be off or this will loop forever) */
-    //[self.autocomplete setOn:NO]; return true;
+    [self.autocomplete setOn:NO]; return true;
     
     // Once cards are in the suitstacks, they're there for good
     if (from.stack_type == suitstack || from.stack_type == deck)
