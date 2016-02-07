@@ -332,9 +332,9 @@
     int card_height = card_width * 1.55;
     
     int toprow_spacer = toolbarBottom+40;  // Space from the top of the screen to the first row of cards
-    int second_spacer = toprow_spacer+card_height*1.2+5 ;
+    int second_spacer = toprow_spacer+card_height*1.3+5;
     int width_spacer  = card_width/2.0;
-    int deal_spacer   = card_width/5;
+    int deal_spacer   = 2*(card_width/5);
     
     
     [_fub resize:card_width/5:toprow_spacer-15:card_width:card_height];
@@ -361,7 +361,7 @@
         _deck.view.layer.borderColor = [[UIColor whiteColor] CGColor];
     }
     
-    [_deal resize:card_width+(card_width/5)+deal_spacer:second_spacer:card_width:card_height];
+    [_deal resize:card_width+deal_spacer:second_spacer:card_width:card_height];
     
     if([_deal.cards count] == 0) {
         _deal.view.layer.borderWidth = 1;
