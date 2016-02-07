@@ -5,10 +5,10 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
     </dependencies>
     <scenes>
-        <!--Ss View Controller-->
+        <!--View Controller-->
         <scene sceneID="4">
             <objects>
-                <viewController useStoryboardIdentifierAsRestorationIdentifier="YES" id="2" customClass="ssViewController" sceneMemberID="viewController">
+                <viewController useStoryboardIdentifierAsRestorationIdentifier="YES" id="2" customClass="ViewController" customModule="Suze_Solitaire" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="dh2-lg-h7d"/>
                         <viewControllerLayoutGuide type="bottom" id="OI5-4C-Zop"/>
@@ -77,12 +77,17 @@
                     <toolbarItems/>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="autoSwitch" destination="hki-rk-g7K" id="Qzu-uu-Y43"/>
                         <outlet property="autocomplete" destination="hki-rk-g7K" id="hb3-tZ-p54"/>
+                        <outlet property="bucksBarButtonItem" destination="cul-DJ-ZFO" id="b5J-x7-JxV"/>
                         <outlet property="bucks_counter" destination="cul-DJ-ZFO" id="SUg-3U-35I"/>
                         <outlet property="help_button" destination="I1G-dW-Shb" id="h62-LY-3P9"/>
+                        <outlet property="lossesBarButtonItem" destination="bG9-1P-NvX" id="5yq-So-iAG"/>
                         <outlet property="losses_counter" destination="bG9-1P-NvX" id="Az7-ZC-8fA"/>
-                        <outlet property="topToolBar" destination="RmG-yI-gJt" id="mBA-T9-nwn"/>
+                        <outlet property="topToolBar" destination="RmG-yI-gJt" id="Awb-2S-dwu"/>
+                        <outlet property="undoBarButtonItem" destination="jeC-UM-pIk" id="GO5-4y-JRv"/>
                         <outlet property="undo_button" destination="jeC-UM-pIk" id="gud-Kk-6xL"/>
+                        <outlet property="winsBarButtonItem" destination="Fdb-xR-OWd" id="9tC-Kr-ORx"/>
                         <outlet property="wins_counter" destination="Fdb-xR-OWd" id="0C3-FA-ZgF"/>
                     </connections>
                 </viewController>
