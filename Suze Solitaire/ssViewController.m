@@ -1055,7 +1055,7 @@
 // accept_card_move should just be the test without that side effect.
 -(BOOL)accept_card_move: (card_stack *)from :(card_stack *)to :(card *)onTopOfCard {
     /* Debug: allow all moves (autocomplete must be off or this will loop forever) */
-    [self.autocomplete setOn:NO]; return true;
+    //[self.autocomplete setOn:NO]; return true;
     
     // Once cards are in the suitstacks, they're there for good
     if (from.stack_type == suitstack || from.stack_type == deck)
