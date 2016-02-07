@@ -13,9 +13,11 @@
 
 @interface ssViewController ()
 
-@property (weak, nonatomic) IBOutlet UILabel *bucks_counter;
-@property (weak, nonatomic) IBOutlet UILabel *wins_counter;
-@property (weak, nonatomic) IBOutlet UILabel *losses_counter;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *bucks_counter;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *wins_counter;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *losses_counter;
+@property (weak, nonatomic) IBOutlet UIToolbar *topToolBar;
+
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *undo_button;
 @property (weak, nonatomic) IBOutlet UISwitch *autocomplete;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *help_button;
@@ -83,24 +85,24 @@
 
 - (void)setWins:(int)wins {
     _wins = wins;
-    self.wins_counter.text = [NSString stringWithFormat:@"Wins: %d",_wins];
+    self.wins_counter.title = [NSString stringWithFormat:@"Wins: %d",_wins];
 }
 
 - (void)setScore:(int)score {
     _score = score;
     
-    self.bucks_counter.text = [NSString stringWithFormat:@"$%d",_score];
+    self.bucks_counter.title = [NSString stringWithFormat:@"$%d",_score];
     if(_score < 0) {
-        [self.bucks_counter setTextColor:[UIColor redColor]];
+        [self.bucks_counter setTintColor:[UIColor redColor]];
     }
     else {
-        [self.bucks_counter setTextColor:[UIColor blackColor]];
+        [self.bucks_counter setTintColor:[UIColor blackColor]];
     }
 }
 
 - (void)setLosses:(int)losses {
     _losses = losses;
-    self.losses_counter.text = [NSString stringWithFormat:@"Losses: %d",_losses];
+    self.losses_counter.title = [NSString stringWithFormat:@"Losses: %d",_losses];
 }
 
 
@@ -137,6 +139,8 @@
         [[((card_stack *)self.suitstacks[i]).view  subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
         [[((card_stack *)self.cardstacks[i]).view  subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     }
+    
+    //[self setWins:1000];
     
     // Remove card stacks
     [self.deck.view removeFromSuperview];
@@ -311,22 +315,29 @@
     [self.view addSubview:self.fub.view];
     self.active_card = NULL;
 }
-
+/* 
+ This function is where the table layout actually gets done.  init_table just sets up the structures
+ */
 - (void)redraw_table {
     
     //int screen_width = self.bounds.size.width;
     int screen_width = CGRectGetWidth(self.view.bounds);
+    //int screen_height = CGRectGetHeight(self.view.bounds);
     //int screenHeight = self.bounds.size.height;
-    NSLog(@"Redraw_table called KDR screen width: %d",screen_width);
+    int toolbarBottom = CGRectGetHeight(self.topToolBar.bounds);
     
-    int card_width = screen_width / 10;
+    NSLog(@"Redraw_table called KDR screen width: %d %f",screen_width,self.topToolBar.bounds.origin.y);
+    
+    int card_width  = screen_width / 10;
     int card_height = card_width * 1.55;
     
-    int toprow_spacer = (card_height/2.0)+20;
-    int second_spacer = card_height*2.0;
+    int toprow_spacer = toolbarBottom+40;  // Space from the top of the screen to the first row of cards
+    int second_spacer = toprow_spacer+card_height*1.2+5 ;
+    int width_spacer  = card_width/2.0;
+    int deal_spacer   = card_width/5;
     
     
-    [_fub resize:card_width/5:toprow_spacer:card_width:card_height];
+    [_fub resize:card_width/5:toprow_spacer-15:card_width:card_height];
     
     if([_fub.cards count] == 0) {
         _fub.view.layer.borderWidth = 1;
@@ -336,7 +347,7 @@
     NSLog(@"before suit stacks");
     // Resize the four suit stacks
     for(int i=0; i<4; i++) {
-        [_suitstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):toprow_spacer:card_width:card_height];
+        [_suitstacks[i] resize:(card_width*4)+(i*card_width+(i*width_spacer)):toprow_spacer:card_width:card_height];
         if([((card_stack *)_suitstacks[i]).cards count] == 0) {
             ((card_stack *)_suitstacks[i]).view.layer.borderWidth = 1;
             ((card_stack *)_suitstacks[i]).view.layer.borderColor = [[UIColor whiteColor] CGColor];
@@ -350,7 +361,7 @@
         _deck.view.layer.borderColor = [[UIColor whiteColor] CGColor];
     }
     
-    [_deal resize:card_width+(card_width/5)+20:second_spacer:card_width:card_height];
+    [_deal resize:card_width+(card_width/5)+deal_spacer:second_spacer:card_width:card_height];
     
     if([_deal.cards count] == 0) {
         _deal.view.layer.borderWidth = 1;
@@ -359,7 +370,7 @@
     
     NSLog(@"Before card stacks");
     for(int i=0; i<4; i++) {
-        [_cardstacks[i] resize:(card_width*4)+(i*card_width+(i*50)):second_spacer:card_width:card_height];
+        [_cardstacks[i] resize:(card_width*4)+(i*card_width+(i*width_spacer)):second_spacer:card_width:card_height];
         if([((card_stack *)_cardstacks[i]).cards count] == 0) {
             ((card_stack *)_cardstacks[i]).view.layer.borderWidth = 1;
             ((card_stack *)_cardstacks[i]).view.layer.borderColor = [[UIColor whiteColor] CGColor];
@@ -841,7 +852,7 @@
         UITouch* touchPoint = [touches anyObject];
         CGPoint point       = [touchPoint locationInView:self.view];
         cs = [self find_active_stack:point];
-        NSLog(@"Deck has: %d",[self.deck.cards count]);
+        NSLog(@"Deck has: %luu",(unsigned long)[self.deck.cards count]);
     }
     
     bool emptystack = false;

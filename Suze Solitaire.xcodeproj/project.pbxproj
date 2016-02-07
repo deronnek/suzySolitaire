@@ -138,7 +138,6 @@
 		0B8255F9175BD52C0064579C /* card.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8255F8175BD52C0064579C /* card.m */; };
 		0B8255FF175CB9F40064579C /* card_stack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8255FE175CB9F40064579C /* card_stack.m */; };
 		0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BB464A6183D690D00EE4F5D /* retina_icon.png */; };
-		0BCD4CB018EF236200F4B103 /* iPhoneStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0BCD4CAF18EF236200F4B103 /* iPhoneStoryboard.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -294,7 +293,6 @@
 		0B8255FD175CB9F40064579C /* card_stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card_stack.h; sourceTree = "<group>"; };
 		0B8255FE175CB9F40064579C /* card_stack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card_stack.m; sourceTree = "<group>"; };
 		0BB464A6183D690D00EE4F5D /* retina_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = retina_icon.png; sourceTree = "<group>"; };
-		0BCD4CAF18EF236200F4B103 /* iPhoneStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = iPhoneStoryboard.storyboard; path = "Suze Solitaire/iPhoneStoryboard.storyboard"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -323,7 +321,6 @@
 		0B825541175B7C310064579C = {
 			isa = PBXGroup;
 			children = (
-				0BCD4CAF18EF236200F4B103 /* iPhoneStoryboard.storyboard */,
 				0B825568175B7C310064579C /* MainStoryboard.storyboard */,
 				0B825556175B7C310064579C /* Suze Solitaire */,
 				0B82557A175B7C310064579C /* Suze SolitaireTests */,
@@ -673,7 +670,6 @@
 				0B4CA22C18BE6CDB00CF8E6B /* heart9.png in Resources */,
 				0B07AAE5183D1987001B67FC /* c.diamond13.png in Resources */,
 				0B4CA21018BE6CCB00CF8E6B /* diamond7.png in Resources */,
-				0BCD4CB018EF236200F4B103 /* iPhoneStoryboard.storyboard in Resources */,
 				0B07AB0A183D199F001B67FC /* c.spade11.png in Resources */,
 				0B4CA22718BE6CDB00CF8E6B /* heart4.png in Resources */,
 				0B07AB03183D199F001B67FC /* c.spade4.png in Resources */,
@@ -870,7 +866,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "kdr-productions.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -888,7 +884,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "kdr-productions.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
