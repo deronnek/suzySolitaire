@@ -278,11 +278,11 @@
 }
 
 - (void)remove_card:(card *)card {
-    // make rect smaller -- wait do I really need to do this?
+    // make rect smaller -- wait do I really need to do this?  No, but the rectangles get long and ugly otherwise.
     if((self.stack_type == cardstack) && [self.cards count] > 1) {
         CGRect rec = self.view.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height - self.card_slice_height);
-        //[self.view setFrame:rec];
+        [self.view setFrame:rec];
     }
 
     [self.cards removeObject:card];
