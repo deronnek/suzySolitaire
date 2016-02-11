@@ -67,7 +67,7 @@
     return self;
 }
 
-- (void)resize:(int)x :(int)y :(int)width :(int)height {
+- (void)resize:(int)x :(int)y :(int)width :(int)cardHeight {
     // Set the bounds of the box for the stack
     CGPoint point;
     point.x = x;
@@ -76,18 +76,26 @@
     CGRect rect;
     rect.origin      = point;
     rect.size.width  = width;
+    
+    // Make stacking tighter if we're not on an ipad
+    if(UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) {
+        if(self.stack_type == suitstack || self.stack_type == cardstack) {
+            self.card_slice_height = cardHeight/2.5;
+        }
+    }
+    
     if(self.stack_type == deck) {
-        rect.size.height = height;
+        rect.size.height = cardHeight;
     }
     else if(self.stack_type == deal || self.stack_type == fub || self.stack_type == cardstack) {
-        rect.size.height = height + ([_cards count]-1)*self.card_slice_height;
+        rect.size.height = cardHeight + ([_cards count]-1)*self.card_slice_height;
     }
     else if(self.stack_type == suitstack) {
         if([_cards count] > 1) {
-            rect.size.height = height + self.card_slice_height;
+            rect.size.height = cardHeight + self.card_slice_height;
         }
         else {
-            rect.size.height = height;
+            rect.size.height = cardHeight;
         }
     }
     self.view.frame  = rect;
@@ -107,7 +115,7 @@
         else {
             y = 0;
         }
-        [self.cards[i] resize:0:y:width:height];
+        [self.cards[i] resize:0:y:width:cardHeight];
         //NSLog(@"cardimage: %@",[((card *)_cards[i]).view image]);
     }
 }
@@ -278,11 +286,11 @@
 }
 
 - (void)remove_card:(card *)card {
-    // make rect smaller -- wait do I really need to do this?
+    // make rect smaller -- wait do I really need to do this?  No, but the rectangles get long and ugly otherwise.
     if((self.stack_type == cardstack) && [self.cards count] > 1) {
         CGRect rec = self.view.frame;
         rec.size = CGSizeMake(rec.size.width, rec.size.height - self.card_slice_height);
-        //[self.view setFrame:rec];
+        [self.view setFrame:rec];
     }
 
     [self.cards removeObject:card];

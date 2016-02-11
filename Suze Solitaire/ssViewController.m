@@ -328,18 +328,27 @@
     
     NSLog(@"Redraw_table called KDR screen width: %d %f",screen_width,self.topToolBar.frame.origin.y);
     
-    int card_width  = screen_width / 10;
-    int card_height = card_width * 1.55;
+    int card_width  = screen_width / 7;
+    int card_height = card_width * 1.2;
     
     int toprow_spacer = toolbarBottom+card_height*0.1;  // Space from the top of the screen to the first row of cards.
     int second_spacer = toprow_spacer+card_height*1.8; // Space from the top row of cards to the second row
+    float left_right_gap_multiplier = 2.8;
+    
+    int width_spacer  = card_width/15;
+    int deal_spacer   = 2*(card_width/5);
     
     if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        card_width    = screen_width/10;
         second_spacer = toprow_spacer+card_height*1.35;
+        width_spacer  = card_width/2.0;
+        deal_spacer   = 2*(card_width/5);
+        left_right_gap_multiplier = 4;
+        card_height   = card_width*1.55;
+
     }
     
-    int width_spacer  = card_width/2.0;
-    int deal_spacer   = 2*(card_width/5);
+   
     
     
     [_fub resize:card_width/5:toprow_spacer:card_width:card_height];  // fub has too many cards and overlaps the deck on the iphone if we don't fudge it a little (hence the -15)
@@ -352,7 +361,7 @@
     NSLog(@"before suit stacks");
     // Resize the four suit stacks
     for(int i=0; i<4; i++) {
-        [_suitstacks[i] resize:(card_width*4)+(i*card_width+(i*width_spacer)):toprow_spacer:card_width:card_height];
+        [_suitstacks[i] resize:(card_width*left_right_gap_multiplier)+(i*card_width+(i*width_spacer)):toprow_spacer:card_width:card_height];
         if([((card_stack *)_suitstacks[i]).cards count] == 0) {
             ((card_stack *)_suitstacks[i]).view.layer.borderWidth = 1;
             ((card_stack *)_suitstacks[i]).view.layer.borderColor = [[UIColor whiteColor] CGColor];
@@ -375,7 +384,7 @@
     
     NSLog(@"Before card stacks");
     for(int i=0; i<4; i++) {
-        [_cardstacks[i] resize:(card_width*4)+(i*card_width+(i*width_spacer)):second_spacer:card_width:card_height];
+        [_cardstacks[i] resize:(card_width*left_right_gap_multiplier)+(i*card_width+(i*width_spacer)):second_spacer:card_width:card_height];
         if([((card_stack *)_cardstacks[i]).cards count] == 0) {
             ((card_stack *)_cardstacks[i]).view.layer.borderWidth = 1;
             ((card_stack *)_cardstacks[i]).view.layer.borderColor = [[UIColor whiteColor] CGColor];
@@ -569,8 +578,14 @@
 -(void)create_cards:(int)width :(int)height {
     NSString *back_img = @"cardback.png";
     int tagCounter = 0;
+    NSString* face_img;
     for (int i=1; i<=13; i++) {
-        NSString* face_img = [NSString stringWithFormat:@"club%d.png",i];
+        if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            face_img = [NSString stringWithFormat:@"club%d.png",i];
+        }
+        else {
+            face_img = [NSString stringWithFormat:@"club%d-iphone.png",i];
+        }
         card *acard = [[card alloc] initWithData:Clubs:i:face_img:back_img:0:0:i:width:height:tagCounter];
         [acard setColor:Black];
         [self.cards addObject:acard];
@@ -579,7 +594,13 @@
     }
     
     for (int i=1; i<=13; i++) {
-        NSString* face_img = [NSString stringWithFormat:@"diamond%d.png",i];
+        if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            face_img = [NSString stringWithFormat:@"diamond%d.png",i];
+        }
+        else {
+            face_img = [NSString stringWithFormat:@"diamond%d-iphone.png",i];
+        }
+        
         card *acard = [[card alloc] initWithData:Diamonds:i:face_img:back_img:0:0:i:width:height:tagCounter];
         [acard setColor:Red];
         [self.cards addObject:acard];
@@ -588,7 +609,12 @@
     }
     
     for (int i=1; i<=13; i++) {
-        NSString* face_img = [NSString stringWithFormat:@"heart%d.png",i];
+        if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            face_img = [NSString stringWithFormat:@"heart%d.png",i];
+        }
+        else {
+            face_img = [NSString stringWithFormat:@"heart%d-iphone.png",i];
+        }
 
         card *acard = [[card alloc] initWithData:Hearts:i:face_img:back_img:0:0:i:width:height:tagCounter];
         [acard setColor:Red];
@@ -598,7 +624,12 @@
     }
     
     for (int i=1; i<=13; i++) {
-        NSString* face_img = [NSString stringWithFormat:@"spade%d.png",i];
+        if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            face_img = [NSString stringWithFormat:@"spade%d.png",i];
+        }
+        else {
+            face_img = [NSString stringWithFormat:@"spade%d-iphone.png",i];
+        }
         card *acard = [[card alloc] initWithData:Spades:i:face_img:back_img:0:0:i:width:height:tagCounter];
         [acard setColor:Black];
         [self.cards addObject:acard];
