@@ -329,7 +329,7 @@
     NSLog(@"Redraw_table called KDR screen width: %d %f",screen_width,self.topToolBar.frame.origin.y);
     
     int card_width  = screen_width / 7;
-    int card_height = card_width * 1.55;
+    int card_height = card_width * 1.2;
     
     int toprow_spacer = toolbarBottom+card_height*0.1;  // Space from the top of the screen to the first row of cards.
     int second_spacer = toprow_spacer+card_height*1.8; // Space from the top row of cards to the second row
@@ -339,10 +339,12 @@
     int deal_spacer   = 2*(card_width/5);
     
     if(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        card_width    = screen_width/10;
         second_spacer = toprow_spacer+card_height*1.35;
         width_spacer  = card_width/2.0;
         deal_spacer   = 2*(card_width/5);
         left_right_gap_multiplier = 4;
+        card_height   = card_width*1.55;
 
     }
     
