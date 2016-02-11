@@ -23,10 +23,9 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *help_button;
 @property (weak) UIPopoverController *myPopover;
 
-
 @property bool do_init_table;
 @property (nonatomic, copy) NSString *restorationIdentifier;
-@property (strong, nonatomic) IBOutlet UIImageView *cardback;
+//@property (strong, nonatomic) IBOutlet UIImageView *cardback;
 
 // These next two keep the card under the cursor where it's grabbed instead
 // of always at the upper left corner
@@ -45,7 +44,7 @@
 @property (nonatomic) int losses;
 @property int deck_just_tapped;
 @property int just_won;
-@property ssTest *mytest;
+//@property ssTest *mytest;
 
 @property    (nonatomic, retain) NSMutableArray *cards; // Initial deck to pull from when setting up a game
 @property    (nonatomic, retain) NSMutableArray *suitstacks;
@@ -1340,7 +1339,7 @@
     [coder encodeInt:self.xCap  forKey:@"xCap"];
     [coder encodeInt:self.yCap  forKey:@"yCap"];
     [coder encodeInt:self.suit_stack_starter  forKey:@"suit_stack_starter"];
-    [coder encodeObject:self.mytest forKey:@"testkey"];
+//    [coder encodeObject:self.mytest forKey:@"testkey"];
     
     //[coder encodeInt:((card *)self.fub.cards[0]).rank forKey:@"fub"];
     
@@ -1387,10 +1386,10 @@
     self.deal       = [coder decodeObjectForKey:@"deal"];
     
     
-    self.mytest = [coder decodeObjectForKey:@"testkey"];
-    NSLog(@"view in decode: %@",self.view);
-    NSLog(@"simple int: %d",self.mytest.simple);
-    NSLog(@"test view: %@",self.mytest.myview);
+//    self.mytest = [coder decodeObjectForKey:@"testkey"];
+//    NSLog(@"view in decode: %@",self.view);
+//    NSLog(@"simple int: %d",self.mytest.simple);
+//    NSLog(@"test view: %@",self.mytest.myview);
     
     [self update_ac_switch];
     

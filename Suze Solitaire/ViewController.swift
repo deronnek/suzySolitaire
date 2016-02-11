@@ -18,8 +18,67 @@ class ViewController: UIViewController {
     @IBOutlet weak var lossesBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var undoBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var autoSwitch: UISwitch!
+    @IBOutlet weak var helpBarButton: UIBarButtonItem!
+    
+    // MARK: Computed Properties
+    var score: Int {
+        get {
+            return Int(bucksBarButtonItem.title!)!
+        }
+        set(newScore) {
+            bucksBarButtonItem.title = String(newScore)
+        }
+    }
+    var wins: Int {
+        get {
+            return Int(winsBarButtonItem.title!)!
+        }
+        set(newWins) {
+            winsBarButtonItem.title = String(newWins)
+        }
+    }
+    var losses: Int {
+        get {
+            return Int(lossesBarButtonItem.title!)!
+        }
+        set(newLosses) {
+            lossesBarButtonItem.title = String(newLosses)
+        }
+    }
     
     var doInitTable = true
-    var restorationIdentifier = "mainViewController"
     var xCap = 0
+    var yCap = 0;
+    
+    var activeCard           = Card()
+    var cardSourceStack      = CardStack()
+    var cardDestinationStack = CardStack()
+    
+    var deckTaps   = 0
+    var justWon    = false
+    // The rank of the first card in the suitStacks
+    var suitStackStarter = -1
+    
+    // Initial deck to pull cards from when setting up a game
+    var cards      = []
+    // The ordered stacks at the top
+    var suitStacks = []
+    // The working stacks at the bottom
+    var cardStacks = []
+    // The "face up blind" stack
+    var fub = CardStack()
+    // The stack from which cards are drawn
+    var deck = CardStack()
+    // The stack containing previously drawn cards
+    var deal = CardStack()
+    
+    // Allows us to quickly figure out which card was tapped
+    var viewTagToCard  = []
+    // Allows us to quickly figure out which stack was tapped
+    var viewTagToStack = []
+    
+    // MARK: Methods
+    override func viewDidLoad() {
+        restorationIdentifier = "mainViewController"
+    }
 }

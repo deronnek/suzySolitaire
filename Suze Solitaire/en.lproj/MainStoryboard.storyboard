@@ -81,6 +81,7 @@
                         <outlet property="autocomplete" destination="hki-rk-g7K" id="hb3-tZ-p54"/>
                         <outlet property="bucksBarButtonItem" destination="cul-DJ-ZFO" id="b5J-x7-JxV"/>
                         <outlet property="bucks_counter" destination="cul-DJ-ZFO" id="SUg-3U-35I"/>
+                        <outlet property="helpBarButton" destination="I1G-dW-Shb" id="xkz-gm-vxB"/>
                         <outlet property="help_button" destination="I1G-dW-Shb" id="h62-LY-3P9"/>
                         <outlet property="lossesBarButtonItem" destination="bG9-1P-NvX" id="5yq-So-iAG"/>
                         <outlet property="losses_counter" destination="bG9-1P-NvX" id="Az7-ZC-8fA"/>
