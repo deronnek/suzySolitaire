@@ -24,16 +24,18 @@ class CardStack: NSObject {
     var stackZ = Int()
     var view   = UIView()
     
-    init(x: Int, y: Int, width: Int, height: Int, type: cardStackType) {
-        var point = CGPoint(x: x, y: y)
-        let rect  = CGRect(origin: point, size: CGSize(width: width, height: height))
-        self.view.frame = rect
+    init(type: cardStackType) {
+//        var point = CGPoint(x: x, y: y)
+//        let rect  = CGRect(origin: point, size: CGSize(width: width, height: height))
+//        self.view.frame = rect
+//        
+//        point.x += CGFloat(Float(width)/2.0)
+//        point.y += CGFloat(Float(height)/2.0)
+//        
+//        self.view = UIView(frame: rect)
+//        self.view.center = point
         
-        point.x += CGFloat(Float(width)/2.0)
-        point.y += CGFloat(Float(height)/2.0)
         
-        self.view = UIView(frame: rect)
-        self.view.center = point
         self.view.userInteractionEnabled = true
         
         //self.identifier = NSUUID().UUIDString()
@@ -43,7 +45,10 @@ class CardStack: NSObject {
             case .deck, .cardstack, .suitstack:
                 break // default value is fine for these
         }
-        
+        self.stackType = type
+        // Assume we have no cards and need a border
+        self.view.layer.borderWidth = 1
+        self.view.layer.borderColor = UIColor.whiteColor().CGColor
     }
     
     func resize(point: CGPoint, width: Int, cardHeight: Int) {
@@ -80,8 +85,9 @@ class CardStack: NSObject {
                     if i > 0 {
                         y = self.cardSliceHeight
                     }
-                default:
-                    break
+                case .deck:
+                    y = 0
+                
             }
             self.cards[i].resize(CGPoint(x: 0, y: y), width: width, height: cardHeight)
         }
@@ -116,7 +122,7 @@ class CardStack: NSObject {
         }
         
         toadd.savedCap = self.cardSliceHeight
-        toadd.setPos(CGPoint(x: pos.x, y:pos.y))
+        toadd.setPos(CGPoint(x: pos.x, y: pos.y))
         
         // If the stack is to be shown, make rect larger
         if ((self.stackType == .cardstack || self.stackType == .fub || self.stackType == .deal) && self.cards.count > 0) || (self.stackType == .suitstack && self.cards.count == 1) {
@@ -148,7 +154,6 @@ class CardStack: NSObject {
         
         toadd.view.exclusiveTouch = true
         self.view.addSubview(toadd.view)
-
     }
     
     func removeCard(toRemove: Card) {

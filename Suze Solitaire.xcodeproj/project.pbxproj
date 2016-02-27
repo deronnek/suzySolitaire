@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0B08A5B4176E5DD200E431D9 /* NSMutableArray+Shuffling.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */; };
 		0B0F5C7A18E210E200CA3F9A /* ssTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0F5C7918E210E200CA3F9A /* ssTest.m */; };
+		0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2DAFF71C7F5D69008C7B87 /* Util.swift */; };
 		0B478BF81C6B7D25008C7B87 /* spade1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BF71C6B7D25008C7B87 /* spade1.png */; };
 		0B478BFC1C6B81D0008C7B87 /* spade1-iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */; };
 		0B478C091C6B9199008C7B87 /* spade2-iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BFD1C6B9199008C7B87 /* spade2-iphone.png */; };
@@ -154,6 +155,7 @@
 		0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableArray+Shuffling.m"; path = "../NSMutableArray+Shuffling.m"; sourceTree = "<group>"; };
 		0B0F5C7818E210E200CA3F9A /* ssTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssTest.h; sourceTree = "<group>"; };
 		0B0F5C7918E210E200CA3F9A /* ssTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ssTest.m; sourceTree = "<group>"; };
+		0B2DAFF71C7F5D69008C7B87 /* Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Util.swift; path = ../Util.swift; sourceTree = "<group>"; };
 		0B478BF71C6B7D25008C7B87 /* spade1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spade1.png; sourceTree = "<group>"; };
 		0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spade1-iphone.png"; sourceTree = "<group>"; };
 		0B478BFD1C6B9199008C7B87 /* spade2-iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spade2-iphone.png"; sourceTree = "<group>"; };
@@ -368,6 +370,7 @@
 				0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */,
 				0B5440DB175FA5BE00231C26 /* mainView.h */,
 				0B5440DC175FA5BE00231C26 /* mainView.m */,
+				0B2DAFF71C7F5D69008C7B87 /* Util.swift */,
 				0B825557175B7C310064579C /* Supporting Files */,
 				0B938E511C67E58A008C7B87 /* Suze Solitaire-Bridging-Header.h */,
 			);
@@ -745,6 +748,7 @@
 				0B82556D175B7C310064579C /* ssViewController.m in Sources */,
 				0B8255F9175BD52C0064579C /* card.m in Sources */,
 				0B8255FF175CB9F40064579C /* card_stack.m in Sources */,
+				0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */,
 				0B53A8DC1C6CF8A7008C7B87 /* CardStack.swift in Sources */,
 				0B53A8DA1C6CE93D008C7B87 /* Card.swift in Sources */,
 				0B5440DD175FA5BE00231C26 /* mainView.m in Sources */,

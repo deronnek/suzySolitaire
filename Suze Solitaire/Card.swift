@@ -15,6 +15,32 @@ enum cardSuit {
     case Diamonds
     case Hearts
     case Spades
+    
+    func simpleDescription() -> String {
+        switch self {
+        case .Spades:
+            return "spade"
+        case .Hearts:
+            return "heart"
+        case .Diamonds:
+            return "diamond"
+        case .Clubs:
+            return "club"
+        }
+    }
+    
+    func color () -> cardColor {
+        switch self {
+        case .Spades:
+            return .Black
+        case .Hearts:
+            return .Red
+        case .Diamonds:
+            return .Red
+        case .Clubs:
+            return .Black
+        }
+    }
 }
 
 enum cardColor {
@@ -40,29 +66,26 @@ class Card: NSObject {
     var faceImage  = UIImage()
     //var identifier =
     
-    init(suit: cardSuit, rank: Int, faceImageFilename: String, backImageFilename: String, x: Int, y: Int, zLocation: Int, width: Int, height: Int, tag: Int) {
+    init(suit: cardSuit, rank: Int, faceImageFilename: String, backImageFilename: String, tag: Int) {
         self.suit              = suit
         self.rank              = rank
         self.faceImageFilename = faceImageFilename
         self.backImageFilename = backImageFilename
-        self.zLocation         = zLocation
+        //self.zLocation         = zLocation
         
         self.view      = UIImageView(image: UIImage(imageLiteral: faceImageFilename))
         self.view.tag  = tag
         self.faceImage = UIImage(imageLiteral: faceImageFilename)
         self.backImage = UIImage(imageLiteral: backImageFilename)
+      
+        self.color = suit.color()
+//        
+//        let point = CGPoint(x: x, y: y)
+//        let rect  = CGRect(origin: point, size: CGSize(width:width, height:height))
+//        self.view.frame  = rect
+//        self.view.center = point
         
-        switch suit {
-            case .Spades, .Clubs:
-                self.color = .Black
-            case .Diamonds, .Hearts:
-                self.color = .Red
-        }
         
-        let point = CGPoint(x: x, y: y)
-        let rect  = CGRect(origin: point, size: CGSize(width:width, height:height))
-        self.view.frame  = rect
-        self.view.center = point
         self.view.userInteractionEnabled = true
         
         self.cardParent = nil
@@ -80,8 +103,7 @@ class Card: NSObject {
     }
     
     func resize(point: CGPoint, width:Int, height:Int) {
-        let rect  = CGRect(origin: point, size: CGSize(width: width, height: height))
-        self.view.frame = rect
+        self.view.frame = CGRect(origin: point, size: CGSize(width: width, height: height))
     }
     
     func cancelMove() {

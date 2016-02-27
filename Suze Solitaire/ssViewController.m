@@ -8,7 +8,7 @@
 
 #import "ssViewController.h"
 #import "mainView.h"
-#import <UIKit/UiColor.h>
+#import <UIKit/UIColor.h>
 #import "NSMutableArray+Shuffling.h"
 
 @interface ssViewController ()
@@ -949,8 +949,8 @@
             }
             _undo_button.enabled = true;
             self.active_card = NULL;
-            // Refresh the appropriate rectangles
             
+            // Refresh the appropriate rectangles
             if([self.deck.cards count] == 0) {
                 
                 self.deck.view.layer.borderWidth = 1;

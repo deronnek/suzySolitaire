@@ -45,22 +45,11 @@
                                 <items>
                                     <barButtonItem title="New Game" id="3cc-z1-ULa">
                                         <connections>
-                                            <action selector="start_new_game:" destination="2" id="xP2-il-Nb2"/>
+                                            <action selector="startNewGame:" destination="2" id="fYq-Bd-awp"/>
                                         </connections>
                                     </barButtonItem>
-                                    <barButtonItem title="Undo" id="jeC-UM-pIk">
-                                        <connections>
-                                            <action selector="undo_move:" destination="2" id="x1v-mx-Z4u"/>
-                                        </connections>
-                                    </barButtonItem>
-                                    <barButtonItem title="Help" width="43" id="I1G-dW-Shb">
-                                        <connections>
-                                            <action selector="help_tapped:" destination="2" id="Jyn-by-l46"/>
-                                            <segue destination="ZTM-93-MXZ" kind="popover" popoverAnchorBarButtonItem="I1G-dW-Shb" id="PaI-If-yxB">
-                                                <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
-                                            </segue>
-                                        </connections>
-                                    </barButtonItem>
+                                    <barButtonItem title="Undo" id="jeC-UM-pIk"/>
+                                    <barButtonItem title="Help" width="43" id="I1G-dW-Shb"/>
                                 </items>
                             </toolbar>
                         </subviews>
@@ -78,18 +67,12 @@
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="autoSwitch" destination="hki-rk-g7K" id="Qzu-uu-Y43"/>
-                        <outlet property="autocomplete" destination="hki-rk-g7K" id="hb3-tZ-p54"/>
                         <outlet property="bucksBarButtonItem" destination="cul-DJ-ZFO" id="b5J-x7-JxV"/>
-                        <outlet property="bucks_counter" destination="cul-DJ-ZFO" id="SUg-3U-35I"/>
                         <outlet property="helpBarButton" destination="I1G-dW-Shb" id="xkz-gm-vxB"/>
-                        <outlet property="help_button" destination="I1G-dW-Shb" id="h62-LY-3P9"/>
                         <outlet property="lossesBarButtonItem" destination="bG9-1P-NvX" id="5yq-So-iAG"/>
-                        <outlet property="losses_counter" destination="bG9-1P-NvX" id="Az7-ZC-8fA"/>
                         <outlet property="topToolBar" destination="RmG-yI-gJt" id="Awb-2S-dwu"/>
                         <outlet property="undoBarButtonItem" destination="jeC-UM-pIk" id="GO5-4y-JRv"/>
-                        <outlet property="undo_button" destination="jeC-UM-pIk" id="gud-Kk-6xL"/>
                         <outlet property="winsBarButtonItem" destination="Fdb-xR-OWd" id="9tC-Kr-ORx"/>
-                        <outlet property="wins_counter" destination="Fdb-xR-OWd" id="0C3-FA-ZgF"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
