@@ -5,9 +5,17 @@
 //  Created by Kevin DeRonne on 2/7/16.
 //  Copyright © 2016 Kevin DeRonne. All rights reserved.
 //
-// TODO:  popup to confirm new game
+// TODO:  
+// Add popup to confirm new game
 // Rename "Help" to "How to play"
 // Fix bug where autobucks makes a move sourceStack the deal, then you tap undo.
+// Fix tapping on empty deck
+// Refactor undo code using moveBetween function
+
+//
+// DONE:
+// Enable autocomplete button; fix code that changes its state
+// Implement Undo
 
 import UIKit
 
@@ -26,30 +34,41 @@ class ViewController: UIViewController {
     // MARK: Computed Properties
     var score: Int {
         get {
-            return Int(bucksBarButtonItem.title!)!
+            let components = bucksBarButtonItem.title?.componentsSeparatedByString("$")
+            return Int(components![1])!
         }
         set(newScore) {
-            bucksBarButtonItem.title = String(newScore)
-        }
-    }
-    var wins: Int {
-        get {
-            return Int(winsBarButtonItem.title!)!
-        }
-        set(newWins) {
-            winsBarButtonItem.title = String(newWins)
-        }
-    }
-    var losses: Int {
-        get {
-            return Int(lossesBarButtonItem.title!)!
-        }
-        set(newLosses) {
-            lossesBarButtonItem.title = String(newLosses)
+            bucksBarButtonItem.title = String(format: "$%d", newScore)
+            if newScore < 0 {
+                bucksBarButtonItem.tintColor = UIColor.redColor()
+            }
+            else {
+                bucksBarButtonItem.tintColor = UIColor.blackColor()
+            }
         }
     }
     
-    // Mark Properties
+    var wins: Int {
+        get {
+            let components = winsBarButtonItem.title?.componentsSeparatedByString(" ")
+            return Int(components![1])!
+        }
+        set(newWins) {
+            winsBarButtonItem.title = String(format: "Wins: %d", newWins)
+        }
+    }
+    
+    var losses: Int {
+        get {
+            let components = lossesBarButtonItem.title?.componentsSeparatedByString(" ")
+            return Int(components![1])!
+        }
+        set(newLosses) {
+            lossesBarButtonItem.title = String(format:"Losses: %d", newLosses)
+        }
+    }
+    
+    // Mark Propertiesd
     var doInitTable = true
     var xCap = 0
     var yCap = 0;
@@ -84,6 +103,9 @@ class ViewController: UIViewController {
     // MARK: Methods
     override func viewDidLoad() {
         restorationIdentifier = "mainViewController"
+        let tapGesture = UITapGestureRecognizer(target: self, action: "handleTapGesture:")
+        tapGesture.numberOfTapsRequired = 2
+        self.view.addGestureRecognizer(tapGesture)
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -92,16 +114,60 @@ class ViewController: UIViewController {
             self.score  = -45
             self.wins   = 0
             self.losses = 0
-            self.autoSwitch.enabled = false
+            self.autoSwitch.setOn(false, animated: true)
             self.initTable()
-            
-            self.doInitTable = false;
+            // I think I only need to set this when I'm restoring from a coder
+            //self.doInitTable = false;
         }
         self.redrawTable()
     }
     
+    func handleTapGesture(sender: UITapGestureRecognizer) {
+        if sender.state == UIGestureRecognizerState.Recognized {
+            // handling code
+            
+            let point = sender.locationInView(self.view)
+            // Put up the card under point if possible
+            //NSLog(@"double tap recognized at %f,%f",point.x,point.y);
+            self.tryToPutUpCardAtPoint(point)
+        }
+    }
+    
+    func tryToPutUpCardAtPoint(point: CGPoint) {
+        if let sourceStack = self.findActiveStack(point) {
+            if (self.activeCard != nil) {
+            
+                for i in 0..<4 {
+                    
+                    let topCard = self.suitStacks[i]!.cards.last
+                    if self.acceptCardMove(sourceStack, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
+                        
+                        self.moveCardBetweenStacks(self.activeCard, sourceStack: sourceStack, destinationStack: self.suitStacks[i]!)
+                        
+                        // Check to see if we've just won
+                        var won = true;
+                        for i in 0..<4 {
+                            if self.suitStacks[i]!.cards.count != 13 {
+                                won = false
+                            }
+                        }
+                        
+                        if(won == true) {
+                            self.runVictory()
+                        }
+                        // If we've put up a card, we don't need to check further stacks
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    
     @IBAction func startNewGame(sender: AnyObject) {
-        self.cards = []
+        
+        self.cards.removeAll()
+        
         for viewContainer in [self.deck, self.deal, self.fub] + self.suitStacks + self.cardStacks {
             viewContainer!.view.subviews.forEach({ $0.removeFromSuperview() })
             viewContainer!.view.removeFromSuperview()
@@ -124,7 +190,70 @@ class ViewController: UIViewController {
         self.initTable()
         self.activeCard = nil
         self.redrawTable()
+        print("Found \(self.suitStacks.count) suitstacks")
     }
+    
+    @IBAction func undoMove(sender: UIBarButtonItem) {
+        // You only get one undo
+        self.undoBarButtonItem.enabled = false
+        
+        /* We should only get to this point if the deck tap is being undone */
+        if self.deckTaps > 0 {
+            self.undoDeckTap()
+        }
+        else {
+            if self.activeCardDestinationStack?.stackType == .suitstack {
+                self.score -= 5 // Do we ever get here?
+            }
+            self.moveCardBetweenStacks(self.activeCard, sourceStack: self.activeCardDestinationStack!, destinationStack: self.activeCardSourceStack!)
+        }
+        
+    }
+    
+    func undoDeckTap() {
+        print("KDR Undoing deck tap")
+        
+        if self.deal!.cards.isEmpty {
+            /* Move everything from the deck back to the deal */
+           let deckCount = self.deck!.cards.count
+            for _ in 0..<deckCount {
+                let aCard = self.deck?.getTopCard()
+                aCard!.cardParent = nil
+                self.deal!.addCard(aCard!)
+                self.deal!.cards.last!.faceUp = true
+                self.viewTagToStack[aCard!.view.tag] = self.deal
+            }
+        }
+        else {
+            /* Take the top 3 cards from the deal and move them to the deck */
+            let dealCount = self.deal!.cards.count
+            var i = 0
+            while i < self.deckTaps && i < dealCount {
+
+                let aCard = self.deal!.getTopCard()
+                // Set child cards of card being moved back to have no parent, so they aren't linked to things in the deck.
+                
+                self.deck!.addCard(aCard!)
+                
+                self.deal!.cards.last?.cardParent = nil
+                
+                self.deck!.cards.last?.faceUp = false
+                self.viewTagToStack[aCard!.view.tag] = self.deck;
+                i++
+            }
+        }
+        
+        if self.deal!.cards.isEmpty {
+            self.deal!.view.layer.borderWidth = 1;
+            self.deal!.view.layer.borderColor = UIColor.whiteColor().CGColor
+        }
+        
+        self.activeCard = nil
+
+        print("Deck has \(self.deck!.cards.count) cards")
+        print("Deal has \(self.deal!.cards.count) cards")
+    }
+    
     
     func initTable() {
         print("Init table called")
@@ -138,9 +267,14 @@ class ViewController: UIViewController {
             return
         }
         
+        
         // Create cards and shuffle them
         self.createCards()
         self.cards.shuffleInPlace()
+        
+        // Make sure the suitStack and cardStack arrays are clear (maybe this should be in startNewGame instead?)
+        self.suitStacks.removeAll()
+        self.cardStacks.removeAll()
         
         print("Cards created: \(self.cards.count)")
         
@@ -225,25 +359,30 @@ class ViewController: UIViewController {
             
         }
         
+        // Get integer versions as that's what resize takes (maybe it shouldn't?)
+        let cardHeightInt = Int(cardHeight)
+        let cardWidthInt  = Int(cardWidth)
+        
         // fub has too many cards and overlaps the deck on the iphone if we don't fudge it a little (hence the -15)
-        self.fub!.resize(CGPoint(x: cardWidth/5, y: toprowSpacer), width: Int(cardWidth), cardHeight: Int(cardHeight))
+        self.fub!.resize(CGPoint(x: cardWidth/5, y: toprowSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
         
         // Resize the four suit stacks
         for i in 0..<4 {
             var x = cardWidth * leftRightGapMultiplier
                 x += CGFloat(i)*cardWidth + CGFloat(i)*widthSpacer
             
-            self.suitStacks[i]!.resize(CGPoint(x: x, y: toprowSpacer), width: Int(cardWidth), cardHeight: Int(cardHeight))
+            self.suitStacks[i]!.resize(CGPoint(x: x, y: toprowSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
         }
         
-        self.deck!.resize(CGPoint(x: cardWidth/5, y: secondSpacer), width: Int(cardWidth), cardHeight: Int(cardHeight))
-        self.deal!.resize(CGPoint(x: cardWidth+dealSpacer, y: secondSpacer), width: Int(cardWidth), cardHeight: Int(cardHeight))
+        self.deck!.resize(CGPoint(x: cardWidth/5, y: secondSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
+        self.deal!.resize(CGPoint(x: cardWidth+dealSpacer, y: secondSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
         
+        // Resize the four card stacks
         for i in 0..<4 {
             var x = cardWidth * leftRightGapMultiplier
             x += CGFloat(i)*cardWidth + CGFloat(i)*widthSpacer
 
-            self.cardStacks[i]!.resize(CGPoint(x: x, y: secondSpacer), width: Int(cardWidth), cardHeight: Int(cardHeight))
+            self.cardStacks[i]!.resize(CGPoint(x: x, y: secondSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
         }
 
     }
@@ -277,6 +416,7 @@ class ViewController: UIViewController {
         if ((viewTapped?.isKindOfClass(UIImageView)) != nil) {
             self.activeCard            = self.viewTagToCard[viewTapped!.tag]!
             self.activeCardSourceStack = self.viewTagToStack[viewTapped!.tag]!
+            self.activeCard?.savePos()
             
             viewTapped?.superview?.bringSubviewToFront(viewTapped!)
             self.view.bringSubviewToFront((viewTapped?.superview)!)
@@ -311,7 +451,7 @@ class ViewController: UIViewController {
             return
         }
         
-        
+        print("touches ended with active card: \(self.activeCard)")
         
         var droppedOnCardStack: CardStack? = nil
         let point = touches.first?.locationInView(self.view)
@@ -320,7 +460,7 @@ class ViewController: UIViewController {
         }
         
         // if the deck is empty, we have to be able to detect a click on it with no card
-        if (droppedOnCardStack == nil) {
+        if droppedOnCardStack == nil {
             droppedOnCardStack = self.findActiveStack(point!)
         }
         
@@ -379,7 +519,7 @@ class ViewController: UIViewController {
             }
             else if(droppedOnCardStack?.stackType == .cardstack || droppedOnCardStack?.stackType == .suitstack) {
                 let droppedOnCard = droppedOnCardStack!.cards.last
-                if self.acceptCardMove(self.activeCardSourceStack!, destinationStack: droppedOnCardStack!, onTopOfCard: droppedOnCard!) {
+                if self.acceptCardMove(self.activeCardSourceStack!, destinationStack: droppedOnCardStack!, onTopOfCard: droppedOnCard) {
                     self.activeCardDestinationStack = droppedOnCardStack
                     self.undoBarButtonItem.enabled  = true
                     self.moveCardBetweenStacks(self.activeCard!, sourceStack: self.activeCardSourceStack!, destinationStack: droppedOnCardStack!)
@@ -401,7 +541,7 @@ class ViewController: UIViewController {
         }
         
         // Make all possible moves to suitstacks
-        if self.autoSwitch.enabled {
+        if self.autoSwitch.on {
             while self.findCardForSuitstack() {
             }
         }
@@ -507,7 +647,7 @@ class ViewController: UIViewController {
                 
                 self.activeCard = self.cardStacks[j]!.cards.last
                 
-                if self.acceptCardMove(self.cardStacks[j]!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard!) {
+                if self.acceptCardMove(self.cardStacks[j]!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                     // Make the move
                     self.moveCardBetweenStacks(self.activeCard!, sourceStack: self.cardStacks[i]!, destinationStack: self.suitStacks[i]!)
                     self.activeCard = backupActive
@@ -517,7 +657,7 @@ class ViewController: UIViewController {
             
             // Check fub
             self.activeCard = self.fub!.cards.last
-            if self.acceptCardMove(self.fub!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard!) {
+            if self.acceptCardMove(self.fub!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                 // Make the move
                 self.moveCardBetweenStacks(self.activeCard!, sourceStack: self.fub!, destinationStack: self.suitStacks[i]!)
                 self.activeCard = backupActive;
@@ -526,7 +666,7 @@ class ViewController: UIViewController {
             
             // Check deal
             self.activeCard = self.deal!.cards.last
-            if self.acceptCardMove(self.deal!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard!) {
+            if self.acceptCardMove(self.deal!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                 // Make the move
                 self.moveCardBetweenStacks(self.activeCard!, sourceStack: self.deal!, destinationStack: self.suitStacks[i]!)
                 self.activeCard = backupActive;
@@ -538,8 +678,8 @@ class ViewController: UIViewController {
         return false
     }
     
-    func acceptCardMove(sourceStack: CardStack, destinationStack: CardStack, onTopOfCard: Card) -> Bool {
-        //self.autoSwitch.enabled = false; return true // debug only
+    func acceptCardMove(sourceStack: CardStack, destinationStack: CardStack, onTopOfCard: Card?) -> Bool {
+        //self.autoSwitch.setOn(false, animated: true); return true // debug only
         
         if sourceStack == destinationStack {
             return false
@@ -557,6 +697,18 @@ class ViewController: UIViewController {
             return false
         }
         
+        if destinationStack.stackType == .suitstack {
+            if destinationStack.cards.isEmpty && self.activeCard!.rank == self.suitStackStarter {
+                self.score += 5
+                return true
+            }
+            // Corner cases
+            if(!destinationStack.cards.isEmpty && (self.activeCard!.suit == onTopOfCard!.suit) && (self.activeCard!.rank == onTopOfCard!.rank+1 || (self.activeCard!.rank == 1 && onTopOfCard!.rank == 13))) {
+                self.score += 5
+                return true
+            }
+        }
+
         if destinationStack.stackType == .cardstack {
             if destinationStack.cards.isEmpty {
                 if sourceStack.stackType == .fub {
@@ -572,28 +724,15 @@ class ViewController: UIViewController {
                 }
             }
             else if(sourceStack.stackType == .fub || sourceStack.stackType == .cardstack || sourceStack.stackType == .deal) {
-                if(self.activeCard!.color == onTopOfCard.color) {
+                if(self.activeCard!.color == onTopOfCard!.color) {
                     return false
                 }
-                if(self.activeCard!.rank == onTopOfCard.rank-1 || (self.activeCard!.rank == 13 && onTopOfCard.rank == 1)) {
+                if(self.activeCard!.rank == onTopOfCard!.rank-1 || (self.activeCard!.rank == 13 && onTopOfCard!.rank == 1)) {
                     return true
                 }
             }
         }
-        
-        if destinationStack.stackType == .suitstack {
-            if destinationStack.cards.isEmpty && self.activeCard!.rank == self.suitStackStarter {
-                self.score += 5
-                return true
-            }
-            // Corner cases
-            if(destinationStack.cards.isEmpty && (self.activeCard!.suit == onTopOfCard.suit) && (self.activeCard!.rank == onTopOfCard.rank+1 || (self.activeCard!.rank == 1 && onTopOfCard.rank == 13))) {
-                self.score += 5
-                return true
-            }
-        }
         return false
-
     }
     
     func moveCardBetweenStacks(cardToMove: Card?, sourceStack: CardStack, destinationStack: CardStack) -> Bool {
@@ -604,7 +743,7 @@ class ViewController: UIViewController {
             destinationStack.addCard(cardToMove!)
             
             // Clean parent card reference
-            sourceStack.cards.last!.cardParent = nil
+            sourceStack.cards.last?.cardParent = nil
             
             self.viewTagToStack[cardToMove!.view.tag] = destinationStack
             self.moveCardBetweenStacks(cardToMove?.cardParent, sourceStack: sourceStack, destinationStack: destinationStack)

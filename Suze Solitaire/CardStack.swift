@@ -122,7 +122,7 @@ class CardStack: NSObject {
         }
         
         toadd.savedCap = self.cardSliceHeight
-        toadd.setPos(CGPoint(x: pos.x, y: pos.y))
+        toadd.setPos(pos)
         
         // If the stack is to be shown, make rect larger
         if ((self.stackType == .cardstack || self.stackType == .fub || self.stackType == .deal) && self.cards.count > 0) || (self.stackType == .suitstack && self.cards.count == 1) {
@@ -177,9 +177,11 @@ class CardStack: NSObject {
 
     }
     
-    func makeSubViewsOfCards() {
-        
-    }
+//    func makeSubViewsOfCards() {
+//        var failNow = Card?()
+//        failNow = nil
+//        let _ = failNow!
+//    }
     
     func getCardAtPosition(point: CGPoint) -> Card? {
         var activeCard = Card?()

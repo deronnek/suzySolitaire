@@ -112,9 +112,11 @@ class Card: NSObject {
     }
     
     func setPos(point: CGPoint) {
-        var rect = self.view.frame
-        rect.origin = point
+        var rect        = self.view.frame
+        rect.origin     = point
         self.view.frame = rect
+        
+        self.cardParent?.setPos(CGPoint(x: point.x, y: point.y+CGFloat(self.savedCap)))
     }
     
     func savePos() {
