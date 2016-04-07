@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0B08A5B4176E5DD200E431D9 /* NSMutableArray+Shuffling.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */; };
-		0B0F5C7A18E210E200CA3F9A /* ssTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0F5C7918E210E200CA3F9A /* ssTest.m */; };
 		0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2DAFF71C7F5D69008C7B87 /* Util.swift */; };
 		0B478BF81C6B7D25008C7B87 /* spade1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BF71C6B7D25008C7B87 /* spade1.png */; };
 		0B478BFC1C6B81D0008C7B87 /* spade1-iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */; };
@@ -116,26 +114,21 @@
 		0B4E73991C0B956B008C7B87 /* spade13.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B4E73981C0B956B008C7B87 /* spade13.png */; };
 		0B53A8DA1C6CE93D008C7B87 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B53A8D91C6CE93D008C7B87 /* Card.swift */; };
 		0B53A8DC1C6CF8A7008C7B87 /* CardStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */; };
-		0B5440DD175FA5BE00231C26 /* mainView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B5440DC175FA5BE00231C26 /* mainView.m */; };
+		0B5BD93B1CB6BB79008C7B87 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */; };
 		0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */; };
 		0B825551175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825553175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B825555175B7C310064579C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825554175B7C310064579C /* CoreGraphics.framework */; };
 		0B82555B175B7C310064579C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B825559175B7C310064579C /* InfoPlist.strings */; };
-		0B82555D175B7C310064579C /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B82555C175B7C310064579C /* main.m */; };
-		0B825561175B7C310064579C /* ssAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B825560175B7C310064579C /* ssAppDelegate.m */; };
 		0B825563175B7C310064579C /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825562175B7C310064579C /* Default.png */; };
 		0B825565175B7C310064579C /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825564175B7C310064579C /* Default@2x.png */; };
 		0B825567175B7C310064579C /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825566175B7C310064579C /* Default-568h@2x.png */; };
 		0B82556A175B7C310064579C /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0B825568175B7C310064579C /* MainStoryboard.storyboard */; };
-		0B82556D175B7C310064579C /* ssViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B82556C175B7C310064579C /* ssViewController.m */; };
 		0B825576175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825577175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B82557F175B7C310064579C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B82557D175B7C310064579C /* InfoPlist.strings */; };
 		0B825582175B7C310064579C /* Suze_SolitaireTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B825581175B7C310064579C /* Suze_SolitaireTests.m */; };
 		0B82558C175B7D2C0064579C /* cardback.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B82558B175B7D2C0064579C /* cardback.png */; };
-		0B8255F9175BD52C0064579C /* card.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8255F8175BD52C0064579C /* card.m */; };
-		0B8255FF175CB9F40064579C /* card_stack.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B8255FE175CB9F40064579C /* card_stack.m */; };
 		0B938E531C67E58B008C7B87 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B938E521C67E58B008C7B87 /* ViewController.swift */; };
 		0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BB464A6183D690D00EE4F5D /* retina_icon.png */; };
 /* End PBXBuildFile section */
@@ -264,6 +257,7 @@
 		0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardStack.swift; sourceTree = "<group>"; };
 		0B5440DB175FA5BE00231C26 /* mainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mainView.h; sourceTree = "<group>"; };
 		0B5440DC175FA5BE00231C26 /* mainView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mainView.m; sourceTree = "<group>"; };
+		0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0B82554C175B7C310064579C /* Suze Solitaire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Suze Solitaire.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B825550175B7C310064579C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
@@ -353,24 +347,26 @@
 			isa = PBXGroup;
 			children = (
 				0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */,
+				0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */,
+				0B938E521C67E58B008C7B87 /* ViewController.swift */,
+				0B53A8D91C6CE93D008C7B87 /* Card.swift */,
+				0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */,
+				0B2DAFF71C7F5D69008C7B87 /* Util.swift */,
 				0B08A5B2176E5DD200E431D9 /* NSMutableArray+Shuffling.h */,
 				0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */,
 				0B82555F175B7C310064579C /* ssAppDelegate.h */,
 				0B825560175B7C310064579C /* ssAppDelegate.m */,
 				0B82556B175B7C310064579C /* ssViewController.h */,
 				0B82556C175B7C310064579C /* ssViewController.m */,
-				0B938E521C67E58B008C7B87 /* ViewController.swift */,
 				0B8255F7175BD52C0064579C /* card.h */,
 				0B8255F8175BD52C0064579C /* card.m */,
-				0B53A8D91C6CE93D008C7B87 /* Card.swift */,
 				0B0F5C7818E210E200CA3F9A /* ssTest.h */,
 				0B0F5C7918E210E200CA3F9A /* ssTest.m */,
 				0B8255FD175CB9F40064579C /* card_stack.h */,
 				0B8255FE175CB9F40064579C /* card_stack.m */,
-				0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */,
+				0B82555C175B7C310064579C /* main.m */,
 				0B5440DB175FA5BE00231C26 /* mainView.h */,
 				0B5440DC175FA5BE00231C26 /* mainView.m */,
-				0B2DAFF71C7F5D69008C7B87 /* Util.swift */,
 				0B825557175B7C310064579C /* Supporting Files */,
 				0B938E511C67E58A008C7B87 /* Suze Solitaire-Bridging-Header.h */,
 			);
@@ -485,7 +481,6 @@
 				0B4CA1FB18BE6CCB00CF8E6B /* diamond12.png */,
 				0B4CA1FC18BE6CCB00CF8E6B /* diamond13.png */,
 				0BB464A6183D690D00EE4F5D /* retina_icon.png */,
-				0B82555C175B7C310064579C /* main.m */,
 				0B82558B175B7D2C0064579C /* cardback.png */,
 				0B825558175B7C310064579C /* Suze Solitaire-Info.plist */,
 				0B825559175B7C310064579C /* InfoPlist.strings */,
@@ -741,18 +736,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B0F5C7A18E210E200CA3F9A /* ssTest.m in Sources */,
-				0B82555D175B7C310064579C /* main.m in Sources */,
-				0B825561175B7C310064579C /* ssAppDelegate.m in Sources */,
 				0B938E531C67E58B008C7B87 /* ViewController.swift in Sources */,
-				0B82556D175B7C310064579C /* ssViewController.m in Sources */,
-				0B8255F9175BD52C0064579C /* card.m in Sources */,
-				0B8255FF175CB9F40064579C /* card_stack.m in Sources */,
 				0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */,
 				0B53A8DC1C6CF8A7008C7B87 /* CardStack.swift in Sources */,
+				0B5BD93B1CB6BB79008C7B87 /* AppDelegate.swift in Sources */,
 				0B53A8DA1C6CE93D008C7B87 /* Card.swift in Sources */,
-				0B5440DD175FA5BE00231C26 /* mainView.m in Sources */,
-				0B08A5B4176E5DD200E431D9 /* NSMutableArray+Shuffling.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

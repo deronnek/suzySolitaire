@@ -17,7 +17,7 @@ enum cardStackType {
     case deal
 }
 
-class CardStack: NSObject {
+class CardStack: AnyObject {
     var cards = [Card]()
     var stackType = cardStackType.cardstack
     var cardSliceHeight = 30
@@ -149,6 +149,9 @@ class CardStack: NSObject {
         // If we're adding a card, we have at least one and don't want the border
         self.view.layer.borderWidth = 0;
         
+        // MARK: Debug
+        self.view.layer.borderWidth = 2;
+        
         // Card ownership is transfered to array
         self.cards.append(toadd)
         
@@ -164,7 +167,7 @@ class CardStack: NSObject {
             self.view.frame = rec
         }
         
-        if let index = self.cards.indexOf(toRemove) {
+        if let index = self.cards.indexOf({ $0 === toRemove }) {
             self.cards.removeAtIndex(index)
         }
      
@@ -210,9 +213,7 @@ class CardStack: NSObject {
     
     func getTopCard() -> Card? {
         if let top = self.cards.last {
-            if let index = self.cards.indexOf(top) {
-                self.cards.removeAtIndex(index)
-            }
+            self.cards.removeLast()
             return top
         }
         return nil

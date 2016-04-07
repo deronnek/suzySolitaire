@@ -819,7 +819,7 @@
     }
     self.just_won = 1;
 }
-
+// MARK: touches
 -(void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
     UITouch* touchPoint = [touches anyObject];
     CGPoint point       = [touchPoint locationInView:self.view];

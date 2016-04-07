@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="14F1605" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="2">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="14F1713" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="XS6-J1-sOB">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+        <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -40,47 +42,46 @@
                                     </barButtonItem>
                                 </items>
                             </toolbar>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="top" restorationIdentifier="" translatesAutoresizingMaskIntoConstraints="NO" id="RmG-yI-gJt">
-                                <rect key="frame" x="0.0" y="20" width="768" height="44"/>
-                                <items>
-                                    <barButtonItem title="New Game" id="3cc-z1-ULa">
-                                        <connections>
-                                            <action selector="startNewGame:" destination="2" id="fYq-Bd-awp"/>
-                                        </connections>
-                                    </barButtonItem>
-                                    <barButtonItem title="Undo" id="jeC-UM-pIk">
-                                        <connections>
-                                            <action selector="undoMove:" destination="2" id="W5b-ys-awL"/>
-                                        </connections>
-                                    </barButtonItem>
-                                    <barButtonItem title="How to Play" id="I1G-dW-Shb"/>
-                                </items>
-                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" red="0.17948933666150763" green="0.43669327445652173" blue="0.19245184737353235" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
                             <constraint firstItem="oDC-bT-7mE" firstAttribute="bottom" secondItem="OI5-4C-Zop" secondAttribute="top" id="2mf-36-yIO"/>
-                            <constraint firstItem="oDC-bT-7mE" firstAttribute="trailing" secondItem="RmG-yI-gJt" secondAttribute="trailing" id="Nia-SV-KkX"/>
-                            <constraint firstItem="RmG-yI-gJt" firstAttribute="top" secondItem="dh2-lg-h7d" secondAttribute="bottom" id="R0A-fn-r1d"/>
-                            <constraint firstItem="oDC-bT-7mE" firstAttribute="leading" secondItem="RmG-yI-gJt" secondAttribute="leading" id="bYG-TE-Km4"/>
-                            <constraint firstAttribute="trailing" secondItem="RmG-yI-gJt" secondAttribute="trailing" id="xXu-dg-y4V"/>
-                            <constraint firstItem="RmG-yI-gJt" firstAttribute="leading" secondItem="5" secondAttribute="leading" id="yca-B2-Jip"/>
+                            <constraint firstItem="oDC-bT-7mE" firstAttribute="leading" secondItem="5" secondAttribute="leadingMargin" constant="-20" id="Mn8-Zd-Fs2"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="oDC-bT-7mE" secondAttribute="trailing" constant="-20" id="leO-mz-a8o"/>
                         </constraints>
                     </view>
                     <toolbarItems/>
+                    <navigationItem key="navigationItem" id="3Ya-Sg-Vfe">
+                        <barButtonItem key="leftBarButtonItem" title="New Game" id="3cc-z1-ULa">
+                            <connections>
+                                <action selector="startNewGame:" destination="2" id="fYq-Bd-awp"/>
+                            </connections>
+                        </barButtonItem>
+                        <rightBarButtonItems>
+                            <barButtonItem title="How to Play" id="I1G-dW-Shb">
+                                <connections>
+                                    <segue destination="ZTM-93-MXZ" kind="push" id="Oqw-mV-gjc"/>
+                                </connections>
+                            </barButtonItem>
+                            <barButtonItem systemItem="undo" id="jeC-UM-pIk">
+                                <connections>
+                                    <action selector="undoMove:" destination="2" id="W5b-ys-awL"/>
+                                </connections>
+                            </barButtonItem>
+                        </rightBarButtonItems>
+                    </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="autoSwitch" destination="hki-rk-g7K" id="Qzu-uu-Y43"/>
                         <outlet property="bucksBarButtonItem" destination="cul-DJ-ZFO" id="b5J-x7-JxV"/>
                         <outlet property="lossesBarButtonItem" destination="bG9-1P-NvX" id="5yq-So-iAG"/>
-                        <outlet property="topToolBar" destination="RmG-yI-gJt" id="Awb-2S-dwu"/>
                         <outlet property="undoBarButtonItem" destination="jeC-UM-pIk" id="tAT-85-Z9h"/>
                         <outlet property="winsBarButtonItem" destination="Fdb-xR-OWd" id="9tC-Kr-ORx"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="176" y="-208"/>
+            <point key="canvasLocation" x="1156" y="-208"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="cqe-pe-etA">
@@ -95,10 +96,9 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" showsHorizontalScrollIndicator="NO" editable="NO" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zWr-CC-nc6">
-                                <rect key="frame" x="20" y="20" width="728" height="234"/>
+                                <rect key="frame" x="20" y="72" width="728" height="234"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                <string key="text">Rules of play:
-1.   Cards must alternate colors in the lower four stacks and count down.
+                                <string key="text">1.   Cards must alternate colors in the lower four stacks and count down.
 2.   Cards must be of the same suit in the upper four stacks and count up.
 3.   Click on the deck to get three cards at a time.
 4.   There are 13 face-up cards above the deck (the "blind").
@@ -117,10 +117,29 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <rect key="contentStretch" x="0.0" y="0.0" width="1" height="0.5"/>
                     </view>
+                    <navigationItem key="navigationItem" id="EMC-kv-7j0"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uP0-2W-6qC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="996" y="-208"/>
+            <point key="canvasLocation" x="1978" y="-208"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="SWb-Ha-W2w">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="XS6-J1-sOB" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="cM4-eb-6yI">
+                        <rect key="frame" x="0.0" y="0.0" width="768" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="2" kind="relationship" relationship="rootViewController" id="e34-zh-Jsf"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="uP1-oa-soh" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="176" y="-208"/>
         </scene>
     </scenes>
 </document>

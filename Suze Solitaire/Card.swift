@@ -48,7 +48,7 @@ enum cardColor {
     case Black
 }
 
-class Card: NSObject {
+class Card: AnyObject {
     // MARK: Properties
     var keysForEncoding = ["color","rank","suit","faceUp", "faceImageFilename","zLocation", "savedPosition", "cardParent"]
     var color  = cardColor.Black
