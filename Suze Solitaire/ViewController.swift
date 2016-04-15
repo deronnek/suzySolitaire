@@ -7,15 +7,13 @@
 //
 
 // TODO:  
-// Add popup to confirm new game
-
-
-// Refactor undo code using moveBetween function
-// Implement state restoration
+// Add popup to confirm new game (?)
 // Try to save state when swiped up
 // Fix cards on suitstacks after rotating device
-// Fix bug where a card from the FUB can't be placed on an empty cardstack after an autobucks move
+// Fix dragging stack of cards makes top card dissappear
 // Go through all functions in ssViewController and make sure you either don't need them or have a swift version
+// Fix card parents not being cleaned properly after auto move
+
 
 //
 // DONE:
@@ -25,6 +23,13 @@
 // Rename "Help" to "How to play"
 // Add Segue to get to how to play screen
 // Fix tapping on empty deck
+// Fix borders appearing when they shouldn't  (was a debug statement in cardStack.swift)
+// Implement state restoration
+// Fix auto move emptying a cardstack not leaving a border (index problem in findCardForSuitStack making it so that the card wasn't in the stack we were trying to remove it from)
+// Fix bug where a card from the FUB can't be placed on an empty cardstack after an autobucks move (same bug as above)
+// Implement initTableTrivial
+// Test Winning
+// Fix bug where you can stick something to an empty deck
 
 import UIKit
 
@@ -107,12 +112,12 @@ class ViewController: UIViewController {
     // Allows us to quickly figure out which stack was tapped
     var viewTagToStack = [Int:CardStack?]()
     
+    
     // MARK: Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         //self.navigationController?.navigationBarHidden = true // might need in viewDidAppear
         
-        restorationIdentifier = "mainViewController"
         let tapGesture = UITapGestureRecognizer(target: self, action: "handleTapGesture:")
         tapGesture.numberOfTapsRequired = 2
         self.view.addGestureRecognizer(tapGesture)
@@ -149,8 +154,8 @@ class ViewController: UIViewController {
         coder.encodeInteger(self.suitStackStarter,  forKey:"suitStackStarter")
         
         for i in 0..<4 {
-            coder.encodeObject(self.suitStacks[i], forKey:String("suitstacks%d",i))
-            coder.encodeObject(self.cardStacks[i], forKey:String("cardstacks%d",i))
+            coder.encodeObject(self.suitStacks[i], forKey:String("suitstack%d",i))
+            coder.encodeObject(self.cardStacks[i], forKey:String("cardstack%d",i))
         }
         
         //coder.encodeObject(self.cards,      forKey:"cards")
@@ -184,20 +189,26 @@ class ViewController: UIViewController {
         //self.cards      = coder.decodeObjectforKey("cards")
         
         self.cards      = [Card?]()
+        self.suitStacks = [CardStack?]()
+        self.cardStacks = [CardStack?]()
+
         
         for i in 0..<4 {
-            self.suitStacks[i] = coder.decodeObjectForKey(String("suitstacks%d",i)) as! CardStack?
-            self.cardStacks[i] = coder.decodeObjectForKey(String("cardstacks%d",i)) as! CardStack?
+            self.suitStacks.append(coder.decodeObjectForKey(String("suitstack%d",i)) as! CardStack?)
+            self.cardStacks.append(coder.decodeObjectForKey(String("cardstack%d",i)) as! CardStack?)
         }
         
         self.fub        = coder.decodeObjectForKey("fub")  as! CardStack?
         self.deck       = coder.decodeObjectForKey("deck") as! CardStack?
         self.deal       = coder.decodeObjectForKey("deal") as! CardStack?
+    }
     
+    override func applicationFinishedRestoringState() {
+        print("KDR Setting up subviews")
         
+        self.view.addSubview(self.fub!.view)
         self.view.addSubview(self.deck!.view)
         self.view.addSubview(self.deal!.view)
-        self.view.addSubview(self.fub!.view)
         
         
         for i in 0..<4 {
@@ -218,7 +229,7 @@ class ViewController: UIViewController {
         
         for i in 0..<self.deck!.cards.count {
             self.deck!.cards[i].view.tag = tagCount
-            self.viewTagToCard[tagCount]  = self.deck!.cards[i];
+            self.viewTagToCard[tagCount]  = self.deck!.cards[i]
             self.viewTagToStack[tagCount] = self.deck
             tagCount++;
         }
@@ -239,15 +250,14 @@ class ViewController: UIViewController {
             }
             for i in 0..<self.suitStacks[j]!.cards.count {
                 self.suitStacks[j]!.cards[i].view.tag = tagCount
-                self.viewTagToCard[tagCount]  = self.suitStacks[j]!.cards[i];
+                self.viewTagToCard[tagCount]  = self.suitStacks[j]!.cards[i]
                 self.viewTagToStack[tagCount] = self.suitStacks[j]
                 tagCount++;
             }
         }
+        
+        print("Deck has \(self.deck!.cards.count)")
     }
-    //override func viewWillDisappear(animated: Bool) {
-        //self.navigationController?.navigationBarHidden = false
-    //}
     
     func handleTapGesture(sender: UITapGestureRecognizer) {
         if sender.state == UIGestureRecognizerState.Recognized {
@@ -315,6 +325,8 @@ class ViewController: UIViewController {
         
         self.score -= 45
         self.initTable()
+        // MARK: Debug trivial table
+        // self.initTableTrivial()
         self.activeCard = nil
         self.redrawTable()
         print("Found \(self.suitStacks.count) suitstacks")
@@ -448,14 +460,97 @@ class ViewController: UIViewController {
         print("Deck has \(self.deck!.cards.count)")
     }
     
+    
+    
     func addCardToStack(dest: CardStack) -> Card{
-        let aCard = self.cards.removeAtIndex(0)!
+        let aCard = self.cards.removeFirst()!
         dest.addCard(aCard)
         self.viewTagToCard[aCard.view.tag]  = aCard
         self.viewTagToStack[aCard.view.tag] = dest
         return aCard
 
     }
+   
+    
+    func initTableTrivial() {
+        print("Init table TRIVIAL called")
+        self.undoBarButtonItem.enabled = false
+        
+        self.view.restorationIdentifier = "mainView"
+        
+        guard self.cards.count == 0 else {
+            // We already have cards.  This should never happen.
+            print("Bailing from initTableTrivial: cards count: \(self.cards.count)")
+            return
+        }
+        
+        
+        // Create cards and shuffle them
+        self.createCards()
+        
+        // Make sure the suitStack and cardStack arrays are clear (maybe this should be in startNewGame instead?)
+        self.suitStacks.removeAll()
+        self.cardStacks.removeAll()
+        self.fub!.cards.removeAll()
+        self.deck!.cards.removeAll()
+        self.deal!.cards.removeAll()
+        
+        print("Cards created: \(self.cards.count)")
+        
+        // Create the suitstacks and cardstacks
+        for i in 0..<4 {
+            let aSuitStack = CardStack(type: .suitstack)
+            for _ in 0..<10 {
+                self.addCardToStack(aSuitStack)
+            }
+            self.suitStacks.append(aSuitStack)
+            self.view.addSubview(aSuitStack.view)
+            
+            let aCardStack = CardStack(type: .cardstack)
+            let topCard    = self.cards.removeFirst()!
+            let middleCard = self.cards.removeFirst()!
+            let bottomCard = self.cards.removeFirst()!
+            
+            topCard.faceUp    = true
+            middleCard.faceUp = true
+            bottomCard.faceUp = true
+            
+            if i == 2 {
+                self.fub!.addCard(topCard)
+                aCardStack.addCard(bottomCard)
+                aCardStack.addCard(middleCard)
+            }
+            else if(i==3) {
+                self.deal!.addCard(topCard)
+                aCardStack.addCard(bottomCard)
+                aCardStack.addCard(middleCard)
+            }
+            else {
+                aCardStack.addCard(bottomCard)
+                aCardStack.addCard(middleCard)
+                aCardStack.addCard(topCard)
+            }
+            self.viewTagToCard[topCard.view.tag]  = topCard;
+            self.viewTagToStack[topCard.view.tag] = aCardStack;
+            
+            self.viewTagToCard[bottomCard.view.tag]  = bottomCard;
+            self.viewTagToStack[bottomCard.view.tag] = aCardStack;
+            
+            self.viewTagToCard[middleCard.view.tag]  = middleCard;
+            self.viewTagToStack[middleCard.view.tag] = aCardStack;
+            
+            
+            self.cardStacks.append(aCardStack)
+            self.view.addSubview(aCardStack.view)
+        }
+
+        self.view.addSubview(self.deck!.view)
+        self.view.addSubview(self.deal!.view)
+        self.view.addSubview(self.fub!.view)
+        
+        print("Deck has \(self.deck!.cards.count)")
+    }
+
     
     /*
         This function (redrawTable) is where the table layout actually gets done.  initTable just sets up the structures
@@ -602,6 +697,7 @@ class ViewController: UIViewController {
             if droppedOnCardStack!.stackType == .deck && (self.deck!.cards.isEmpty || self.activeCardSourceStack?.stackType == .deck) {
                 if self.deck!.cards.isEmpty {
                     // tapped empty deck
+                    self.activeCard?.cancelMove()
                     let dealCount = self.deal!.cards.count
                     for _ in 0..<dealCount {
                         if let aCard = self.deal?.getTopCard() {
@@ -614,6 +710,7 @@ class ViewController: UIViewController {
                 }
                 else {
                     // Take up to 3 cards from the deck and move them to the deal
+                    print("Deck tapped")
                     let deckCount  = self.deck!.cards.count
                     self.deckTaps  = 0
                     let cardsToAdd = 3 > deckCount ? deckCount : 3
@@ -658,9 +755,9 @@ class ViewController: UIViewController {
                     // Card move to cardstack or suitstack cancelled because it wasn't accepted
                     // Cancelling a stack drag; clean up everything.
                     print("move canceled due to lack of acceptance")
-                    var rect = self.activeCard!.view.frame
+                    //var rect = self.activeCard!.view.frame
                     // TODO: investigate that 45, might be a source of problems.
-                    rect.size.height = self.view.bounds.size.height - self.activeCard!.view.frame.origin.y+45
+                    //rect.size.height = self.view.bounds.size.height - self.activeCard!.view.frame.origin.y+45
                     self.activeCard?.cancelMove()
                 }
             }
@@ -682,7 +779,7 @@ class ViewController: UIViewController {
         // Check to see if we've just won
         var won = true
         for i in 0..<self.suitStacks.count {
-            if self.suitStacks[i]!.cards.count != 14 {
+            if self.suitStacks[i]!.cards.count != 13 {
                 won = false
             }
         }
@@ -819,7 +916,7 @@ class ViewController: UIViewController {
                 
                 if self.acceptCardMove(self.cardStacks[j]!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                     // Make the move
-                    self.moveCardBetweenStacks(self.activeCard!, sourceStack: self.cardStacks[i]!, destinationStack: self.suitStacks[i]!)
+                    self.moveCardBetweenStacks(self.activeCard!, sourceStack: self.cardStacks[j]!, destinationStack: self.suitStacks[i]!)
                     self.activeCard = backupActive
                     return true
                 }
@@ -848,7 +945,9 @@ class ViewController: UIViewController {
         return false
     }
     
+    // This function checks to see if an attempted card move is valid
     func acceptCardMove(sourceStack: CardStack, destinationStack: CardStack, onTopOfCard: Card?) -> Bool {
+        print("Acceptance testing for move from stack type \(sourceStack.stackType) to \(destinationStack.stackType)")
         //self.autoSwitch.setOn(false, animated: true); return true // debug only
         
         if sourceStack === destinationStack {
@@ -922,11 +1021,13 @@ class ViewController: UIViewController {
             sourceStack.removeCard(cardToMove!)
             destinationStack.addCard(cardToMove!)
             
-            // Clean parent card reference
+            // Clean parent card reference from sourceStack
             sourceStack.cards.last?.cardParent = nil
             
             self.viewTagToStack[cardToMove!.view.tag] = destinationStack
-            self.moveCardBetweenStacks(cardToMove?.cardParent, sourceStack: sourceStack, destinationStack: destinationStack)
+            self.moveCardBetweenStacks(cardToMove!.cardParent, sourceStack: sourceStack, destinationStack: destinationStack)
+            
+            cardToMove!.cardParent = nil
             
             return true
         }

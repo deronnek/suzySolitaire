@@ -15,14 +15,30 @@ enum cardStackType {
     case cardstack
     case deck
     case deal
+    
+    func simpleDescription() -> String {
+        switch self {
+            case .fub:
+                return "fub"
+            case .suitstack:
+                return "suitstack"
+            case .cardstack:
+                return "cardstack"
+            case .deck:
+                return "deck"
+            case .deal:
+                return "deal"
+        }
+    }
 }
 
-class CardStack: AnyObject {
+class CardStack: NSObject, NSCoding {
     var cards = [Card]()
     var stackType = cardStackType.cardstack
     var cardSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
+    let keysForEncoding = ["cards", "cardSliceHeight", "stackZ"]
     
     init(type: cardStackType) {
 //        var point = CGPoint(x: x, y: y)
@@ -49,6 +65,62 @@ class CardStack: AnyObject {
         // Assume we have no cards and need a border
         self.view.layer.borderWidth = 1
         self.view.layer.borderColor = UIColor.whiteColor().CGColor
+    }
+    
+    // MARK: State restoration
+    func encodeWithCoder(aCoder: NSCoder) {
+        for key in self.keysForEncoding {
+            aCoder.encodeObject(self.valueForKey(key), forKey: key)
+        }
+        aCoder.encodeObject(self.stackType.simpleDescription(), forKey:"stackType")
+    }
+    
+//    required convenience init?(coder aDecoder: NSCoder) {
+//        let stackType = aDecoder.decodeObjectForKey("stackType") as! cardStackType
+//        self.init(type: stackType)
+//    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init()
+        
+        self.view = UIView()
+        self.view.decodeRestorableStateWithCoder(aDecoder)
+        
+        for key in self.keysForEncoding {
+            self.setValue(aDecoder.decodeObjectForKey(key), forKey: key)
+        }
+        
+        self.stackType = self.descriptionToEnum(aDecoder.decodeObjectForKey("stackType") as! String)
+
+        
+        for i in 0..<self.cards.count {
+            self.view.addSubview(self.cards[i].view)
+            if self.stackType == .deck {
+                self.cards[i].view.image = UIImage(imageLiteral: self.cards[i].backImageFilename)
+            }
+        }
+        
+        if self.cards.count == 0 {
+            self.view.layer.borderWidth = 1
+            self.view.layer.borderColor = UIColor.whiteColor().CGColor
+        }
+    }
+    
+    func descriptionToEnum(description: String) -> cardStackType {
+        switch description {
+            case "fub":
+                return .fub
+            case "suitstack":
+                return .suitstack
+            case "cardstack":
+                return .cardstack
+            case "deck":
+                return .deck
+            case "deal":
+                return .deal
+            default:
+                exit(1)
+        }
     }
     
     func resize(point: CGPoint, width: Int, cardHeight: Int) {
@@ -149,11 +221,16 @@ class CardStack: AnyObject {
         // If we're adding a card, we have at least one and don't want the border
         self.view.layer.borderWidth = 0;
         
-        // MARK: Debug
-        self.view.layer.borderWidth = 2;
+        // MARK: Debug: turn on borders
+        //self.view.layer.borderWidth = 2;
         
         // Card ownership is transfered to array
         self.cards.append(toadd)
+        
+        
+        // We always add a card at the end of the array.  Parent will be set properly above if more cards get added.
+        //toadd.cardParent = nil
+        // Doing this causes some very strange bugs--cards get stacked with incorrect slice heights
         
         toadd.view.exclusiveTouch = true
         self.view.addSubview(toadd.view)
@@ -166,10 +243,9 @@ class CardStack: AnyObject {
             rec.size = CGSizeMake(rec.size.width, rec.size.height - CGFloat(self.cardSliceHeight))
             self.view.frame = rec
         }
-        
-        if let index = self.cards.indexOf({ $0 === toRemove }) {
-            self.cards.removeAtIndex(index)
-        }
+        print(self.cards[0], toRemove)
+        let index = self.cards.indexOf({$0 === toRemove})
+        self.cards.removeAtIndex(index!)
      
         if self.cards.isEmpty {
             self.view.layer.borderWidth = 1;

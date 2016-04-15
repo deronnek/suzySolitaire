@@ -10,12 +10,12 @@
         <!--View Controller-->
         <scene sceneID="4">
             <objects>
-                <viewController useStoryboardIdentifierAsRestorationIdentifier="YES" id="2" customClass="ViewController" customModule="Suze_Solitaire" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="MainViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="2" customClass="ViewController" customModule="Suze_Solitaire" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="dh2-lg-h7d"/>
                         <viewControllerLayoutGuide type="bottom" id="OI5-4C-Zop"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" restorationIdentifier="mainView" id="5" customClass="mainView">
+                    <view key="view" contentMode="scaleToFill" restorationIdentifier="mainView" id="5">
                         <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
@@ -86,7 +86,7 @@
         <!--View Controller-->
         <scene sceneID="cqe-pe-etA">
             <objects>
-                <viewController id="ZTM-93-MXZ" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="howToPlay" useStoryboardIdentifierAsRestorationIdentifier="YES" id="ZTM-93-MXZ" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="9Hh-G9-fdc"/>
                         <viewControllerLayoutGuide type="bottom" id="hLj-Ai-t43"/>
@@ -126,7 +126,7 @@
         <!--Navigation Controller-->
         <scene sceneID="SWb-Ha-W2w">
             <objects>
-                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="XS6-J1-sOB" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="NavigationController" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="XS6-J1-sOB" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="cM4-eb-6yI">
                         <rect key="frame" x="0.0" y="0.0" width="768" height="44"/>

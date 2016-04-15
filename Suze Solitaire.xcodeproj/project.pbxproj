@@ -367,8 +367,8 @@
 				0B82555C175B7C310064579C /* main.m */,
 				0B5440DB175FA5BE00231C26 /* mainView.h */,
 				0B5440DC175FA5BE00231C26 /* mainView.m */,
-				0B825557175B7C310064579C /* Supporting Files */,
 				0B938E511C67E58A008C7B87 /* Suze Solitaire-Bridging-Header.h */,
+				0B825557175B7C310064579C /* Supporting Files */,
 			);
 			path = "Suze Solitaire";
 			sourceTree = "<group>";

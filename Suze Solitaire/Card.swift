@@ -10,6 +10,10 @@ import Foundation
 import CoreGraphics // for CGPoint
 import UIKit // for UIImageView
 
+enum cardSuitError: ErrorType {
+    case InvalidSuitDescription
+}
+
 enum cardSuit {
     case Clubs
     case Diamonds
@@ -48,9 +52,9 @@ enum cardColor {
     case Black
 }
 
-class Card: AnyObject {
+class Card: NSObject, NSCoding {
     // MARK: Properties
-    var keysForEncoding = ["color","rank","suit","faceUp", "faceImageFilename","zLocation", "savedPosition", "cardParent"]
+    let keysForEncoding = ["rank", "faceUp", "faceImageFilename", "backImageFilename", "zLocation", "savedPos", "cardParent"]
     var color  = cardColor.Black
     var rank   = Int()
     var suit   = cardSuit.Clubs
@@ -94,6 +98,45 @@ class Card: AnyObject {
         
         
     }
+    // MARK: State restoration
+    func encodeWithCoder(aCoder: NSCoder) {
+        for key in self.keysForEncoding {
+            aCoder.encodeObject(self.valueForKey(key), forKey: key)
+        }
+        aCoder.encodeObject(self.suit.simpleDescription(), forKey:"suit")
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init()
+        for key in self.keysForEncoding {
+            self.setValue(aDecoder.decodeObjectForKey(key), forKey: key)
+        }
+        self.view = UIImageView(image: UIImage(imageLiteral: self.faceImageFilename))
+        self.view.userInteractionEnabled = true
+        self.view.decodeRestorableStateWithCoder(aDecoder)
+        
+        self.faceImage = UIImage(imageLiteral: faceImageFilename)
+        self.backImage = UIImage(imageLiteral: backImageFilename)
+
+        self.suit  = self.descriptionToEnum(aDecoder.decodeObjectForKey("suit") as! String)
+        self.color = self.suit.color()
+    }
+    
+    func descriptionToEnum(description: String) -> cardSuit {
+        switch description {
+            case "spade":
+                return .Spades
+            case "heart":
+                return .Hearts
+            case "diamond":
+                return .Diamonds
+            case "club":
+                return .Clubs
+            default:
+                exit(1)
+        }
+    }
+    
     // MARK: Drawing
     func drawSelfAndParent() {
         if self.faceUp {

@@ -48,27 +48,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return true
     }
     
-    func application(application: UIApplication, willEncodeRestorableStateWithCoder coder: NSCoder) {
-        coder.encodeObject(self.window?.rootViewController, forKey:"AppDelegateRootVCKey")
-    }
     
-    func application(application: UIApplication, didDecodeRestorableStateWithCoder coder: NSCoder) {
-        print("didDecodeRestorableStateWithCoder")
+//    func application(application: UIApplication, willEncodeRestorableStateWithCoder coder: NSCoder) {
+//        print("Encoding window: \(self.window!.rootViewController)")
+//        coder.encodeObject(self.window!.rootViewController, forKey:"AppDelegateRootVCKey")
+//    }
+    
+//    func application(application: UIApplication, viewControllerWithRestorationIdentifierPath identifierComponents: [AnyObject], coder: NSCoder) -> UIViewController? {
+//        for viewControllerIdentifier in identifierComponents {
+//            
+//        }
+//    }
+    
+//    func application(application: UIApplication, didDecodeRestorableStateWithCoder coder: NSCoder) {
+//        print("didDecodeRestorableStateWithCoder")
         // Grabs the preserved root view controller.
-        if let vc = coder.decodeObjectForKey("AppDelegateRootVCKey") {
-            let window = UIWindow(frame: UIScreen().applicationFrame)
-            window.rootViewController    = vc as? UIViewController
-            window.restorationIdentifier = NSStringFromClass(UIWindow)
+//        if let vc = coder.decodeObjectForKey("AppDelegateRootVCKey") {
+//            let window = UIWindow(frame: UIScreen().applicationFrame)
+//            window.rootViewController    = vc as? UINavigationController
+//            window.restorationIdentifier = NSStringFromClass(UIWindow)
+//            
+//            // The green color is just to make it obvious if our view didn't load properly.
+//            // It can be removed when you are finished debugging.
+//            window.backgroundColor = UIColor.greenColor()
+//            
+//            self.window = window;
+//            self.window?.makeKeyAndVisible()
+//        }
+//        else {
+//            print("Didn't get a view controller?")
+//        }
 
-            // The green color is just to make it obvious if our view didn't load properly.
-            // It can be removed when you are finished debugging.
-            window.backgroundColor = UIColor.greenColor()
-            
-            self.window = window;
-            self.window?.makeKeyAndVisible()
-        }
-        else {
-            print("Didn't get a view controller?")
-        }
-    }
+//    }
 }
