@@ -118,7 +118,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         //self.navigationController?.navigationBarHidden = true // might need in viewDidAppear
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: "handleTapGesture:")
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ViewController.handleTapGesture(_:)))
         tapGesture.numberOfTapsRequired = 2
         self.view.addGestureRecognizer(tapGesture)
     }
@@ -224,21 +224,21 @@ class ViewController: UIViewController {
             self.fub!.cards[i].view.tag = tagCount;
             self.viewTagToCard[tagCount]  = self.fub!.cards[i]
             self.viewTagToStack[tagCount] = self.fub
-            tagCount++;
+            tagCount += 1
         }
         
         for i in 0..<self.deck!.cards.count {
             self.deck!.cards[i].view.tag = tagCount
             self.viewTagToCard[tagCount]  = self.deck!.cards[i]
             self.viewTagToStack[tagCount] = self.deck
-            tagCount++;
+            tagCount += 1;
         }
         
         for i in 0..<self.deal!.cards.count {
             self.deal!.cards[i].view.tag = tagCount
             self.viewTagToCard[tagCount]  = self.deal!.cards[i]
             self.viewTagToStack[tagCount] = self.deal
-            tagCount++;
+            tagCount += 1
         }
         
         for j in 0..<4 {
@@ -246,13 +246,13 @@ class ViewController: UIViewController {
                 self.cardStacks[j]!.cards[i].view.tag = tagCount
                 self.viewTagToCard[tagCount]  = self.cardStacks[j]!.cards[i]
                 self.viewTagToStack[tagCount] = self.cardStacks[j]
-                tagCount++;
+                tagCount += 1
             }
             for i in 0..<self.suitStacks[j]!.cards.count {
                 self.suitStacks[j]!.cards[i].view.tag = tagCount
                 self.viewTagToCard[tagCount]  = self.suitStacks[j]!.cards[i]
                 self.viewTagToStack[tagCount] = self.suitStacks[j]
-                tagCount++;
+                tagCount += 1
             }
         }
         
@@ -320,7 +320,7 @@ class ViewController: UIViewController {
             self.justWon = false
         }
         else {
-            self.losses++
+            self.losses += 1
         }
         
         self.score -= 45
@@ -378,7 +378,7 @@ class ViewController: UIViewController {
                 
                 self.deck!.cards.last?.faceUp = false
                 self.viewTagToStack[aCard!.view.tag] = self.deck;
-                i++
+                i += 1
             }
         }
         
@@ -626,7 +626,7 @@ class ViewController: UIViewController {
                 
                 let aCard = Card(suit: suit, rank: i, faceImageFilename: faceImgFile, backImageFilename: backImgFile, tag: tagCounter)
                 self.cards.append(aCard)
-                tagCounter++;
+                tagCounter += 1;
             }
         }
     }
@@ -719,7 +719,7 @@ class ViewController: UIViewController {
                             self.deal?.addCard(aCard)
                             self.viewTagToStack[aCard.view.tag] = self.deal
                         }
-                        self.deckTaps++
+                        self.deckTaps += 1
                     }
                 }
                 self.undoBarButtonItem.enabled = true
@@ -864,7 +864,7 @@ class ViewController: UIViewController {
         if !self.justWon {
             self.activeCard = nil
             self.score += 250
-            self.wins++
+            self.wins += 1
             self.undoBarButtonItem.enabled = false
             
             // Visual "reward" for winning
