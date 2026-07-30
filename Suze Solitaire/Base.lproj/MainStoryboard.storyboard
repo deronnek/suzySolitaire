@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="9532" systemVersion="14F1713" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="XS6-J1-sOB">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="21701" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="XS6-J1-sOB">
+    <device id="ipad10_9rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
-        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
-        <capability name="Navigation items with more than one left or right bar item" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="21679"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -16,34 +16,34 @@
                         <viewControllerLayoutGuide type="bottom" id="OI5-4C-Zop"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" restorationIdentifier="mainView" id="5">
-                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <rect key="frame" x="0.0" y="0.0" width="820" height="1180"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="bottom" translatesAutoresizingMaskIntoConstraints="NO" id="oDC-bT-7mE">
-                                <rect key="frame" x="0.0" y="936" width="768" height="44"/>
+                                <rect key="frame" x="0.0" y="1060" width="820" height="50"/>
                                 <items>
                                     <barButtonItem title="Score" style="plain" id="cul-DJ-ZFO">
-                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </barButtonItem>
                                     <barButtonItem title="Wins" style="plain" id="Fdb-xR-OWd">
-                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </barButtonItem>
                                     <barButtonItem title="Losses" style="plain" id="bG9-1P-NvX">
-                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </barButtonItem>
                                     <barButtonItem title="Auto" style="plain" id="4wn-vl-8H8">
-                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </barButtonItem>
                                     <barButtonItem style="plain" id="kzJ-Um-FQe">
                                         <switch key="customView" opaque="NO" contentMode="right" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" id="hki-rk-g7K">
-                                            <rect key="frame" x="233" y="7" width="51" height="31"/>
+                                            <rect key="frame" x="259" y="9.5" width="51" height="31"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         </switch>
                                     </barButtonItem>
                                 </items>
                             </toolbar>
                         </subviews>
-                        <color key="backgroundColor" red="0.17948933666150763" green="0.43669327445652173" blue="0.19245184737353235" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="backgroundColor" red="0.17948933666150763" green="0.43669327445652173" blue="0.19245184737353235" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="oDC-bT-7mE" firstAttribute="bottom" secondItem="OI5-4C-Zop" secondAttribute="top" id="2mf-36-yIO"/>
                             <constraint firstItem="oDC-bT-7mE" firstAttribute="leading" secondItem="5" secondAttribute="leadingMargin" constant="-20" id="Mn8-Zd-Fs2"/>
@@ -54,7 +54,7 @@
                     <navigationItem key="navigationItem" id="3Ya-Sg-Vfe">
                         <barButtonItem key="leftBarButtonItem" title="New Game" id="3cc-z1-ULa">
                             <connections>
-                                <action selector="startNewGame:" destination="2" id="fYq-Bd-awp"/>
+                                <action selector="startNewGameWithSenderWithSender:" destination="2" id="dsA-2m-52m"/>
                             </connections>
                         </barButtonItem>
                         <rightBarButtonItems>
@@ -81,7 +81,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1156" y="-208"/>
+            <point key="canvasLocation" x="845.85365853658539" y="-105.76271186440678"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="cqe-pe-etA">
@@ -92,12 +92,13 @@
                         <viewControllerLayoutGuide type="bottom" id="hLj-Ai-t43"/>
                     </layoutGuides>
                     <view key="view" autoresizesSubviews="NO" contentMode="top" id="9Ac-If-LoR">
-                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <rect key="frame" x="0.0" y="0.0" width="820" height="1180"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" showsHorizontalScrollIndicator="NO" editable="NO" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="zWr-CC-nc6">
                                 <rect key="frame" x="20" y="72" width="728" height="234"/>
-                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <string key="text">1.   Cards must alternate colors in the lower four stacks and count down.
 2.   Cards must be of the same suit in the upper four stacks and count up.
 3.   Click on the deck to get three cards at a time.
@@ -114,14 +115,14 @@
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <rect key="contentStretch" x="0.0" y="0.0" width="1" height="0.5"/>
                     </view>
                     <navigationItem key="navigationItem" id="EMC-kv-7j0"/>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uP0-2W-6qC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1978" y="-208"/>
+            <point key="canvasLocation" x="1447.3170731707316" y="-105.76271186440678"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="SWb-Ha-W2w">
@@ -129,7 +130,7 @@
                 <navigationController storyboardIdentifier="NavigationController" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="XS6-J1-sOB" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="cM4-eb-6yI">
-                        <rect key="frame" x="0.0" y="0.0" width="768" height="44"/>
+                        <rect key="frame" x="0.0" y="24" width="820" height="50"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
@@ -139,7 +140,7 @@
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="uP1-oa-soh" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="176" y="-208"/>
+            <point key="canvasLocation" x="10" y="-106"/>
         </scene>
     </scenes>
 </document>

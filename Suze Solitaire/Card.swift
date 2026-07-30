@@ -10,9 +10,9 @@ import Foundation
 import CoreGraphics // for CGPoint
 import UIKit // for UIImageView
 
-enum cardSuitError: ErrorType {
-    case InvalidSuitDescription
-}
+//enum cardSuitError: ErrorType {
+//    case InvalidSuitDescription
+//}
 
 enum cardSuit {
     case Clubs
@@ -53,6 +53,10 @@ enum cardColor {
 }
 
 class Card: NSObject, NSCoding {
+    func encode(with coder: NSCoder) {
+        
+    }
+    
     // MARK: Properties
     let keysForEncoding = ["rank", "faceUp", "faceImageFilename", "backImageFilename", "zLocation", "savedPos", "cardParent"]
     var color  = cardColor.Black
@@ -64,7 +68,7 @@ class Card: NSObject, NSCoding {
     var zLocation  = Int()
     var savedPos   = CGPoint()
     var savedCap   = Int()
-    var cardParent = Card?()
+    var cardParent: Card? = nil
     var view       = UIImageView()
     var backImage  = UIImage()
     var faceImage  = UIImage()
@@ -77,10 +81,10 @@ class Card: NSObject, NSCoding {
         self.backImageFilename = backImageFilename
         //self.zLocation         = zLocation
         
-        self.view      = UIImageView(image: UIImage(imageLiteral: faceImageFilename))
+        self.view      = UIImageView(image: UIImage(imageLiteralResourceName: faceImageFilename))
         self.view.tag  = tag
-        self.faceImage = UIImage(imageLiteral: faceImageFilename)
-        self.backImage = UIImage(imageLiteral: backImageFilename)
+        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
+        self.backImage = UIImage(imageLiteralResourceName: backImageFilename)
       
         self.color = suit.color()
 //        
@@ -90,7 +94,7 @@ class Card: NSObject, NSCoding {
 //        self.view.center = point
         
         
-        self.view.userInteractionEnabled = true
+        self.view.isUserInteractionEnabled = true
         
         self.cardParent = nil
         // create a unique identifier for this object, used in state restoration
@@ -101,24 +105,24 @@ class Card: NSObject, NSCoding {
     // MARK: State restoration
     func encodeWithCoder(aCoder: NSCoder) {
         for key in self.keysForEncoding {
-            aCoder.encodeObject(self.valueForKey(key), forKey: key)
+            aCoder.encode(self.value(forKey: key), forKey: key)
         }
-        aCoder.encodeObject(self.suit.simpleDescription(), forKey:"suit")
+        aCoder.encode(self.suit.simpleDescription(), forKey:"suit")
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init()
         for key in self.keysForEncoding {
-            self.setValue(aDecoder.decodeObjectForKey(key), forKey: key)
+            self.setValue(aDecoder.decodeObject(forKey: key), forKey: key)
         }
-        self.view = UIImageView(image: UIImage(imageLiteral: self.faceImageFilename))
-        self.view.userInteractionEnabled = true
-        self.view.decodeRestorableStateWithCoder(aDecoder)
+        self.view = UIImageView(image: UIImage(imageLiteralResourceName: self.faceImageFilename))
+        self.view.isUserInteractionEnabled = true
+        self.view.decodeRestorableState(with: aDecoder)
         
-        self.faceImage = UIImage(imageLiteral: faceImageFilename)
-        self.backImage = UIImage(imageLiteral: backImageFilename)
+        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
+        self.backImage = UIImage(imageLiteralResourceName: backImageFilename)
 
-        self.suit  = self.descriptionToEnum(aDecoder.decodeObjectForKey("suit") as! String)
+        self.suit  = self.descriptionToEnum(description: aDecoder.decodeObject(forKey: "suit") as! String)
         self.color = self.suit.color()
     }
     
@@ -140,7 +144,7 @@ class Card: NSObject, NSCoding {
     // MARK: Drawing
     func drawSelfAndParent() {
         if self.faceUp {
-            self.view.hidden = false;
+            self.view.isHidden = false;
         }
         self.cardParent?.drawSelfAndParent()
     }
@@ -150,7 +154,7 @@ class Card: NSObject, NSCoding {
     }
     
     func cancelMove() {
-        self.setPos(self.savedPos)
+        self.setPos(point: self.savedPos)
         self.cardParent?.cancelMove()
     }
     
@@ -159,7 +163,7 @@ class Card: NSObject, NSCoding {
         rect.origin     = point
         self.view.frame = rect
         
-        self.cardParent?.setPos(CGPoint(x: point.x, y: point.y+CGFloat(self.savedCap)))
+        self.cardParent?.setPos(point: CGPoint(x: point.x, y: point.y+CGFloat(self.savedCap)))
     }
     
     func savePos() {

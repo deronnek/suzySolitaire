@@ -33,6 +33,10 @@ enum cardStackType {
 }
 
 class CardStack: NSObject, NSCoding {
+    func encode(with coder: NSCoder) {
+        
+    }
+    
     var cards = [Card]()
     var stackType = cardStackType.cardstack
     var cardSliceHeight = 30
@@ -52,7 +56,7 @@ class CardStack: NSObject, NSCoding {
 //        self.view.center = point
         
         
-        self.view.userInteractionEnabled = true
+        self.view.isUserInteractionEnabled = true
         
         //self.identifier = NSUUID().UUIDString()
         switch type {
@@ -64,15 +68,15 @@ class CardStack: NSObject, NSCoding {
         self.stackType = type
         // Assume we have no cards and need a border
         self.view.layer.borderWidth = 1
-        self.view.layer.borderColor = UIColor.whiteColor().CGColor
+        self.view.layer.borderColor = UIColor.white.cgColor
     }
     
     // MARK: State restoration
     func encodeWithCoder(aCoder: NSCoder) {
         for key in self.keysForEncoding {
-            aCoder.encodeObject(self.valueForKey(key), forKey: key)
+            aCoder.encode(self.value(forKey: key), forKey: key)
         }
-        aCoder.encodeObject(self.stackType.simpleDescription(), forKey:"stackType")
+        aCoder.encode(self.stackType.simpleDescription(), forKey:"stackType")
     }
     
 //    required convenience init?(coder aDecoder: NSCoder) {
@@ -84,25 +88,25 @@ class CardStack: NSObject, NSCoding {
         super.init()
         
         self.view = UIView()
-        self.view.decodeRestorableStateWithCoder(aDecoder)
+        self.view.decodeRestorableState(with: aDecoder)
         
         for key in self.keysForEncoding {
-            self.setValue(aDecoder.decodeObjectForKey(key), forKey: key)
+            self.setValue(aDecoder.decodeObject(forKey: key), forKey: key)
         }
         
-        self.stackType = self.descriptionToEnum(aDecoder.decodeObjectForKey("stackType") as! String)
+        self.stackType = self.descriptionToEnum(description: aDecoder.decodeObject(forKey: "stackType") as! String)
 
         
         for i in 0..<self.cards.count {
             self.view.addSubview(self.cards[i].view)
             if self.stackType == .deck {
-                self.cards[i].view.image = UIImage(imageLiteral: self.cards[i].backImageFilename)
+                self.cards[i].view.image = UIImage(imageLiteralResourceName: self.cards[i].backImageFilename)
             }
         }
         
         if self.cards.count == 0 {
             self.view.layer.borderWidth = 1
-            self.view.layer.borderColor = UIColor.whiteColor().CGColor
+            self.view.layer.borderColor = UIColor.white.cgColor
         }
     }
     
@@ -126,7 +130,7 @@ class CardStack: NSObject, NSCoding {
     func resize(point: CGPoint, width: Int, cardHeight: Int) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
         // Make stacking tighter if we're not on an ipad
-        if UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiom.Pad {
+        if UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiom.pad {
             if self.stackType == .suitstack || self.stackType == .cardstack {
                 self.cardSliceHeight = Int(Double(cardHeight)/2.5)
             }
@@ -161,7 +165,7 @@ class CardStack: NSObject, NSCoding {
                     y = 0
                 
             }
-            self.cards[i].resize(CGPoint(x: 0, y: y), width: width, height: cardHeight)
+            self.cards[i].resize(point: CGPoint(x: 0, y: y), width: width, height: cardHeight)
         }
     }
     
@@ -194,7 +198,7 @@ class CardStack: NSObject, NSCoding {
         }
         
         toadd.savedCap = self.cardSliceHeight
-        toadd.setPos(pos)
+        toadd.setPos(point: pos)
         
         // If the stack is to be shown, make rect larger
         if ((self.stackType == .cardstack || self.stackType == .fub || self.stackType == .deal) && self.cards.count > 0) || (self.stackType == .suitstack && self.cards.count == 1) {
@@ -232,7 +236,7 @@ class CardStack: NSObject, NSCoding {
         //toadd.cardParent = nil
         // Doing this causes some very strange bugs--cards get stacked with incorrect slice heights
         
-        toadd.view.exclusiveTouch = true
+        toadd.view.isExclusiveTouch = true
         self.view.addSubview(toadd.view)
     }
     
@@ -244,12 +248,12 @@ class CardStack: NSObject, NSCoding {
             self.view.frame = rec
         }
         print(self.cards[0], toRemove)
-        let index = self.cards.indexOf({$0 === toRemove})
-        self.cards.removeAtIndex(index!)
-     
+        let index = self.cards.firstIndex(of:toRemove)
+        self.cards.remove(at:index!)
+        
         if self.cards.isEmpty {
             self.view.layer.borderWidth = 1;
-            self.view.layer.borderColor = UIColor.whiteColor().CGColor
+            self.view.layer.borderColor = UIColor.white.cgColor
         }
         // KDR a little awkward that I send a message to the card to remove itself from us, effectively
         toRemove.view.removeFromSuperview();
@@ -263,7 +267,7 @@ class CardStack: NSObject, NSCoding {
 //    }
     
     func getCardAtPosition(point: CGPoint) -> Card? {
-        var activeCard = Card?()
+        var activeCard: Card? = nil
         if self.stackType == .deck || self.stackType == .deal || self.stackType == .fub {
             let card = self.cards.last
             if CGRectContainsPoint(card!.view.frame, point) {
@@ -277,7 +281,7 @@ class CardStack: NSObject, NSCoding {
                         activeCard = card
                     }
                     else {
-                        if card.zLocation > activeCard?.zLocation {
+                        if card.zLocation > activeCard?.zLocation ?? 0 {
                             activeCard = card
                         }
                     }

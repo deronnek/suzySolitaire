@@ -8,6 +8,7 @@
 // this file contains utility functions
 
 import Foundation
+/*
 
 extension CollectionType {
     /// Return a copy of `self` with its elements shuffled
@@ -31,4 +32,4 @@ extension MutableCollectionType where Index == Int {
         }
     }
 }
-
+*/
