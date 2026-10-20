@@ -8,7 +8,6 @@
 
 // TODO:  
 // Add popup to confirm new game (?)
-// Try to save state when swiped up
 // Fix cards on suitstacks after rotating device
 // Fix dragging stack of cards makes top card dissappear
 // Go through all functions in ssViewController and make sure you either don't need them or have a swift version
@@ -24,7 +23,7 @@
 // Add Segue to get to how to play screen
 // Fix tapping on empty deck
 // Fix borders appearing when they shouldn't  (was a debug statement in cardStack.swift)
-// Implement state restoration
+// Implement state restoration (now saves the game to a file when the app is backgrounded)
 // Fix auto move emptying a cardstack not leaving a border (index problem in findCardForSuitStack making it so that the card wasn't in the stack we were trying to remove it from)
 // Fix bug where a card from the FUB can't be placed on an empty cardstack after an autobucks move (same bug as above)
 // Implement initTableTrivial
@@ -123,142 +122,132 @@ class ViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.handleTapGesture))
         tapGesture.numberOfTapsRequired = 2
         self.view.addGestureRecognizer(tapGesture)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         if self.doInitTable {
-            print("Initializing table")
-            self.score  = -45
-            self.wins   = 0
-            self.losses = 0
-            self.autoSwitch.setOn(false, animated: true)
-            self.initTable()
+            if let saved = self.loadSavedGame() {
+                print("Restoring saved game")
+                self.score  = saved.score
+                self.wins   = saved.wins
+                self.losses = saved.losses
+                self.autoSwitch.setOn(saved.autocomplete, animated: false)
+                if saved.board == nil || !self.restoreBoard(saved.board!, suitStackStarter: saved.suitStackStarter) {
+                    // The saved game had been won (or couldn't be read), so deal a new one
+                    self.score -= 45
+                    self.initTable()
+                }
+            }
+            else {
+                print("Initializing table")
+                self.score  = -45
+                self.wins   = 0
+                self.losses = 0
+                self.autoSwitch.setOn(false, animated: true)
+                self.initTable()
+            }
             self.doInitTable = false;
         }
         self.redrawTable()
     }
     
-    override func didRotate(from fromInterfaceOrientation: UIInterfaceOrientation) {
-        self.redrawTable()
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: nil) { _ in
+            self.redrawTable()
+        }
     }
     
-    override func encodeRestorableState(with coder: NSCoder) {
+    // MARK: Saving and restoring games
     
-        print("KDR encoding state");
-        
-        coder.encode(self.score,   forKey:"score")
-        coder.encode(self.wins,    forKey:"wins")
-        coder.encode(self.justWon,    forKey: "justWon")
-        coder.encode(self.losses,  forKey:"losses")
-        coder.encode(self.autoSwitch.isEnabled,  forKey:"autocomplete")
-        coder.encode(self.xCap,    forKey:"xCap")
-        coder.encode(self.yCap,    forKey:"yCap")
-        coder.encode(self.suitStackStarter,  forKey:"suitStackStarter")
-        
-        for i in 0..<4 {
-            coder.encode(self.suitStacks[i], forKey:String(repeating: "suitstack%d",count: i))
-            coder.encode(self.cardStacks[i], forKey:String(repeating: "cardstack%d",count: i))
+    // A snapshot of the game.  Cards are identified by their view tag (see createCards), and each stack lists its
+    // cards bottom to top.
+    struct SavedGame: Codable {
+        struct Board: Codable {
+            var fub:        [Int]
+            var deck:       [Int]
+            var deal:       [Int]
+            var suitStacks: [[Int]]
+            var cardStacks: [[Int]]
         }
-        
-        //coder.encodeObject(self.cards,      forKey:"cards")
-        
-        coder.encode(self.fub,  forKey:"fub")
-        coder.encode(self.deck, forKey:"deck")
-        coder.encode(self.deal, forKey:"deal")
-        
-        super.encodeRestorableState(with: coder)
-        
-        print("KDR State encoded")
+        var score:            Int
+        var wins:             Int
+        var losses:           Int
+        var autocomplete:     Bool
+        var suitStackStarter: Int
+        // nil if the game was just won; the next launch deals a new game
+        var board:            Board?
     }
     
-    override func decodeRestorableState(with coder: NSCoder) {
-        print("KDR decoding state")
-        super.decodeRestorableState(with:coder)
-        
-        self.doInitTable = false;
-        
-        self.score        = coder.decodeInteger(forKey:"score")
-        self.wins         = coder.decodeInteger(forKey:"wins")
-        self.losses       = coder.decodeInteger(forKey:"losses")
-        self.justWon      = coder.decodeBool(forKey:"justWon")
-        self.xCap         = coder.decodeInteger(forKey:"xCap")
-        self.yCap         = coder.decodeInteger(forKey:"yCap")
-        self.autoSwitch.isEnabled = coder.decodeBool(forKey:"autocomplete")
-        self.suitStackStarter   = coder.decodeInteger(forKey:"suitStackStarter")
-        
-        
-        
-        //self.cards      = coder.decodeObjectforKey("cards")
-        
-        self.cards      = [Card?]()
-        self.suitStacks = [CardStack?]()
-        self.cardStacks = [CardStack?]()
-
-        
-        for i in 0..<4 {
-            self.suitStacks.append(coder.decodeObject(forKey: String(repeating: "suitstack%d",count: i)) as! CardStack?)
-            self.cardStacks.append(coder.decodeObject(forKey: String(repeating: "cardstack%d",count: i)) as! CardStack?)
+    static var savedGameURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("SavedGame.json")
+    
+    @objc func saveGame() {
+        guard let fub = self.fub, let deck = self.deck, let deal = self.deal else {
+            return
         }
-        
-        self.fub        = coder.decodeObject(forKey:"fub")  as! CardStack?
-        self.deck       = coder.decodeObject(forKey:"deck") as! CardStack?
-        self.deal       = coder.decodeObject(forKey:"deal") as! CardStack?
+        let tags = { (stack: CardStack?) in stack!.cards.map { $0.view.tag } }
+        let board = SavedGame.Board(fub: tags(fub), deck: tags(deck), deal: tags(deal),
+                                    suitStacks: self.suitStacks.map(tags), cardStacks: self.cardStacks.map(tags))
+        let game = SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoSwitch.isOn,
+                             suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board)
+        do {
+            try JSONEncoder().encode(game).write(to: ViewController.savedGameURL, options: .atomic)
+        }
+        catch {
+            print("Failed to save game: \(error)")
+        }
     }
     
-    override func applicationFinishedRestoringState() {
-        print("KDR Setting up subviews")
-        
-        self.view.addSubview(self.fub!.view)
-        self.view.addSubview(self.deck!.view)
-        self.view.addSubview(self.deal!.view)
-        
-        
-        for i in 0..<4 {
-            self.view.addSubview(self.cardStacks[i]!.view)
-            self.view.addSubview(self.suitStacks[i]!.view)
+    func loadSavedGame() -> SavedGame? {
+        guard let data = try? Data(contentsOf: ViewController.savedGameURL) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(SavedGame.self, from: data)
+    }
+    
+    // Returns false if the saved board isn't a valid deal, in which case the caller should start a new table.
+    func restoreBoard(_ board: SavedGame.Board, suitStackStarter: Int) -> Bool {
+        let allTags = board.fub + board.deck + board.deal + board.suitStacks.joined() + board.cardStacks.joined()
+        guard allTags.sorted() == Array(0..<52), board.suitStacks.count == 4, board.cardStacks.count == 4 else {
+            print("Saved board is invalid; ignoring it")
+            return false
         }
         
-        // Loop over all cards and assign tags to their views, building the viewTagToCard and viewTagToStack
-        // arrays in the process.
-        var tagCount = 0
-        for i in 0..<self.fub!.cards.count {
-            
-            self.fub!.cards[i].view.tag = tagCount;
-            self.viewTagToCard[tagCount]  = self.fub!.cards[i]
-            self.viewTagToStack[tagCount] = self.fub
-            tagCount += 1
+        self.undoBarButtonItem.isEnabled = false
+        self.cards.removeAll()
+        self.createCards()
+        var cardsByTag = [Int: Card]()
+        for case let card? in self.cards {
+            cardsByTag[card.view.tag] = card
         }
+        self.cards.removeAll()
         
-        for i in 0..<self.deck!.cards.count {
-            self.deck!.cards[i].view.tag = tagCount
-            self.viewTagToCard[tagCount]  = self.deck!.cards[i]
-            self.viewTagToStack[tagCount] = self.deck
-            tagCount += 1;
-        }
-        
-        for i in 0..<self.deal!.cards.count {
-            self.deal!.cards[i].view.tag = tagCount
-            self.viewTagToCard[tagCount]  = self.deal!.cards[i]
-            self.viewTagToStack[tagCount] = self.deal
-            tagCount += 1
-        }
-        
-        for j in 0..<4 {
-            for i in 0..<self.cardStacks[j]!.cards.count {
-                self.cardStacks[j]!.cards[i].view.tag = tagCount
-                self.viewTagToCard[tagCount]  = self.cardStacks[j]!.cards[i]
-                self.viewTagToStack[tagCount] = self.cardStacks[j]
-                tagCount += 1
+        // Rebuild each stack the same way initTable does, so card parents get set up by addCard
+        let makeStack = { (type: cardStackType, tags: [Int]) -> CardStack in
+            let stack = CardStack(type: type)
+            for tag in tags {
+                let aCard = cardsByTag[tag]!
+                stack.addCard(toadd: aCard)
+                self.viewTagToCard[tag]  = aCard
+                self.viewTagToStack[tag] = stack
             }
-            for i in 0..<self.suitStacks[j]!.cards.count {
-                self.suitStacks[j]!.cards[i].view.tag = tagCount
-                self.viewTagToCard[tagCount]  = self.suitStacks[j]!.cards[i]
-                self.viewTagToStack[tagCount] = self.suitStacks[j]
-                tagCount += 1
-            }
+            return stack
         }
         
-        print("Deck has \(self.deck!.cards.count)")
+        self.suitStackStarter = suitStackStarter
+        self.fub        = makeStack(.fub, board.fub)
+        self.suitStacks = board.suitStacks.map { makeStack(.suitstack, $0) }
+        self.deck       = makeStack(.deck, board.deck)
+        self.deal       = makeStack(.deal, board.deal)
+        self.cardStacks = board.cardStacks.map { makeStack(.cardstack, $0) }
+        
+        for stack in self.suitStacks + self.cardStacks + [self.deck, self.deal, self.fub] {
+            self.view.addSubview(stack!.view)
+        }
+        self.activeCard = nil
+        return true
     }
     
     @objc func handleTapGesture(sender: UITapGestureRecognizer) {
@@ -464,6 +453,7 @@ class ViewController: UIViewController {
     
     
     
+    @discardableResult
     func addCardToStack(dest: CardStack) -> Card{
         let aCard = self.cards.removeFirst()!
         dest.addCard(toadd: aCard)
@@ -560,10 +550,17 @@ class ViewController: UIViewController {
     */
 
     func redrawTable() {
+        guard self.fub != nil else {
+            // No table yet
+            return
+        }
         let screenWidth = CGRectGetWidth(self.view.bounds);
         let toolbarBottom = CGRectGetHeight((self.navigationController?.navigationBar.bounds)!)+(self.navigationController?.navigationBar.frame.origin.y)!
     
-        var cardWidth  = CGFloat(screenWidth / 7);
+        // On iPhone the rows span 7.2 card widths (the fub/deck/deal column, then the gap and four stacks), plus a cardWidth/5
+        // margin on the right.  The iPad sizes its cards below, but its row spacing is still based on screenWidth/7.
+        let isPad      = UIDevice.current.userInterfaceIdiom == .pad
+        var cardWidth  = CGFloat(screenWidth / (isPad ? 7 : 7.4));
         var cardHeight = cardWidth * 1.2;
         
         let toprowSpacer = toolbarBottom+cardHeight*0.1;  // Space from the top of the screen to the first row of cards.
@@ -573,7 +570,7 @@ class ViewController: UIViewController {
         var widthSpacer  = cardWidth/15;
         var dealSpacer   = 2*(cardWidth/5);
         
-        if(UI_USER_INTERFACE_IDIOM() == .pad) {
+        if(isPad) {
             cardWidth    = screenWidth/10;
             secondSpacer = toprowSpacer+cardHeight*1.35;
             widthSpacer  = cardWidth/2.0;
@@ -619,7 +616,7 @@ class ViewController: UIViewController {
         
         for suit in [cardSuit.Clubs, .Diamonds, .Hearts, .Spades] {
             for i in 1...13 {
-                if(UI_USER_INTERFACE_IDIOM() == .pad) {
+                if(UIDevice.current.userInterfaceIdiom == .pad) {
                     faceImgFile = String.init(format: suit.simpleDescription() + "%d.png", i)
                 }
                 else {
@@ -1017,6 +1014,7 @@ class ViewController: UIViewController {
         return false
     }
     
+    @discardableResult
     func moveCardBetweenStacks(cardToMove: Card?, sourceStack: CardStack, destinationStack: CardStack) -> Bool {
         // Since this is a recursive function, we stop when the card we're trying to move doesn't exist.
         if (cardToMove != nil && sourceStack !== destinationStack){

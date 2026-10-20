@@ -128,7 +128,7 @@
 		0B825576175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825577175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B82557F175B7C310064579C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B82557D175B7C310064579C /* InfoPlist.strings */; };
-		0B825582175B7C310064579C /* Suze_SolitaireTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B825581175B7C310064579C /* Suze_SolitaireTests.m */; };
+		0B825582175B7C310064579C /* Suze_SolitaireTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B825581175B7C310064579C /* Suze_SolitaireTests.swift */; };
 		0B82558C175B7D2C0064579C /* cardback.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B82558B175B7D2C0064579C /* cardback.png */; };
 		0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BB464A6183D690D00EE4F5D /* retina_icon.png */; };
 /* End PBXBuildFile section */
@@ -278,8 +278,7 @@
 		0B825573175B7C310064579C /* Suze SolitaireTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Suze SolitaireTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B82557C175B7C310064579C /* Suze SolitaireTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Suze SolitaireTests-Info.plist"; sourceTree = "<group>"; };
 		0B82557E175B7C310064579C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		0B825580175B7C310064579C /* Suze_SolitaireTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Suze_SolitaireTests.h; sourceTree = "<group>"; };
-		0B825581175B7C310064579C /* Suze_SolitaireTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Suze_SolitaireTests.m; sourceTree = "<group>"; };
+		0B825581175B7C310064579C /* Suze_SolitaireTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suze_SolitaireTests.swift; sourceTree = "<group>"; };
 		0B82558B175B7D2C0064579C /* cardback.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cardback.png; sourceTree = "<group>"; };
 		0B8255F7175BD52C0064579C /* card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card.h; sourceTree = "<group>"; };
 		0B8255F8175BD52C0064579C /* card.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card.m; sourceTree = "<group>"; };
@@ -495,8 +494,7 @@
 		0B82557A175B7C310064579C /* Suze SolitaireTests */ = {
 			isa = PBXGroup;
 			children = (
-				0B825580175B7C310064579C /* Suze_SolitaireTests.h */,
-				0B825581175B7C310064579C /* Suze_SolitaireTests.m */,
+				0B825581175B7C310064579C /* Suze_SolitaireTests.swift */,
 				0B82557B175B7C310064579C /* Supporting Files */,
 			);
 			path = "Suze SolitaireTests";
@@ -538,7 +536,6 @@
 				0B82556E175B7C310064579C /* Sources */,
 				0B82556F175B7C310064579C /* Frameworks */,
 				0B825570175B7C310064579C /* Resources */,
-				0B825571175B7C310064579C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -717,22 +714,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		0B825571175B7C310064579C /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		0B825548175B7C310064579C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -750,7 +731,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B825582175B7C310064579C /* Suze_SolitaireTests.m in Sources */,
+				0B825582175B7C310064579C /* Suze_SolitaireTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -838,7 +819,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -882,7 +863,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -896,7 +877,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Brand Assets";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -904,13 +884,12 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze Solitaire/Suze Solitaire-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.--PRODUCT-NAME-rfc1034identifier-";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "kdr-alternate.Suze-Solitaire";
+				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.Suze-Solitaire";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -926,7 +905,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Brand Assets";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -934,13 +912,12 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze Solitaire/Suze Solitaire-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.--PRODUCT-NAME-rfc1034identifier-";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "kdr-alternate.Suze-Solitaire";
+				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.Suze-Solitaire";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -956,8 +933,6 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
 				FRAMEWORK_SEARCH_PATHS = (
-					"\\\"$(SDKROOT)/Developer/Library/Frameworks\\\"",
-					"\\\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\\\"",
 					"$(inherited)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -965,6 +940,7 @@
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "kdr-productions.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};
 			name = Debug;
@@ -974,8 +950,6 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
 				FRAMEWORK_SEARCH_PATHS = (
-					"\\\"$(SDKROOT)/Developer/Library/Frameworks\\\"",
-					"\\\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\\\"",
 					"$(inherited)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -983,6 +957,7 @@
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "kdr-productions.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};
 			name = Release;

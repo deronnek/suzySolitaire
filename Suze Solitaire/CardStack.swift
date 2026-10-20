@@ -130,7 +130,7 @@ class CardStack: NSObject, NSCoding {
     func resize(point: CGPoint, width: Int, cardHeight: Int) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
         // Make stacking tighter if we're not on an ipad
-        if UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiom.pad {
+        if UIDevice.current.userInterfaceIdiom != UIUserInterfaceIdiom.pad {
             if self.stackType == .suitstack || self.stackType == .cardstack {
                 self.cardSliceHeight = Int(Double(cardHeight)/2.5)
             }
