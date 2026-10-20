@@ -45,11 +45,12 @@ extension ViewController: PHPickerViewControllerDelegate {
         guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else {
             return
         }
-        provider.loadObject(ofClass: UIImage.self) { object, _ in
+        // The photo arrives on a background thread
+        provider.loadObject(ofClass: UIImage.self) { @Sendable object, _ in
             guard let photo = object as? UIImage else {
                 return
             }
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.setCardBack(Card.cardBackImage(from: photo))
             }
         }

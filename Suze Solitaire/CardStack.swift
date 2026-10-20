@@ -32,6 +32,7 @@ enum cardStackType {
     }
 }
 
+@MainActor
 class CardStack: NSObject {
     var cards = [Card]() {
         didSet {

@@ -6,18 +6,23 @@
 import XCTest
 @testable import Suze_Solitaire
 
+@MainActor
 final class Suze_SolitaireTests: XCTestCase {
 
     var vc: ViewController!
+    // A view controller only holds its navigation controller weakly, so the test keeps them alive
+    var navigationControllers = [UINavigationController]()
 
     override class func setUp() {
         super.setUp()
         // The first accessibilityActivate() in a fresh process once returned false without running the view's activate
         // block, presumably while UIKit's accessibility support loaded; make that first call here, before any test
-        _ = UIView().accessibilityActivate()
+        MainActor.assumeIsolated {
+            _ = UIView().accessibilityActivate()
+        }
     }
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         // Keep tests away from the real saved game
         ViewController.savedGameURL = FileManager.default.temporaryDirectory.appendingPathComponent("SavedGame-\(UUID().uuidString).json")
         Card.customBackImageURL     = FileManager.default.temporaryDirectory.appendingPathComponent("CardBack-\(UUID().uuidString).png")
@@ -29,16 +34,18 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.initTable()
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         try? FileManager.default.removeItem(at: ViewController.savedGameURL)
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
         vc = nil
+        navigationControllers = []
     }
 
     func makeViewController() throws -> ViewController {
         let storyboard = UIStoryboard(name: "MainStoryboard", bundle: Bundle(for: ViewController.self))
         let nav = try XCTUnwrap(storyboard.instantiateInitialViewController() as? UINavigationController)
+        self.navigationControllers.append(nav)
         let vc  = try XCTUnwrap(nav.topViewController as? ViewController)
         vc.loadViewIfNeeded()
         return vc

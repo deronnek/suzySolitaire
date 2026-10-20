@@ -52,6 +52,7 @@ enum cardColor {
     case Black
 }
 
+@MainActor
 class Card: NSObject {
     // Height / width of the card images
     static let aspectRatio: CGFloat = 726.0 / 500.0
