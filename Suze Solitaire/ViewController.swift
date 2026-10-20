@@ -1088,9 +1088,9 @@ class ViewController: UIViewController {
             sourceStack.cards.last?.cardParent = nil
             
             self.viewTagToStack[cardToMove!.view.tag] = destinationStack
+            // Then the cards on top of it.  Adding each one to the destination links it to the card below, so the run can
+            // be moved together again later.
             self.moveCardBetweenStacks(cardToMove: cardToMove!.cardParent, sourceStack: sourceStack, destinationStack: destinationStack)
-            
-            cardToMove!.cardParent = nil
             
             return true
         }

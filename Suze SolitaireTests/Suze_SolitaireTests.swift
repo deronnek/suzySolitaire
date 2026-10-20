@@ -227,6 +227,24 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
     }
 
+    func testMovedRunStaysTogether() {
+        // Build a three-card run on a lower stack, move it, then move it again by its bottom card
+        let first = vc.cardStacks[0]!, second = vc.cardStacks[1]!, third = vc.cardStacks[2]!
+        for _ in 0..<2 {
+            first.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        let run = first.cards
+        vc.performMove(card: run[0], from: first, to: second)
+        XCTAssertTrue(run[0].cardParent === run[1])
+        XCTAssertTrue(run[1].cardParent === run[2])
+        XCTAssertNil(run[2].cardParent)
+
+        let beforeThird = third.cards
+        vc.performMove(card: run[0], from: second, to: third)
+        XCTAssertEqual(third.cards, beforeThird + run)
+        XCTAssertEqual(second.cards.count, 1, "only the stack's original card should be left behind")
+    }
+
     func testUndoAfterTouchingAnotherCard() {
         // Move the top blind card onto a lower stack (skipping the rules check; only undo is under test)
         let fubCard = vc.fub!.cards.last!
