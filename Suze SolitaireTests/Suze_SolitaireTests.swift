@@ -110,6 +110,16 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNil(saved.board)
     }
 
+    func testButtonActionsExist() {
+        // A storyboard action whose selector doesn't match an @IBAction crashes when the button is tapped
+        let items = (vc.navigationItem.leftBarButtonItems ?? []) + (vc.navigationItem.rightBarButtonItems ?? []) + (vc.toolbarItems ?? [])
+        for item in items {
+            guard let action = item.action else { continue }
+            let target = (item.target as? NSObject) ?? vc!
+            XCTAssertTrue(target.responds(to: action), "\(item.title ?? "untitled") button sends \(action), which \(type(of: target)) doesn't implement")
+        }
+    }
+
     func testUndoAfterTouchingAnotherCard() {
         // Move the top blind card onto a lower stack (skipping the rules check; only undo is under test)
         let fubCard = vc.fub!.cards.last!
@@ -120,7 +130,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Touching a different card used to make undo act on that card instead, which crashed
         vc.activeCard            = vc.cardStacks[1]!.cards.last
         vc.activeCardSourceStack = vc.cardStacks[1]
-        vc.undoMove(sender: vc.undoBarButtonItem)
+        vc.undoMove(vc.undoBarButtonItem)
 
         XCTAssertTrue(vc.fub!.cards.last === fubCard)
         XCTAssertEqual(target.cards.count, 1)
@@ -139,7 +149,7 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(to.cards, before + moved)
         XCTAssertTrue(from.cards.isEmpty)
 
-        vc.undoMove(sender: vc.undoBarButtonItem)
+        vc.undoMove(vc.undoBarButtonItem)
         XCTAssertEqual(from.cards, moved)
         XCTAssertEqual(to.cards, before)
         XCTAssertTrue(moved[0].cardParent === moved[1])

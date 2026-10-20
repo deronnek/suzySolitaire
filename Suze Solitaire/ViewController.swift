@@ -324,7 +324,8 @@ class ViewController: UIViewController {
         print("Found \(self.suitStacks.count) suitstacks")
     }
     
-    @IBAction func undoMove(sender: UIBarButtonItem) {
+    // The storyboard connects the undo button to undoMove:, so the parameter must be unlabeled
+    @IBAction func undoMove(_ sender: UIBarButtonItem) {
         // You only get one undo
         self.undoBarButtonItem.isEnabled = false
         
