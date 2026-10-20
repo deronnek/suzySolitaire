@@ -52,7 +52,7 @@ enum cardColor {
     case Black
 }
 
-class Card: NSObject, NSCoding {
+class Card: NSObject {
     // Height / width of the card images
     static let aspectRatio: CGFloat = 726.0 / 500.0
     // Corner radius as a fraction of card width; matches the corners cut into the card images
@@ -89,12 +89,7 @@ class Card: NSObject, NSCoding {
         }
     }
     
-    func encode(with coder: NSCoder) {
-        
-    }
-    
     // MARK: Properties
-    let keysForEncoding = ["rank", "faceUp", "faceImageFilename", "backImageFilename", "zLocation", "savedPos", "cardParent"]
     var color  = cardColor.Black
     var rank   = Int()
     var suit   = cardSuit.Clubs
@@ -146,45 +141,6 @@ class Card: NSObject, NSCoding {
         
         
     }
-    // MARK: State restoration
-    func encodeWithCoder(aCoder: NSCoder) {
-        for key in self.keysForEncoding {
-            aCoder.encode(self.value(forKey: key), forKey: key)
-        }
-        aCoder.encode(self.suit.simpleDescription(), forKey:"suit")
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init()
-        for key in self.keysForEncoding {
-            self.setValue(aDecoder.decodeObject(forKey: key), forKey: key)
-        }
-        self.view = UIImageView(image: UIImage(imageLiteralResourceName: self.faceImageFilename))
-        self.view.isUserInteractionEnabled = true
-        self.view.decodeRestorableState(with: aDecoder)
-        
-        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
-        self.backImage = UIImage(imageLiteralResourceName: backImageFilename)
-
-        self.suit  = self.descriptionToEnum(description: aDecoder.decodeObject(forKey: "suit") as! String)
-        self.color = self.suit.color()
-    }
-    
-    func descriptionToEnum(description: String) -> cardSuit {
-        switch description {
-            case "spade":
-                return .Spades
-            case "heart":
-                return .Hearts
-            case "diamond":
-                return .Diamonds
-            case "club":
-                return .Clubs
-            default:
-                exit(1)
-        }
-    }
-    
     // MARK: Drawing
     func drawSelfAndParent() {
         if self.faceUp {

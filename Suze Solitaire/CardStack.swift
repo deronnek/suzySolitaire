@@ -32,11 +32,7 @@ enum cardStackType {
     }
 }
 
-class CardStack: NSObject, NSCoding {
-    func encode(with coder: NSCoder) {
-        
-    }
-    
+class CardStack: NSObject {
     var cards = [Card]() {
         didSet {
             // Deck cards sit exactly on top of each other, so only the top one casts a shadow; otherwise they'd add up
@@ -57,7 +53,6 @@ class CardStack: NSObject, NSCoding {
     var baseSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
-    let keysForEncoding = ["cards", "cardSliceHeight", "stackZ"]
     // How far apart cards in the blind (fub) and deal are fanned
     static let fannedSliceHeight = 5
     
@@ -87,62 +82,6 @@ class CardStack: NSObject, NSCoding {
         // Assume we have no cards and need a border
         self.view.layer.borderWidth = 1
         self.view.layer.borderColor = UIColor.white.cgColor
-    }
-    
-    // MARK: State restoration
-    func encodeWithCoder(aCoder: NSCoder) {
-        for key in self.keysForEncoding {
-            aCoder.encode(self.value(forKey: key), forKey: key)
-        }
-        aCoder.encode(self.stackType.simpleDescription(), forKey:"stackType")
-    }
-    
-//    required convenience init?(coder aDecoder: NSCoder) {
-//        let stackType = aDecoder.decodeObjectForKey("stackType") as! cardStackType
-//        self.init(type: stackType)
-//    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init()
-        
-        self.view = UIView()
-        self.view.decodeRestorableState(with: aDecoder)
-        
-        for key in self.keysForEncoding {
-            self.setValue(aDecoder.decodeObject(forKey: key), forKey: key)
-        }
-        
-        self.stackType = self.descriptionToEnum(description: aDecoder.decodeObject(forKey: "stackType") as! String)
-
-        
-        for i in 0..<self.cards.count {
-            self.view.addSubview(self.cards[i].view)
-            if self.stackType == .deck {
-                self.cards[i].view.image = UIImage(imageLiteralResourceName: self.cards[i].backImageFilename)
-            }
-        }
-        
-        if self.cards.count == 0 {
-            self.view.layer.borderWidth = 1
-            self.view.layer.borderColor = UIColor.white.cgColor
-        }
-    }
-    
-    func descriptionToEnum(description: String) -> cardStackType {
-        switch description {
-            case "fub":
-                return .fub
-            case "suitstack":
-                return .suitstack
-            case "cardstack":
-                return .cardstack
-            case "deck":
-                return .deck
-            case "deal":
-                return .deal
-            default:
-                exit(1)
-        }
     }
     
     // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it
