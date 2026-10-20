@@ -88,7 +88,8 @@ class ViewController: UIViewController {
     
     var activeCard:                      Card? = nil
     var activeCardSourceStack:      CardStack? = nil
-    var activeCardDestinationStack: CardStack? = nil
+    // The last card move, so it can be undone: the cards moved (bottom to top), and the stacks they came from and went to
+    var lastMove: (cards: [Card], from: CardStack, to: CardStack)? = nil
     
     var deckTaps   = 0
     var justWon    = false
@@ -270,7 +271,7 @@ class ViewController: UIViewController {
                     let topCard = self.suitStacks[i]!.cards.last
                     if self.acceptCardMove(sourceStack: sourceStack, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                         
-                        self.moveCardBetweenStacks(cardToMove: self.activeCard, sourceStack: sourceStack, destinationStack: self.suitStacks[i]!)
+                        self.performMove(card: self.activeCard!, from: sourceStack, to: self.suitStacks[i]!)
                         
                         // Check to see if we've just won
                         var won = true;
@@ -327,17 +328,34 @@ class ViewController: UIViewController {
         // You only get one undo
         self.undoBarButtonItem.isEnabled = false
         
-        /* We should only get to this point if the deck tap is being undone */
         if self.deckTaps > 0 {
             self.undoDeckTap()
         }
-        else {
-            if self.activeCardDestinationStack?.stackType == .suitstack {
-                self.score -= 5 // Do we ever get here?
+        else if let move = self.lastMove, move.cards.allSatisfy({ card in move.to.cards.contains(card) }) {
+            // Put the cards back in the same order, which also restores their parent links
+            for card in move.cards {
+                if move.to.stackType == .suitstack {
+                    self.score -= 5
+                }
+                move.to.removeCard(toRemove: card)
+                move.from.addCard(toadd: card)
+                self.viewTagToStack[card.view.tag] = move.from
             }
-            self.moveCardBetweenStacks(cardToMove: self.activeCard, sourceStack: self.activeCardDestinationStack!, destinationStack: self.activeCardSourceStack!)
+            move.to.cards.last?.cardParent = nil
+            move.cards.last?.cardParent    = nil
+            self.redrawTable()
         }
-        
+        self.lastMove   = nil
+        self.activeCard = nil
+    }
+    
+    // Moves a card, and any cards on top of it, and remembers the move so it can be undone
+    func performMove(card: Card, from source: CardStack, to destination: CardStack) {
+        let countBefore = destination.cards.count
+        self.moveCardBetweenStacks(cardToMove: card, sourceStack: source, destinationStack: destination)
+        self.lastMove = (Array(destination.cards[countBefore...]), source, destination)
+        self.deckTaps = 0
+        self.undoBarButtonItem.isEnabled = true
     }
     
     func undoDeckTap() {
@@ -707,6 +725,8 @@ class ViewController: UIViewController {
                             self.viewTagToStack[aCard.view.tag] = self.deck
                         }
                     }
+                    // Any non-zero count works here: undoDeckTap moves the whole deck back when the deal is empty
+                    self.deckTaps = 1
                 }
                 else {
                     // Take up to 3 cards from the deck and move them to the deal
@@ -723,6 +743,7 @@ class ViewController: UIViewController {
                     }
                 }
                 self.undoBarButtonItem.isEnabled = true
+                self.lastMove   = nil
                 self.activeCard = nil
                 
                 // Refresh the appropriate rectangles (if used the moveCardBetweenStacks function above this wouldn't be necessary, but it needs to be smarter about 
@@ -746,10 +767,7 @@ class ViewController: UIViewController {
             else if(droppedOnCardStack?.stackType == .cardstack || droppedOnCardStack?.stackType == .suitstack) {
                 let droppedOnCard = droppedOnCardStack!.cards.last
                 if self.acceptCardMove(sourceStack: self.activeCardSourceStack!, destinationStack: droppedOnCardStack!, onTopOfCard: droppedOnCard) {
-                    self.activeCardDestinationStack = droppedOnCardStack
-                    self.undoBarButtonItem.isEnabled  = true
-                    self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.activeCardSourceStack!, destinationStack: droppedOnCardStack!)
-                    self.deckTaps = 0
+                    self.performMove(card: self.activeCard!, from: self.activeCardSourceStack!, to: droppedOnCardStack!)
                 }
                 else {
                     // Card move to cardstack or suitstack cancelled because it wasn't accepted

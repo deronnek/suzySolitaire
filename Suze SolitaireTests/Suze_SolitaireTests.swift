@@ -110,6 +110,50 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNil(saved.board)
     }
 
+    func testUndoAfterTouchingAnotherCard() {
+        // Move the top blind card onto a lower stack (skipping the rules check; only undo is under test)
+        let fubCard = vc.fub!.cards.last!
+        let target  = vc.cardStacks[0]!
+        vc.performMove(card: fubCard, from: vc.fub!, to: target)
+        XCTAssertTrue(target.cards.last === fubCard)
+
+        // Touching a different card used to make undo act on that card instead, which crashed
+        vc.activeCard            = vc.cardStacks[1]!.cards.last
+        vc.activeCardSourceStack = vc.cardStacks[1]
+        vc.undoMove(sender: vc.undoBarButtonItem)
+
+        XCTAssertTrue(vc.fub!.cards.last === fubCard)
+        XCTAssertEqual(target.cards.count, 1)
+        XCTAssertTrue(vc.viewTagToStack[fubCard.view.tag]! === vc.fub)
+        XCTAssertFalse(vc.undoBarButtonItem.isEnabled)
+    }
+
+    func testUndoMovesWholeStackBack() {
+        let from = vc.cardStacks[0]!
+        let to   = vc.cardStacks[1]!
+        from.addCard(toadd: vc.fub!.getTopCard()!)
+        let moved  = from.cards
+        let before = to.cards
+
+        vc.performMove(card: moved[0], from: from, to: to)
+        XCTAssertEqual(to.cards, before + moved)
+        XCTAssertTrue(from.cards.isEmpty)
+
+        vc.undoMove(sender: vc.undoBarButtonItem)
+        XCTAssertEqual(from.cards, moved)
+        XCTAssertEqual(to.cards, before)
+        XCTAssertTrue(moved[0].cardParent === moved[1])
+        XCTAssertNil(moved[1].cardParent)
+        XCTAssertNil(before.last!.cardParent)
+    }
+
+    func testRulesTextIsNumberedWithoutAsterisks() {
+        let text = HowToPlayViewController.rulesText().string
+        XCTAssertFalse(text.contains("*"))
+        XCTAssertEqual(text.components(separatedBy: "\n").count, HowToPlayViewController.rules.count)
+        XCTAssertTrue(text.hasPrefix("1.\t"))
+    }
+
     func testRestoreRejectsInvalidBoard() throws {
         var board = ViewController.SavedGame.Board(fub: tags(vc.fub), deck: tags(vc.deck), deal: tags(vc.deal),
                                                    suitStacks: vc.suitStacks.map(tags), cardStacks: vc.cardStacks.map(tags))

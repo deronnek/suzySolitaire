@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0BAA5E1A2E9C000000000003 /* HowToPlayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */; };
 		0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */; };
 		0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2DAFF71C7F5D69008C7B87 /* Util.swift */; };
 		0B478BF81C6B7D25008C7B87 /* spade1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BF71C6B7D25008C7B87 /* spade1.png */; };
@@ -148,6 +149,7 @@
 		0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableArray+Shuffling.m"; path = "../NSMutableArray+Shuffling.m"; sourceTree = "<group>"; };
 		0B0F5C7818E210E200CA3F9A /* ssTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssTest.h; sourceTree = "<group>"; };
 		0B0F5C7918E210E200CA3F9A /* ssTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ssTest.m; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayViewController.swift; sourceTree = "<group>"; };
 		0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		0B2DAFF71C7F5D69008C7B87 /* Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Util.swift; path = ../Util.swift; sourceTree = "<group>"; };
 		0B478BF71C6B7D25008C7B87 /* spade1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spade1.png; sourceTree = "<group>"; };
@@ -349,6 +351,7 @@
 			children = (
 				0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */,
 				0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */,
+				0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */,
 				0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */,
 				0B53A8D91C6CE93D008C7B87 /* Card.swift */,
 				0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */,
@@ -722,6 +725,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */,
+				0BAA5E1A2E9C000000000003 /* HowToPlayViewController.swift in Sources */,
 				0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */,
 				0B53A8DC1C6CF8A7008C7B87 /* CardStack.swift in Sources */,
 				0B5BD93B1CB6BB79008C7B87 /* AppDelegate.swift in Sources */,

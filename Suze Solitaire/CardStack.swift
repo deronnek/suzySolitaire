@@ -247,7 +247,6 @@ class CardStack: NSObject, NSCoding {
             rec.size = CGSizeMake(rec.size.width, rec.size.height - CGFloat(self.cardSliceHeight))
             self.view.frame = rec
         }
-        print(self.cards[0], toRemove)
         let index = self.cards.firstIndex(of:toRemove)
         self.cards.remove(at:index!)
         
