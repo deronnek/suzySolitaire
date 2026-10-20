@@ -36,10 +36,7 @@ enum cardStackType {
 class CardStack: NSObject {
     var cards = [Card]() {
         didSet {
-            // Deck cards sit exactly on top of each other, so only the top one casts a shadow; otherwise they'd add up
-            for card in self.cards {
-                card.view.layer.shadowOpacity = (self.stackType != .deck || card === self.cards.last) ? Card.shadowOpacity : 0
-            }
+            self.updateShadows()
             // Only the top card of the blind and deal can be played, so the ones under it show blank faces
             if self.stackType == .fub || self.stackType == .deal {
                 for card in self.cards {
@@ -132,6 +129,28 @@ class CardStack: NSObject {
             }
             self.cards[i].resize(point: CGPoint(x: 0, y: y), width: width, height: cardHeight)
             self.cards[i].savedCap = self.cardSliceHeight
+        }
+        self.updateShadows()
+    }
+
+    // Overlapping shadows add up, so stacks whose cards sit close together only give shadows to the cards needed to
+    // outline the whole stack
+    func updateShadows() {
+        let shadowed: (Int) -> Bool
+        switch self.stackType {
+            case .deck:
+                // The cards sit exactly on top of each other
+                shadowed = { $0 == self.cards.count - 1 }
+            case .fub, .deal:
+                // A card's shadow reaches down a card's height, so every few cards are enough to cover the edges
+                let cardHeight = self.cards.first.map { Int($0.view.bounds.height) } ?? 0
+                let step = max(1, cardHeight / max(1, self.cardSliceHeight))
+                shadowed = { $0 % step == 0 || $0 == self.cards.count - 1 }
+            case .cardstack, .suitstack:
+                shadowed = { _ in true }
+        }
+        for (i, card) in self.cards.enumerated() {
+            card.view.layer.shadowOpacity = shadowed(i) ? Card.shadowOpacity : 0
         }
     }
     

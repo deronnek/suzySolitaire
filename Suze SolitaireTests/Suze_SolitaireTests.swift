@@ -219,6 +219,20 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(try autoState(), .on)
     }
 
+    func testCloselyStackedCardsDontPileUpShadows() throws {
+        vc.redrawTable()
+        func shadowed(_ stack: CardStack?) -> [Int] {
+            return stack!.cards.indices.filter { stack!.cards[$0].view.layer.shadowOpacity > 0 }
+        }
+        // The blind's 13 cards fan less than a card's height, so its bottom and top cards outline it
+        XCTAssertEqual(shadowed(vc.fub), [0, 12])
+        XCTAssertEqual(shadowed(vc.deck), [vc.deck!.cards.count - 1])
+        // Lower stacks fan wide enough that every card keeps its shadow
+        for stack in vc.cardStacks {
+            XCTAssertEqual(shadowed(stack), Array(stack!.cards.indices))
+        }
+    }
+
     func testResetStatsClearsWinsAndLosses() throws {
         let menu  = try XCTUnwrap(vc.menuBarButtonItem?.menu)
         let reset = try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title.hasPrefix("Reset Wins") })
