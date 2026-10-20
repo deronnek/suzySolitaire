@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 53;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -285,6 +285,7 @@
 		0B8255FD175CB9F40064579C /* card_stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card_stack.h; sourceTree = "<group>"; };
 		0B8255FE175CB9F40064579C /* card_stack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card_stack.m; sourceTree = "<group>"; };
 		0B938E511C67E58A008C7B87 /* Suze Solitaire-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Suze Solitaire-Bridging-Header.h"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000001 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		0BB464A6183D690D00EE4F5D /* retina_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = retina_icon.png; sourceTree = "<group>"; };
 		0BD5A6D92A4CE45000E5C053 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -315,6 +316,7 @@
 		0B825541175B7C310064579C = {
 			isa = PBXGroup;
 			children = (
+				0BAA5E1A2E9C000000000001 /* Signing.xcconfig */,
 				0B825568175B7C310064579C /* MainStoryboard.storyboard */,
 				0B825556175B7C310064579C /* Suze Solitaire */,
 				0B82557A175B7C310064579C /* Suze SolitaireTests */,
@@ -875,12 +877,12 @@
 		};
 		0B825586175B7C310064579C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0BAA5E1A2E9C000000000001 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = V28C6CTDW9;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze Solitaire/Suze Solitaire-Info.plist";
@@ -889,7 +891,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.Suze-Solitaire";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -903,12 +904,12 @@
 		};
 		0B825587175B7C310064579C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0BAA5E1A2E9C000000000001 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = V28C6CTDW9;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze Solitaire/Suze Solitaire-Info.plist";
@@ -917,7 +918,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.Suze-Solitaire";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -932,9 +932,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
@@ -949,9 +947,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
