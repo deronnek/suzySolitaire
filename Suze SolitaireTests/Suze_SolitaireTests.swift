@@ -372,6 +372,86 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(names.contains("Move \(stack.cards.last!.accessibilityName) to an upper stack"))
     }
 
+    // MARK: Kevin's open to-dos
+
+    // Each card in a fanned stack is linked to the card on top of it; the top card and every deck card are unlinked
+    func assertLinksConsistent(_ file: StaticString = #filePath, line: UInt = #line) {
+        for stack in [vc.fub!, vc.deal!] + vc.cardStacks.map({ $0! }) {
+            for (i, card) in stack.cards.enumerated() {
+                let expected = i + 1 < stack.cards.count ? stack.cards[i + 1] : nil
+                XCTAssertTrue(card.cardParent === expected, "\(vc.accessibilityName(of: stack)) card \(i)", file: file, line: line)
+            }
+        }
+        XCTAssertTrue(vc.deck!.cards.allSatisfy { $0.cardParent == nil }, "deck", file: file, line: line)
+    }
+
+    // "Fix dragging stack of cards makes top card dissappear": picking up a run has to lift the whole run in order
+    func testPickingUpARunKeepsItsCardsInOrder() {
+        let first = vc.cardStacks[0]!, second = vc.cardStacks[1]!
+        for _ in 0..<2 {
+            first.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        let run = first.cards
+        vc.performMove(card: run[0], from: first, to: second)
+
+        vc.liftRun(startingAt: run[0])
+        XCTAssertEqual(second.view.subviews.suffix(3), run.map { $0.view }, "the touched card mustn't cover the cards on it")
+        XCTAssertTrue(vc.view.subviews.last === second.view)
+    }
+
+    // "Fix card parents not being cleaned properly after auto move"
+    func testCardLinksStayConsistentThroughPlay() {
+        assertLinksConsistent()
+
+        // Deal, then put a card that can go up on top of a lower stack and let auto moves take it
+        vc.tapDeck()
+        vc.finishTurn()
+        assertLinksConsistent()
+        let starter = vc.deck!.cards.first { $0.rank == vc.suitStackStarter } ?? vc.deal!.cards.first { $0.rank == vc.suitStackStarter }
+        if let starter = starter, let from = vc.viewTagToStack[starter.view.tag]! {
+            from.removeCard(toRemove: starter)
+            from.cards.last?.cardParent = nil
+            vc.cardStacks[1]!.addCard(toadd: starter)
+            vc.viewTagToStack[starter.view.tag] = vc.cardStacks[1]
+        }
+        vc.autoMoves = true
+        vc.finishTurn()
+        XCTAssertTrue(vc.suitStacks.contains { $0!.cards.contains { $0 === starter } }, "auto moves should have put the card up")
+        assertLinksConsistent()
+
+        // Move a run, undo it, and recycle the deck
+        let first = vc.cardStacks[0]!
+        first.addCard(toadd: vc.deck!.getTopCard()!)
+        vc.performMove(card: first.cards[0], from: first, to: vc.cardStacks[2]!)
+        assertLinksConsistent()
+        vc.undoMove(vc.undoBarButtonItem)
+        assertLinksConsistent()
+        while !vc.deck!.cards.isEmpty {
+            vc.tapDeck()
+        }
+        vc.tapDeck()
+        assertLinksConsistent()
+    }
+
+    // "Fix cards on suitstacks after rotating device"
+    func testSuitStackCardsAfterRotating() {
+        let suit = vc.suitStacks[0]!
+        for _ in 0..<3 {
+            suit.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        for (width, height) in [(390.0, 844.0), (844.0, 390.0), (390.0, 844.0)] {
+            vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            vc.redrawTable()
+            let cardSize = vc.cardStacks[0]!.cards[0].view.frame.size
+            for (i, card) in suit.cards.enumerated() {
+                XCTAssertEqual(card.view.frame.size, cardSize, "\(width)x\(height)")
+                XCTAssertEqual(card.view.frame.minY, i == 0 ? 0 : CGFloat(suit.cardSliceHeight), "\(width)x\(height)")
+            }
+            XCTAssertTrue(suit.view.subviews.last === suit.cards.last!.view, "the top card should be drawn on top")
+            XCTAssertEqual(suit.view.frame.height, cardSize.height + CGFloat(suit.cardSliceHeight), accuracy: 1)
+        }
+    }
+
     func testMovedRunStaysTogether() {
         // Build a three-card run on a lower stack, move it, then move it again by its bottom card
         let first = vc.cardStacks[0]!, second = vc.cardStacks[1]!, third = vc.cardStacks[2]!

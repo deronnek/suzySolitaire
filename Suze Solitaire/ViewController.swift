@@ -6,16 +6,13 @@
 //  Copyright © 2016 Kevin DeRonne. All rights reserved.
 //
 
-// TODO:  
-// Add popup to confirm new game (?)
-// Fix cards on suitstacks after rotating device
-// Fix dragging stack of cards makes top card dissappear
-// Go through all functions in ssViewController and make sure you either don't need them or have a swift version
-// Fix card parents not being cleaned properly after auto move
-
-
 //
 // DONE:
+// Add popup to confirm new game (instead, New Game offers Undo for a few seconds)
+// Fix cards on suitstacks after rotating device (the table re-lays out on every size change; covered by a test)
+// Fix dragging stack of cards makes top card dissappear (moved runs lost the links that lift them together when dragged)
+// Go through all functions in ssViewController and make sure you either don't need them or have a swift version (Objective-C version removed)
+// Fix card parents not being cleaned properly after auto move (card links are checked through play by a test)
 // Fix bug where autobucks makes a move from the deal, then you tap undo. (undo now disabled after any autobucks action)
 // Enable autocomplete button; fix code that changes its state
 // Implement Undo
@@ -720,15 +717,7 @@ class ViewController: UIViewController {
             self.activeCard            = self.viewTagToCard[viewTapped!.tag]!
             self.activeCardSourceStack = self.viewTagToStack[viewTapped!.tag]!
             self.activeCard?.savePos()
-            
-            viewTapped?.superview?.bringSubviewToFront(viewTapped!)
-            self.view.bringSubviewToFront((viewTapped?.superview)!)
-            
-            var cardParent = self.activeCard?.cardParent
-            while((cardParent) != nil) {
-                cardParent!.view.superview?.bringSubviewToFront(cardParent!.view)
-                cardParent = cardParent?.cardParent
-            }
+            self.liftRun(startingAt: self.activeCard!)
         }
         else {
             self.activeCard = nil
@@ -737,6 +726,19 @@ class ViewController: UIViewController {
         if (self.activeCard != nil) {
             self.xCap = Int(point!.x - self.activeCard!.view.frame.origin.x)
             self.yCap = Int(point!.y - self.activeCard!.view.frame.origin.y)
+        }
+    }
+    
+    // Brings a card being picked up, and the cards on top of it, above everything else so they stay visible while dragged
+    func liftRun(startingAt card: Card) {
+        card.view.superview?.bringSubviewToFront(card.view)
+        if let stackView = card.view.superview {
+            self.view.bringSubviewToFront(stackView)
+        }
+        var cardParent = card.cardParent
+        while cardParent != nil {
+            cardParent!.view.superview?.bringSubviewToFront(cardParent!.view)
+            cardParent = cardParent?.cardParent
         }
     }
     
