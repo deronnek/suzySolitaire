@@ -655,7 +655,8 @@ class ViewController: UIViewController {
         let toolbarBottom = CGRectGetHeight((self.navigationController?.navigationBar.bounds)!)+(self.navigationController?.navigationBar.frame.origin.y)!
         // Fanned stacks may reach down to just above the bottom toolbar
         let tableBottom = self.toolbar.frame.minY - 8
-        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        // The iPad layout needs room; narrow iPad windows (Split View, Slide Over, Stage Manager) use the iPhone layout
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad && bounds.width >= 600 && bounds.height >= 600
         
         var cardWidth, cardHeight: CGFloat
         var fubPoint, deckPoint, dealPoint: CGPoint
@@ -718,7 +719,7 @@ class ViewController: UIViewController {
         let cardHeightInt = Int(cardHeight)
         let cardWidthInt  = Int(cardWidth)
         let place = { (stack: CardStack?, point: CGPoint) in
-            stack!.resize(point: point, width: cardWidthInt, cardHeight: cardHeightInt, maxHeight: Int(tableBottom - point.y))
+            stack!.resize(point: point, width: cardWidthInt, cardHeight: cardHeightInt, maxHeight: Int(tableBottom - point.y), compact: !isPad)
         }
         
         place(self.fub, fubPoint)

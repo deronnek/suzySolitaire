@@ -103,6 +103,20 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(vc.deal!.view.frame.size, cardSize)
     }
 
+    // iPad Split View, Slide Over and Stage Manager windows can be any size; small ones get the iPhone layout
+    func testWindowSizeChoosesLayout() {
+        for (width, height) in [(320.0, 900.0), (375.0, 1000.0), (507.0, 800.0)] {
+            vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            vc.redrawTable()
+            XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, CGFloat(Int(width / 7.4)), "\(width)x\(height)")
+        }
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 1180)
+            vc.redrawTable()
+            XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, 82)
+        }
+    }
+
     func testLandscapeTableFitsOnScreen() {
         for (width, height) in [(844.0, 390.0), (932.0, 430.0), (667.0, 375.0)] {
             vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)

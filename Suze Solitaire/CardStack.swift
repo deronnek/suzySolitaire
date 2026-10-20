@@ -84,16 +84,15 @@ class CardStack: NSObject {
         self.view.layer.borderColor = UIColor.white.cgColor
     }
     
-    // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it
-    func resize(point: CGPoint, width: Int, cardHeight: Int, maxHeight: Int? = nil) {
+    // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it.  compact
+    // is true for the iPhone-style layout, which also fans lower stacks more tightly.
+    func resize(point: CGPoint, width: Int, cardHeight: Int, maxHeight: Int? = nil, compact: Bool = true) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
         // Round the empty-stack outline to match the cards
         self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
-        // Make stacking tighter if we're not on an ipad
-        if UIDevice.current.userInterfaceIdiom != UIUserInterfaceIdiom.pad {
-            if self.stackType == .suitstack || self.stackType == .cardstack {
-                self.baseSliceHeight = Int(Double(cardHeight)/2.5)
-            }
+        // Make stacking tighter in the iPhone-style layout
+        if self.stackType == .suitstack || self.stackType == .cardstack {
+            self.baseSliceHeight = compact ? Int(Double(cardHeight)/2.5) : 30
         }
         self.cardSliceHeight = self.baseSliceHeight
         if let maxHeight = maxHeight, self.cards.count > 1, self.stackType == .cardstack || self.stackType == .fub || self.stackType == .deal {
