@@ -2,3 +2,4 @@ Signing.local.xcconfig
 build/
 xcuserdata/
 .DS_Store
+scripts/testflight.local.env
