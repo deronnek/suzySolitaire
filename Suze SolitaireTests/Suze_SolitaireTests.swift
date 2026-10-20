@@ -219,6 +219,27 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(try autoState(), .on)
     }
 
+    func testResetStatsClearsWinsAndLosses() throws {
+        let menu  = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+        let reset = try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title.hasPrefix("Reset Wins") })
+        XCTAssertTrue(reset.attributes.contains(.destructive))
+
+        vc.wins   = 3
+        vc.losses = 7
+        vc.score  = 120
+        vc.startNewGameWithSender(sender: self)
+        XCTAssertNotNil(vc.newGameUndoBanner)
+        vc.resetStats()
+        XCTAssertEqual(vc.wins, 0)
+        XCTAssertEqual(vc.losses, 0)
+        XCTAssertEqual(vc.score, 75, "money is kept")
+        // The New Game undo can't bring the old counts back
+        XCTAssertNil(vc.gameBeforeNewGame)
+        // and the reset survives a relaunch
+        let saved = try XCTUnwrap(vc.loadSavedGame())
+        XCTAssertEqual([saved.wins, saved.losses], [0, 0])
+    }
+
     func testBuildDateFromTestFlightBuildNumber() throws {
         let date  = try XCTUnwrap(ViewController.buildDate(buildNumber: "20261019.2212"))
         let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)

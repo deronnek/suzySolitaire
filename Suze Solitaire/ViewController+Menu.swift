@@ -6,7 +6,7 @@
 import PhotosUI
 import UIKit
 
-// The "..." menu in the bottom toolbar: auto moves, the card back, and the About box
+// The "..." menu in the bottom toolbar: auto moves, the card back, resetting wins and losses, and the About box
 extension ViewController: PHPickerViewControllerDelegate {
 
     func buildMenu() -> UIMenu {
@@ -28,10 +28,15 @@ extension ViewController: PHPickerViewControllerDelegate {
         }
         let cardBack = UIMenu(title: "Card Back", image: UIImage(systemName: "rectangle.portrait"), children: [choosePhoto, useDefault])
 
+        let resetStats = UIAction(title: "Reset Wins & Losses…", image: UIImage(systemName: "arrow.counterclockwise.circle"),
+                                  attributes: .destructive) { _ in
+            self.confirmResetStats()
+        }
+
         let about = UIAction(title: "About", image: UIImage(systemName: "info.circle")) { _ in
             self.showAbout()
         }
-        return UIMenu(children: [auto, cardBack, about])
+        return UIMenu(children: [auto, cardBack, resetStats, about])
     }
 
     func updateMenu() {
@@ -78,6 +83,28 @@ extension ViewController: PHPickerViewControllerDelegate {
             }
         }
         self.updateMenu()
+    }
+
+    // MARK: Wins and losses
+
+    func confirmResetStats() {
+        let alert = UIAlertController(title: "Reset Wins & Losses?",
+                                      message: "Your wins and losses will go back to zero. Your money and the current game won't change.",
+                                      preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { _ in
+            self.resetStats()
+        })
+        self.present(alert, animated: true)
+    }
+
+    func resetStats() {
+        // Undoing a New Game would bring the old counts back
+        self.dismissNewGameUndo(animated: true)
+        self.wins   = 0
+        self.losses = 0
+        self.saveGame()
+        self.announce("Wins and losses reset")
     }
 
     // MARK: About
