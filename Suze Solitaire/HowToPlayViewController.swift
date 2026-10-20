@@ -39,8 +39,8 @@ class HowToPlayViewController: UIViewController {
         NSLayoutConstraint.activate([
             self.textView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
             self.textView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            self.textView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-            self.textView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
+            self.textView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor),
+            self.textView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor),
         ])
 
         self.textView.attributedText = HowToPlayViewController.rulesText()

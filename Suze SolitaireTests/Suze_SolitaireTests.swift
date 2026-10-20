@@ -67,6 +67,49 @@ final class Suze_SolitaireTests: XCTestCase {
         }
     }
 
+    func testOnlyTopCardOfBlindAndDealShowsItsFace() {
+        for _ in 0..<3 {
+            vc.deal!.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        for stack in [vc.fub!, vc.deal!] {
+            XCTAssertTrue(stack.cards.last!.view.image === stack.cards.last!.faceImage)
+            XCTAssertTrue(stack.cards.dropLast().allSatisfy { $0.view.image === Card.blankFaceImage }, "\(stack.stackType)")
+
+            // Taking the top card reveals the one underneath
+            let top = stack.getTopCard()!
+            XCTAssertTrue(stack.cards.last!.view.image === stack.cards.last!.faceImage)
+            XCTAssertTrue(top.view.image === top.faceImage)
+        }
+    }
+
+    func testLandscapeTableFitsOnScreen() {
+        for (width, height) in [(844.0, 390.0), (932.0, 430.0), (667.0, 375.0)] {
+            vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            vc.redrawTable()
+            for stack in allStacks(vc) {
+                XCTAssertGreaterThanOrEqual(stack!.view.frame.minX, 0)
+                XCTAssertLessThanOrEqual(stack!.view.frame.maxX, CGFloat(width), "\(stack!.stackType) runs off a \(width)pt screen")
+                XCTAssertLessThanOrEqual(stack!.view.frame.maxY, vc.toolbar.frame.minY, "\(stack!.stackType) runs under the toolbar at \(width)x\(height)")
+            }
+        }
+    }
+
+    func testLongStacksSqueezeAboveToolbar() {
+        // Pile most of the deck onto one lower stack
+        let stack = vc.cardStacks[0]!
+        for _ in 0..<20 {
+            stack.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        for (width, height) in [(390.0, 844.0), (844.0, 390.0)] {
+            vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            vc.redrawTable()
+            XCTAssertLessThanOrEqual(stack.view.frame.maxY, vc.toolbar.frame.minY, "\(width)x\(height)")
+            XCTAssertLessThan(stack.cardSliceHeight, stack.baseSliceHeight)
+            // Every card should still show a sliver
+            XCTAssertGreaterThanOrEqual(stack.cardSliceHeight, 2)
+        }
+    }
+
     func testSaveAndRestoreRoundTrip() throws {
         vc.score  = 120
         vc.wins   = 3

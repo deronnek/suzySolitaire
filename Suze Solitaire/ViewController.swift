@@ -586,59 +586,85 @@ class ViewController: UIViewController {
             // No table yet
             return
         }
-        let screenWidth = CGRectGetWidth(self.view.bounds);
+        self.view.layoutIfNeeded()
+        let bounds = self.view.bounds
+        let safe   = self.view.safeAreaInsets
         let toolbarBottom = CGRectGetHeight((self.navigationController?.navigationBar.bounds)!)+(self.navigationController?.navigationBar.frame.origin.y)!
-    
-        // On iPhone the rows span 7.2 card widths (the fub/deck/deal column, then the gap and four stacks), plus a cardWidth/5
-        // margin on the right.  The iPad sizes its cards below, but its row spacing is still based on screenWidth/7.
-        let isPad      = UIDevice.current.userInterfaceIdiom == .pad
-        var cardWidth  = CGFloat(screenWidth / (isPad ? 7 : 7.4));
-        var cardHeight = cardWidth * Card.aspectRatio;
+        // Fanned stacks may reach down to just above the bottom toolbar
+        let tableBottom = self.toolbar.frame.minY - 8
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         
-        let toprowSpacer = toolbarBottom+cardHeight*0.1;  // Space from the top of the screen to the first row of cards.
-        var leftRightGapMultiplier = CGFloat(2.8);
+        var cardWidth, cardHeight: CGFloat
+        var fubPoint, deckPoint, dealPoint: CGPoint
+        var stackXs = [CGFloat]()
+        var toprowSpacer, secondSpacer: CGFloat
         
-        var widthSpacer  = cardWidth/15;
-        var dealSpacer   = 2*(cardWidth/5);
-        
-        if(isPad) {
-            cardWidth    = screenWidth/10;
-            widthSpacer  = cardWidth/2.0;
-            dealSpacer   = 2*(cardWidth/5);
-            leftRightGapMultiplier = 4;
-            cardHeight   = cardWidth*Card.aspectRatio;
-            
+        if !isPad && bounds.width > bounds.height {
+            // iPhone landscape: size the cards so two rows fit in the height, with the blind, deck and deal side by side on
+            // the left, then a wider gap and the four stacks
+            cardHeight = (tableBottom - toolbarBottom) * 0.36
+            cardWidth  = cardHeight / Card.aspectRatio
+            var gap    = cardWidth / 5
+            let rowWidth       = { 7*cardWidth + 5*gap + cardWidth*0.6 }
+            let availableWidth = bounds.width - safe.left - safe.right
+            if rowWidth() > availableWidth {
+                let scale = availableWidth / rowWidth()
+                cardWidth *= scale; cardHeight *= scale; gap *= scale
+            }
+            let left = safe.left + (availableWidth - rowWidth()) / 2
+            toprowSpacer = toolbarBottom + cardHeight*0.1
+            secondSpacer = toprowSpacer + cardHeight*1.15
+            fubPoint  = CGPoint(x: left, y: toprowSpacer)
+            deckPoint = CGPoint(x: left + cardWidth + gap, y: toprowSpacer)
+            dealPoint = CGPoint(x: left + 2*(cardWidth + gap), y: toprowSpacer)
+            let stacksLeft = left + 3*cardWidth + 2*gap + cardWidth*0.6
+            stackXs = (0..<4).map { stacksLeft + CGFloat($0)*(cardWidth + gap) }
         }
-        
-        // The second row starts just below the blind with all 13 of its cards fanned out
-        let secondSpacer = toprowSpacer + cardHeight + CGFloat(12*CardStack.fannedSliceHeight) + cardHeight*0.15
+        else {
+            // On iPhone the rows span 7.2 card widths (the fub/deck/deal column, then the gap and four stacks), plus a cardWidth/5
+            // margin on the right.  The iPad sizes its cards below, but its row spacing is still based on screenWidth/7.
+            let screenWidth = CGRectGetWidth(bounds);
+            cardWidth  = CGFloat(screenWidth / (isPad ? 7 : 7.4));
+            cardHeight = cardWidth * Card.aspectRatio;
+            
+            toprowSpacer = toolbarBottom+cardHeight*0.1;  // Space from the top of the screen to the first row of cards.
+            var leftRightGapMultiplier = CGFloat(2.8);
+            
+            var widthSpacer  = cardWidth/15;
+            var dealSpacer   = 2*(cardWidth/5);
+            
+            if(isPad) {
+                cardWidth    = screenWidth/10;
+                widthSpacer  = cardWidth/2.0;
+                dealSpacer   = 2*(cardWidth/5);
+                leftRightGapMultiplier = 4;
+                cardHeight   = cardWidth*Card.aspectRatio;
+                
+            }
+            
+            // The second row starts just below the blind with all 13 of its cards fanned out
+            secondSpacer = toprowSpacer + cardHeight + CGFloat(12*CardStack.fannedSliceHeight) + cardHeight*0.15
+            
+            fubPoint  = CGPoint(x: cardWidth/5, y: toprowSpacer)
+            deckPoint = CGPoint(x: cardWidth/5, y: secondSpacer)
+            dealPoint = CGPoint(x: cardWidth+dealSpacer, y: secondSpacer)
+            stackXs   = (0..<4).map { cardWidth*leftRightGapMultiplier + CGFloat($0)*(cardWidth + widthSpacer) }
+        }
         
         // Get integer versions as that's what resize takes (maybe it shouldn't?)
         let cardHeightInt = Int(cardHeight)
         let cardWidthInt  = Int(cardWidth)
-        
-        // fub has too many cards and overlaps the deck on the iphone if we don't fudge it a little (hence the -15)
-        self.fub!.resize(point: CGPoint(x: cardWidth/5, y: toprowSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
-        
-        // Resize the four suit stacks
-        for i in 0..<4 {
-            var x = cardWidth * leftRightGapMultiplier
-                x += CGFloat(i)*cardWidth + CGFloat(i)*widthSpacer
-            
-            self.suitStacks[i]!.resize(point: CGPoint(x: x, y: toprowSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
+        let place = { (stack: CardStack?, point: CGPoint) in
+            stack!.resize(point: point, width: cardWidthInt, cardHeight: cardHeightInt, maxHeight: Int(tableBottom - point.y))
         }
         
-        self.deck!.resize(point: CGPoint(x: cardWidth/5, y: secondSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
-        self.deal!.resize(point: CGPoint(x: cardWidth+dealSpacer, y: secondSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
-        
-        // Resize the four card stacks
+        place(self.fub, fubPoint)
+        place(self.deck, deckPoint)
+        place(self.deal, dealPoint)
         for i in 0..<4 {
-            var x = cardWidth * leftRightGapMultiplier
-            x += CGFloat(i)*cardWidth + CGFloat(i)*widthSpacer
-
-            self.cardStacks[i]!.resize(point: CGPoint(x: x, y: secondSpacer), width: cardWidthInt, cardHeight: cardHeightInt)
+            place(self.suitStacks[i], CGPoint(x: stackXs[i], y: toprowSpacer))
+            place(self.cardStacks[i], CGPoint(x: stackXs[i], y: secondSpacer))
         }
-
     }
     
     func createCards() {
@@ -808,6 +834,9 @@ class ViewController: UIViewController {
                 undoBarButtonItem.isEnabled = false
             }
         }
+        
+        // Re-lay out so stacks that grew squeeze to fit above the toolbar
+        self.redrawTable()
         
         // Check to see if we've just won
         var won = true

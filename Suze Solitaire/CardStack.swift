@@ -43,10 +43,18 @@ class CardStack: NSObject, NSCoding {
             for card in self.cards {
                 card.view.layer.shadowOpacity = (self.stackType != .deck || card === self.cards.last) ? Card.shadowOpacity : 0
             }
+            // Only the top card of the blind and deal can be played, so the ones under it show blank faces
+            if self.stackType == .fub || self.stackType == .deal {
+                for card in self.cards {
+                    card.view.image = card === self.cards.last ? card.faceImage : Card.blankFaceImage
+                }
+            }
         }
     }
     var stackType = cardStackType.cardstack
     var cardSliceHeight = 30
+    // The fan spacing when there's room; resize squeezes cardSliceHeight below this so tall stacks still fit
+    var baseSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
     let keysForEncoding = ["cards", "cardSliceHeight", "stackZ"]
@@ -71,6 +79,7 @@ class CardStack: NSObject, NSCoding {
         switch type {
             case .fub, .deal:
                 self.cardSliceHeight = CardStack.fannedSliceHeight
+                self.baseSliceHeight = CardStack.fannedSliceHeight
             case .deck, .cardstack, .suitstack:
                 break // default value is fine for these
         }
@@ -136,15 +145,20 @@ class CardStack: NSObject, NSCoding {
         }
     }
     
-    func resize(point: CGPoint, width: Int, cardHeight: Int) {
+    // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it
+    func resize(point: CGPoint, width: Int, cardHeight: Int, maxHeight: Int? = nil) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
         // Round the empty-stack outline to match the cards
         self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
         // Make stacking tighter if we're not on an ipad
         if UIDevice.current.userInterfaceIdiom != UIUserInterfaceIdiom.pad {
             if self.stackType == .suitstack || self.stackType == .cardstack {
-                self.cardSliceHeight = Int(Double(cardHeight)/2.5)
+                self.baseSliceHeight = Int(Double(cardHeight)/2.5)
             }
+        }
+        self.cardSliceHeight = self.baseSliceHeight
+        if let maxHeight = maxHeight, self.cards.count > 1, self.stackType == .cardstack || self.stackType == .fub || self.stackType == .deal {
+            self.cardSliceHeight = max(2, min(self.baseSliceHeight, (maxHeight - cardHeight) / (self.cards.count - 1)))
         }
         switch self.stackType {
             case .deck:
@@ -177,6 +191,7 @@ class CardStack: NSObject, NSCoding {
                 
             }
             self.cards[i].resize(point: CGPoint(x: 0, y: y), width: width, height: cardHeight)
+            self.cards[i].savedCap = self.cardSliceHeight
         }
     }
     

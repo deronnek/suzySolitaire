@@ -59,6 +59,18 @@ class Card: NSObject, NSCoding {
     static let cornerRadiusFraction: CGFloat = 0.06
     static let shadowOpacity: Float = 0.35
     
+    // A plain white face, shown on covered cards in the blind and deal so their fanned edges don't give away rank or suit
+    static let blankFaceImage: UIImage = {
+        let size   = CGSize(width: 500, height: 500 * Card.aspectRatio)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale  = 1
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIColor.white.setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * Card.cornerRadiusFraction).fill()
+        }
+    }()
+    
     // A card back chosen by the player, or nil for the default
     static var customBackImageURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("CardBack.png")
     static var customBackImage = UIImage(contentsOfFile: Card.customBackImageURL.path)
