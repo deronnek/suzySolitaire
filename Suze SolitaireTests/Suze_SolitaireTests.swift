@@ -13,6 +13,8 @@ final class Suze_SolitaireTests: XCTestCase {
     override func setUpWithError() throws {
         // Keep tests away from the real saved game
         ViewController.savedGameURL = FileManager.default.temporaryDirectory.appendingPathComponent("SavedGame-\(UUID().uuidString).json")
+        Card.customBackImageURL     = FileManager.default.temporaryDirectory.appendingPathComponent("CardBack-\(UUID().uuidString).png")
+        Card.customBackImage        = nil
         vc = try self.makeViewController()
         vc.score  = -45
         vc.wins   = 0
@@ -22,6 +24,8 @@ final class Suze_SolitaireTests: XCTestCase {
 
     override func tearDown() {
         try? FileManager.default.removeItem(at: ViewController.savedGameURL)
+        try? FileManager.default.removeItem(at: Card.customBackImageURL)
+        Card.customBackImage = nil
         vc = nil
     }
 
@@ -67,7 +71,7 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.score  = 120
         vc.wins   = 3
         vc.losses = 2
-        vc.autoSwitch.setOn(true, animated: false)
+        vc.autoMoves = true
         // Deal three cards so every stack type has something in it
         for _ in 0..<3 {
             vc.deal!.addCard(toadd: vc.deck!.getTopCard()!)
@@ -112,12 +116,58 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testButtonActionsExist() {
         // A storyboard action whose selector doesn't match an @IBAction crashes when the button is tapped
-        let items = (vc.navigationItem.leftBarButtonItems ?? []) + (vc.navigationItem.rightBarButtonItems ?? []) + (vc.toolbarItems ?? [])
+        let items = (vc.navigationItem.leftBarButtonItems ?? []) + (vc.navigationItem.rightBarButtonItems ?? []) + (vc.toolbar.items ?? [])
         for item in items {
             guard let action = item.action else { continue }
             let target = (item.target as? NSObject) ?? vc!
             XCTAssertTrue(target.responds(to: action), "\(item.title ?? "untitled") button sends \(action), which \(type(of: target)) doesn't implement")
         }
+    }
+
+    func testMenuShowsAutoMovesState() throws {
+        func autoState() throws -> UIMenuElement.State {
+            let menu = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+            return try XCTUnwrap(menu.children.first as? UIAction).state
+        }
+        XCTAssertEqual(try autoState(), .off)
+        vc.autoMoves = true
+        XCTAssertEqual(try autoState(), .on)
+    }
+
+    func testBuildDateFromTestFlightBuildNumber() throws {
+        let date  = try XCTUnwrap(ViewController.buildDate(buildNumber: "20261019.2212"))
+        let parts = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        XCTAssertEqual([parts.year, parts.month, parts.day, parts.hour, parts.minute], [2026, 10, 19, 22, 12])
+        // Builds not numbered by date still get a date
+        XCTAssertNotNil(ViewController.buildDate(buildNumber: "1"))
+    }
+
+    func testCardBackImageIsCardShaped() throws {
+        let photo = UIGraphicsImageRenderer(size: CGSize(width: 1000, height: 400)).image { context in
+            UIColor.blue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 1000, height: 400))
+        }
+        let back = Card.cardBackImage(from: photo)
+        XCTAssertEqual(back.size.width, 500)
+        XCTAssertEqual(back.size.height, (500 * Card.aspectRatio).rounded(), accuracy: 1)
+        let pixels = try XCTUnwrap(back.cgImage?.dataProvider?.data as Data?)
+        let row    = try XCTUnwrap(back.cgImage?.bytesPerRow)
+        func alpha(_ x: Int, _ y: Int) -> UInt8 { pixels[y * row + x * 4 + 3] }
+        XCTAssertEqual(alpha(0, 0), 0, "corners should be cut off")
+        XCTAssertEqual(alpha(250, 360), 255)
+    }
+
+    func testCustomCardBackAppliesToDeckAndPersists() {
+        let back = Card.cardBackImage(from: UIImage(systemName: "star")!)
+        vc.setCardBack(back)
+        XCTAssertTrue(vc.deck!.cards.allSatisfy { $0.view.image === back })
+        XCTAssertTrue(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
+        // Face-up cards keep their faces
+        XCTAssertFalse(vc.fub!.cards.contains { $0.view.image === back })
+
+        vc.setCardBack(nil)
+        XCTAssertFalse(vc.deck!.cards.contains { $0.view.image === back })
+        XCTAssertFalse(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
     }
 
     func testUndoAfterTouchingAnotherCard() {

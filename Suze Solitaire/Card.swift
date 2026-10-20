@@ -59,6 +59,24 @@ class Card: NSObject, NSCoding {
     static let cornerRadiusFraction: CGFloat = 0.06
     static let shadowOpacity: Float = 0.35
     
+    // A card back chosen by the player, or nil for the default
+    static var customBackImageURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("CardBack.png")
+    static var customBackImage = UIImage(contentsOfFile: Card.customBackImageURL.path)
+    
+    // Crops a photo to card proportions with the same rounded corners as the card images
+    static func cardBackImage(from photo: UIImage) -> UIImage {
+        let size   = CGSize(width: 500, height: 500 * Card.aspectRatio)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale  = 1
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * Card.cornerRadiusFraction).addClip()
+            let scale = max(size.width / photo.size.width, size.height / photo.size.height)
+            let drawn = CGSize(width: photo.size.width * scale, height: photo.size.height * scale)
+            photo.draw(in: CGRect(x: (size.width - drawn.width) / 2, y: (size.height - drawn.height) / 2, width: drawn.width, height: drawn.height))
+        }
+    }
+    
     func encode(with coder: NSCoder) {
         
     }
@@ -90,7 +108,7 @@ class Card: NSObject, NSCoding {
         self.view      = UIImageView(image: UIImage(imageLiteralResourceName: faceImageFilename))
         self.view.tag  = tag
         self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
-        self.backImage = UIImage(imageLiteralResourceName: backImageFilename)
+        self.backImage = Card.customBackImage ?? UIImage(imageLiteralResourceName: backImageFilename)
       
         self.color = suit.color()
 //        

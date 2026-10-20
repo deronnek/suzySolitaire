@@ -31,15 +31,6 @@
                                     <barButtonItem title="Losses" style="plain" id="bG9-1P-NvX">
                                         <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                     </barButtonItem>
-                                    <barButtonItem title="Auto" style="plain" id="4wn-vl-8H8">
-                                        <color key="tintColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                    </barButtonItem>
-                                    <barButtonItem style="plain" id="kzJ-Um-FQe">
-                                        <switch key="customView" opaque="NO" contentMode="right" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" id="hki-rk-g7K">
-                                            <rect key="frame" x="259" y="9.5" width="51" height="31"/>
-                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                        </switch>
-                                    </barButtonItem>
                                 </items>
                             </toolbar>
                         </subviews>
@@ -72,7 +63,7 @@
                     </navigationItem>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
-                        <outlet property="autoSwitch" destination="hki-rk-g7K" id="Qzu-uu-Y43"/>
+                        <outlet property="toolbar" destination="oDC-bT-7mE" id="Qzu-uu-Y43"/>
                         <outlet property="bucksBarButtonItem" destination="cul-DJ-ZFO" id="b5J-x7-JxV"/>
                         <outlet property="lossesBarButtonItem" destination="bG9-1P-NvX" id="5yq-So-iAG"/>
                         <outlet property="undoBarButtonItem" destination="jeC-UM-pIk" id="tAT-85-Z9h"/>

@@ -1,0 +1,108 @@
+//
+//  ViewController+Menu.swift
+//  Suze Solitaire
+//
+
+import PhotosUI
+import UIKit
+
+// The "..." menu in the bottom toolbar: auto moves, the card back, and the About box
+extension ViewController: PHPickerViewControllerDelegate {
+
+    func buildMenu() -> UIMenu {
+        let auto = UIAction(title: "Auto Moves", image: UIImage(systemName: "wand.and.stars"), state: self.autoMoves ? .on : .off) { _ in
+            self.autoMoves.toggle()
+        }
+
+        let choosePhoto = UIAction(title: "Choose Photo…", image: UIImage(systemName: "photo.on.rectangle")) { _ in
+            var config = PHPickerConfiguration()
+            config.filter         = .images
+            config.selectionLimit = 1
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = self
+            self.present(picker, animated: true)
+        }
+        let useDefault = UIAction(title: "Use Default", image: UIImage(systemName: "arrow.counterclockwise"),
+                                  attributes: Card.customBackImage == nil ? .disabled : []) { _ in
+            self.setCardBack(nil)
+        }
+        let cardBack = UIMenu(title: "Card Back", image: UIImage(systemName: "rectangle.portrait"), children: [choosePhoto, useDefault])
+
+        let about = UIAction(title: "About", image: UIImage(systemName: "info.circle")) { _ in
+            self.showAbout()
+        }
+        return UIMenu(children: [auto, cardBack, about])
+    }
+
+    func updateMenu() {
+        self.menuBarButtonItem?.menu = self.buildMenu()
+    }
+
+    // MARK: Card back
+
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else {
+            return
+        }
+        provider.loadObject(ofClass: UIImage.self) { object, _ in
+            guard let photo = object as? UIImage else {
+                return
+            }
+            DispatchQueue.main.async {
+                self.setCardBack(Card.cardBackImage(from: photo))
+            }
+        }
+    }
+
+    // Uses `image` as the back of every card (nil restores the default) and remembers it across launches
+    func setCardBack(_ image: UIImage?) {
+        do {
+            if let image = image {
+                try image.pngData()?.write(to: Card.customBackImageURL, options: .atomic)
+            }
+            else if FileManager.default.fileExists(atPath: Card.customBackImageURL.path) {
+                try FileManager.default.removeItem(at: Card.customBackImageURL)
+            }
+        }
+        catch {
+            print("Failed to save card back: \(error)")
+        }
+        Card.customBackImage = image
+
+        for case let card? in self.viewTagToCard.values {
+            card.backImage = image ?? UIImage(imageLiteralResourceName: card.backImageFilename)
+            if self.viewTagToStack[card.view.tag]??.stackType == .deck {
+                card.view.image = card.backImage
+            }
+        }
+        self.updateMenu()
+    }
+
+    // MARK: About
+
+    func showAbout() {
+        let info    = Bundle.main.infoDictionary ?? [:]
+        let version = info["CFBundleShortVersionString"] as? String ?? "?"
+        let build   = info["CFBundleVersion"] as? String ?? "?"
+        var message = "Version \(version) (\(build))"
+        if let date = ViewController.buildDate(buildNumber: build) {
+            message += "\nBuilt " + DateFormatter.localizedString(from: date, dateStyle: .long, timeStyle: .short)
+        }
+        let alert = UIAlertController(title: "Suze Solitaire", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        self.present(alert, animated: true)
+    }
+
+    static func buildDate(buildNumber: String) -> Date? {
+        // scripts/testflight.sh numbers builds by the time they were made (yyyyMMdd.HHmm)
+        let formatter = DateFormatter()
+        formatter.locale     = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd.HHmm"
+        if let date = formatter.date(from: buildNumber) {
+            return date
+        }
+        // Other builds: when the executable was linked
+        return (try? Bundle.main.executableURL?.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+    }
+}

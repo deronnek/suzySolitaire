@@ -42,7 +42,15 @@ class ViewController: UIViewController {
     @IBOutlet weak var winsBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var lossesBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var undoBarButtonItem: UIBarButtonItem!
-    @IBOutlet weak var autoSwitch: UISwitch!
+    @IBOutlet weak var toolbar: UIToolbar!
+    var menuBarButtonItem: UIBarButtonItem? = nil
+    
+    // Whether any card that can go up to a suit stack is moved there automatically
+    var autoMoves = false {
+        didSet {
+            self.updateMenu()
+        }
+    }
     
     // MARK: Computed Properties
     var score: Int {
@@ -125,6 +133,11 @@ class ViewController: UIViewController {
         self.view.addGestureRecognizer(tapGesture)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
+        
+        let menuItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: self.buildMenu())
+        menuItem.accessibilityLabel = "More"
+        self.toolbar.items = (self.toolbar.items ?? []) + [menuItem]
+        self.menuBarButtonItem = menuItem
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -134,7 +147,7 @@ class ViewController: UIViewController {
                 self.score  = saved.score
                 self.wins   = saved.wins
                 self.losses = saved.losses
-                self.autoSwitch.setOn(saved.autocomplete, animated: false)
+                self.autoMoves = saved.autocomplete
                 if saved.board == nil || !self.restoreBoard(saved.board!, suitStackStarter: saved.suitStackStarter) {
                     // The saved game had been won (or couldn't be read), so deal a new one
                     self.score -= 45
@@ -146,7 +159,7 @@ class ViewController: UIViewController {
                 self.score  = -45
                 self.wins   = 0
                 self.losses = 0
-                self.autoSwitch.setOn(false, animated: true)
+                self.autoMoves = false
                 self.initTable()
             }
             self.doInitTable = false;
@@ -191,7 +204,7 @@ class ViewController: UIViewController {
         let tags = { (stack: CardStack?) in stack!.cards.map { $0.view.tag } }
         let board = SavedGame.Board(fub: tags(fub), deck: tags(deck), deal: tags(deal),
                                     suitStacks: self.suitStacks.map(tags), cardStacks: self.cardStacks.map(tags))
-        let game = SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoSwitch.isOn,
+        let game = SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoMoves,
                              suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board)
         do {
             try JSONEncoder().encode(game).write(to: ViewController.savedGameURL, options: .atomic)
@@ -790,7 +803,7 @@ class ViewController: UIViewController {
         }
         
         // Make all possible moves to suitstacks
-        if self.autoSwitch.isOn {
+        if self.autoMoves {
             while self.findCardForSuitstack() {
                 undoBarButtonItem.isEnabled = false
             }
