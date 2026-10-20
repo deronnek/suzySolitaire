@@ -360,6 +360,7 @@ class ViewController: UIViewController {
     @IBAction func undoMove(_ sender: UIBarButtonItem) {
         // You only get one undo
         self.undoBarButtonItem.isEnabled = false
+        let frames = self.cardFrames()
         
         if self.deckTaps > 0 {
             self.undoDeckTap()
@@ -376,19 +377,62 @@ class ViewController: UIViewController {
             }
             move.to.cards.last?.cardParent = nil
             move.cards.last?.cardParent    = nil
-            self.redrawTable()
         }
         self.lastMove   = nil
         self.activeCard = nil
+        self.layOutAndSlide(from: frames)
     }
     
     // Moves a card, and any cards on top of it, and remembers the move so it can be undone
     func performMove(card: Card, from source: CardStack, to destination: CardStack) {
+        let frames = self.cardFrames()
         let countBefore = destination.cards.count
         self.moveCardBetweenStacks(cardToMove: card, sourceStack: source, destinationStack: destination)
         self.lastMove = (Array(destination.cards[countBefore...]), source, destination)
         self.deckTaps = 0
         self.undoBarButtonItem.isEnabled = true
+        self.layOutAndSlide(from: frames)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+    
+    // MARK: Animation
+    
+    // Where every card on the table is, in the main view's coordinates, by view tag
+    func cardFrames() -> [Int: CGRect] {
+        var frames = [Int: CGRect]()
+        for case let card? in self.viewTagToCard.values {
+            if let superview = card.view.superview {
+                frames[card.view.tag] = self.view.convert(card.view.frame, from: superview)
+            }
+        }
+        return frames
+    }
+    
+    // Lays out the table, then slides each card that moved from where it was (see cardFrames) to its new place
+    func layOutAndSlide(from oldFrames: [Int: CGRect]) {
+        self.redrawTable()
+        if UIAccessibility.isReduceMotionEnabled {
+            return
+        }
+        for case let card? in self.viewTagToCard.values {
+            guard let superview = card.view.superview, let old = oldFrames[card.view.tag] else {
+                continue
+            }
+            let end   = card.view.frame
+            let start = superview.convert(old, from: self.view)
+            if start.origin == end.origin {
+                continue
+            }
+            // Keep the moving card above the stacks it passes over
+            self.view.bringSubviewToFront(superview)
+            card.view.frame = start
+            UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+                card.view.frame = end
+            }
+        }
+        if let banner = self.newGameUndoBanner {
+            self.view.bringSubviewToFront(banner)
+        }
     }
     
     func undoDeckTap() {
@@ -810,6 +854,10 @@ class ViewController: UIViewController {
     
     // Deals up to three cards from the deck, or turns the deal back over when the deck is empty
     func tapDeck() {
+        let frames = self.cardFrames()
+        defer {
+            self.layOutAndSlide(from: frames)
+        }
         if self.deck!.cards.isEmpty {
             // tapped empty deck
             self.activeCard?.cancelMove()
@@ -863,6 +911,7 @@ class ViewController: UIViewController {
     
     // Everything that happens after the player moves: automatic moves, layout, and checking for a win
     func finishTurn() {
+        let frames = self.cardFrames()
         // Make all possible moves to suitstacks
         if self.autoMoves {
             while self.findCardForSuitstack() {
@@ -871,7 +920,7 @@ class ViewController: UIViewController {
         }
         
         // Re-lay out so stacks that grew squeeze to fit above the toolbar
-        self.redrawTable()
+        self.layOutAndSlide(from: frames)
         
         // Check to see if we've just won
         var won = true
@@ -959,6 +1008,7 @@ class ViewController: UIViewController {
     func runVictory() {
         if !self.justWon {
             self.announce("You won! $250")
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             self.activeCard = nil
             self.score += 250
             self.wins += 1
