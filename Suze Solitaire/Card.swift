@@ -53,6 +53,12 @@ enum cardColor {
 }
 
 class Card: NSObject, NSCoding {
+    // Height / width of the card images
+    static let aspectRatio: CGFloat = 726.0 / 500.0
+    // Corner radius as a fraction of card width; matches the corners cut into the card images
+    static let cornerRadiusFraction: CGFloat = 0.06
+    static let shadowOpacity: Float = 0.35
+    
     func encode(with coder: NSCoder) {
         
     }
@@ -95,6 +101,14 @@ class Card: NSObject, NSCoding {
         
         
         self.view.isUserInteractionEnabled = true
+        
+        // The outline and shadow are drawn here rather than in the images so they stay crisp at any card size
+        self.view.layer.borderWidth   = 0.5
+        self.view.layer.borderColor   = UIColor.black.withAlphaComponent(0.8).cgColor
+        self.view.layer.shadowColor   = UIColor.black.cgColor
+        self.view.layer.shadowOpacity = Card.shadowOpacity
+        self.view.layer.shadowRadius  = 1.5
+        self.view.layer.shadowOffset  = .zero
         
         self.cardParent = nil
         // create a unique identifier for this object, used in state restoration
@@ -151,6 +165,8 @@ class Card: NSObject, NSCoding {
     
     func resize(point: CGPoint, width:Int, height:Int) {
         self.view.frame = CGRect(origin: point, size: CGSize(width: width, height: height))
+        self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
+        self.view.layer.shadowPath   = UIBezierPath(roundedRect: self.view.bounds, cornerRadius: self.view.layer.cornerRadius).cgPath
     }
     
     func cancelMove() {

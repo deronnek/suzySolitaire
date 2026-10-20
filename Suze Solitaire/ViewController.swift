@@ -579,10 +579,9 @@ class ViewController: UIViewController {
         // margin on the right.  The iPad sizes its cards below, but its row spacing is still based on screenWidth/7.
         let isPad      = UIDevice.current.userInterfaceIdiom == .pad
         var cardWidth  = CGFloat(screenWidth / (isPad ? 7 : 7.4));
-        var cardHeight = cardWidth * 1.2;
+        var cardHeight = cardWidth * Card.aspectRatio;
         
         let toprowSpacer = toolbarBottom+cardHeight*0.1;  // Space from the top of the screen to the first row of cards.
-        var secondSpacer = toprowSpacer+cardHeight*1.8;   // Space from the top row of cards to the second row
         var leftRightGapMultiplier = CGFloat(2.8);
         
         var widthSpacer  = cardWidth/15;
@@ -590,13 +589,15 @@ class ViewController: UIViewController {
         
         if(isPad) {
             cardWidth    = screenWidth/10;
-            secondSpacer = toprowSpacer+cardHeight*1.35;
             widthSpacer  = cardWidth/2.0;
             dealSpacer   = 2*(cardWidth/5);
             leftRightGapMultiplier = 4;
-            cardHeight   = cardWidth*1.55;
+            cardHeight   = cardWidth*Card.aspectRatio;
             
         }
+        
+        // The second row starts just below the blind with all 13 of its cards fanned out
+        let secondSpacer = toprowSpacer + cardHeight + CGFloat(12*CardStack.fannedSliceHeight) + cardHeight*0.15
         
         // Get integer versions as that's what resize takes (maybe it shouldn't?)
         let cardHeightInt = Int(cardHeight)

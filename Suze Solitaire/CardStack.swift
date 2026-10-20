@@ -37,12 +37,21 @@ class CardStack: NSObject, NSCoding {
         
     }
     
-    var cards = [Card]()
+    var cards = [Card]() {
+        didSet {
+            // Deck cards sit exactly on top of each other, so only the top one casts a shadow; otherwise they'd add up
+            for card in self.cards {
+                card.view.layer.shadowOpacity = (self.stackType != .deck || card === self.cards.last) ? Card.shadowOpacity : 0
+            }
+        }
+    }
     var stackType = cardStackType.cardstack
     var cardSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
     let keysForEncoding = ["cards", "cardSliceHeight", "stackZ"]
+    // How far apart cards in the blind (fub) and deal are fanned
+    static let fannedSliceHeight = 5
     
     init(type: cardStackType) {
 //        var point = CGPoint(x: x, y: y)
@@ -61,7 +70,7 @@ class CardStack: NSObject, NSCoding {
         //self.identifier = NSUUID().UUIDString()
         switch type {
             case .fub, .deal:
-                self.cardSliceHeight = 2
+                self.cardSliceHeight = CardStack.fannedSliceHeight
             case .deck, .cardstack, .suitstack:
                 break // default value is fine for these
         }
@@ -129,6 +138,8 @@ class CardStack: NSObject, NSCoding {
     
     func resize(point: CGPoint, width: Int, cardHeight: Int) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
+        // Round the empty-stack outline to match the cards
+        self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
         // Make stacking tighter if we're not on an ipad
         if UIDevice.current.userInterfaceIdiom != UIUserInterfaceIdiom.pad {
             if self.stackType == .suitstack || self.stackType == .cardstack {
