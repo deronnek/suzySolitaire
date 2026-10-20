@@ -164,7 +164,8 @@ class CardStack: NSObject, NSCoding {
             case .deck:
                 rect.size.height = CGFloat(cardHeight)
             case .deal, .fub, .cardstack:
-                rect.size.height = CGFloat(cardHeight + (self.cards.count-1)*self.cardSliceHeight)
+                // An empty stack still gets a full card-sized outline
+                rect.size.height = CGFloat(cardHeight + max(self.cards.count-1, 0)*self.cardSliceHeight)
             case .suitstack:
                 if self.cards.count > 1 {
                     rect.size.height = CGFloat(cardHeight + self.cardSliceHeight)

@@ -82,6 +82,20 @@ final class Suze_SolitaireTests: XCTestCase {
         }
     }
 
+    func testEmptyStacksKeepCardSizedOutlines() {
+        // Empty a lower stack and the deal, then lay out the table as happens after every move
+        let stack = vc.cardStacks[0]!
+        vc.fub!.addCard(toadd: stack.getTopCard()!)
+        XCTAssertTrue(stack.cards.isEmpty)
+        XCTAssertTrue(vc.deal!.cards.isEmpty)
+        vc.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+        vc.redrawTable()
+
+        let cardSize = vc.cardStacks[1]!.cards[0].view.frame.size
+        XCTAssertEqual(stack.view.frame.size, cardSize)
+        XCTAssertEqual(vc.deal!.view.frame.size, cardSize)
+    }
+
     func testLandscapeTableFitsOnScreen() {
         for (width, height) in [(844.0, 390.0), (932.0, 430.0), (667.0, 375.0)] {
             vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
