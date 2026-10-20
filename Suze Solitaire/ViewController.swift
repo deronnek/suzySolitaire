@@ -96,6 +96,9 @@ class ViewController: UIViewController {
     
     var activeCard:                      Card? = nil
     var activeCardSourceStack:      CardStack? = nil
+    // The card a VoiceOver user has selected to move, and the stack it's in (see ViewController+Accessibility.swift)
+    var accessibilitySelection: (card: Card, stack: CardStack)? = nil
+    
     // The last card move, so it can be undone: the cards moved (bottom to top), and the stacks they came from and went to
     var lastMove: (cards: [Card], from: CardStack, to: CardStack)? = nil
     
@@ -276,33 +279,25 @@ class ViewController: UIViewController {
     }
     
     func tryToPutUpCardAtPoint(point: CGPoint) {
-        if let sourceStack = self.findActiveStack(point: point) {
-            if (self.activeCard != nil) {
-            
-                for i in 0..<4 {
-                    
-                    let topCard = self.suitStacks[i]!.cards.last
-                    if self.acceptCardMove(sourceStack: sourceStack, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
-                        
-                        self.performMove(card: self.activeCard!, from: sourceStack, to: self.suitStacks[i]!)
-                        
-                        // Check to see if we've just won
-                        var won = true;
-                        for i in 0..<4 {
-                            if self.suitStacks[i]!.cards.count != 13 {
-                                won = false
-                            }
-                        }
-                        
-                        if(won == true) {
-                            self.runVictory()
-                        }
-                        // If we've put up a card, we don't need to check further stacks
-                        return
-                    }
-                }
+        if let sourceStack = self.findActiveStack(point: point), let card = self.activeCard {
+            if self.putUp(card: card, from: sourceStack) {
+                self.finishTurn()
             }
         }
+    }
+    
+    // Moves a card to whichever upper stack will take it; returns whether one did
+    @discardableResult
+    func putUp(card: Card, from sourceStack: CardStack) -> Bool {
+        self.activeCard = card
+        for i in 0..<4 {
+            let topCard = self.suitStacks[i]!.cards.last
+            if self.acceptCardMove(sourceStack: sourceStack, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
+                self.performMove(card: card, from: sourceStack, to: self.suitStacks[i]!)
+                return true
+            }
+        }
+        return false
     }
 
     
@@ -665,6 +660,7 @@ class ViewController: UIViewController {
             place(self.suitStacks[i], CGPoint(x: stackXs[i], y: toprowSpacer))
             place(self.cardStacks[i], CGPoint(x: stackXs[i], y: secondSpacer))
         }
+        self.updateAccessibility()
     }
     
     func createCards() {
@@ -754,56 +750,7 @@ class ViewController: UIViewController {
             // Tapped deck
             
             if droppedOnCardStack!.stackType == .deck && (self.deck!.cards.isEmpty || self.activeCardSourceStack?.stackType == .deck) {
-                if self.deck!.cards.isEmpty {
-                    // tapped empty deck
-                    self.activeCard?.cancelMove()
-                    let dealCount = self.deal!.cards.count
-                    for _ in 0..<dealCount {
-                        if let aCard = self.deal?.getTopCard() {
-                            aCard.cardParent = nil
-                            self.deck?.addCard(toadd: aCard)
-                            self.deck!.cards.last?.faceUp = false
-                            self.viewTagToStack[aCard.view.tag] = self.deck
-                        }
-                    }
-                    // Any non-zero count works here: undoDeckTap moves the whole deck back when the deal is empty
-                    self.deckTaps = 1
-                }
-                else {
-                    // Take up to 3 cards from the deck and move them to the deal
-                    print("Deck tapped")
-                    let deckCount  = self.deck!.cards.count
-                    self.deckTaps  = 0
-                    let cardsToAdd = 3 > deckCount ? deckCount : 3
-                    for _ in 0..<cardsToAdd {
-                        if let aCard = self.deck?.getTopCard() {
-                            self.deal?.addCard(toadd: aCard)
-                            self.viewTagToStack[aCard.view.tag] = self.deal
-                        }
-                        self.deckTaps += 1
-                    }
-                }
-                self.undoBarButtonItem.isEnabled = true
-                self.lastMove   = nil
-                self.activeCard = nil
-                
-                // Refresh the appropriate rectangles (if used the moveCardBetweenStacks function above this wouldn't be necessary, but it needs to be smarter about 
-                // things like parent relationships first)
-                if self.deck!.cards.isEmpty {
-                    self.deck!.view.layer.borderWidth = 1
-                    self.deck!.view.layer.borderColor = UIColor.white.cgColor
-                }
-                
-                if self.deal!.cards.isEmpty {
-                    // Reset the size of the rectangle for the deal
-                    var rec  = self.deal!.view.frame
-                    rec.size = CGSizeMake(rec.size.width, self.deck!.view.frame.size.height)
-                    self.deal!.view.frame = rec
-                    self.deal!.view.layer.borderWidth = 1
-                    self.deal!.view.layer.borderColor = UIColor.white.cgColor
-
-                }
-                
+                self.tapDeck()
             }
             else if(droppedOnCardStack?.stackType == .cardstack || droppedOnCardStack?.stackType == .suitstack) {
                 let droppedOnCard = droppedOnCardStack!.cards.last
@@ -828,6 +775,65 @@ class ViewController: UIViewController {
             }
         }
         
+        self.finishTurn()
+    }
+    // MARK: End of touches implementations
+    
+    // Deals up to three cards from the deck, or turns the deal back over when the deck is empty
+    func tapDeck() {
+        if self.deck!.cards.isEmpty {
+            // tapped empty deck
+            self.activeCard?.cancelMove()
+            let dealCount = self.deal!.cards.count
+            for _ in 0..<dealCount {
+                if let aCard = self.deal?.getTopCard() {
+                    aCard.cardParent = nil
+                    self.deck?.addCard(toadd: aCard)
+                    self.deck!.cards.last?.faceUp = false
+                    self.viewTagToStack[aCard.view.tag] = self.deck
+                }
+            }
+            // Any non-zero count works here: undoDeckTap moves the whole deck back when the deal is empty
+            self.deckTaps = 1
+        }
+        else {
+            // Take up to 3 cards from the deck and move them to the deal
+            print("Deck tapped")
+            let deckCount  = self.deck!.cards.count
+            self.deckTaps  = 0
+            let cardsToAdd = 3 > deckCount ? deckCount : 3
+            for _ in 0..<cardsToAdd {
+                if let aCard = self.deck?.getTopCard() {
+                    self.deal?.addCard(toadd: aCard)
+                    self.viewTagToStack[aCard.view.tag] = self.deal
+                }
+                self.deckTaps += 1
+            }
+        }
+        self.undoBarButtonItem.isEnabled = true
+        self.lastMove   = nil
+        self.activeCard = nil
+        
+        // Refresh the appropriate rectangles (if used the moveCardBetweenStacks function above this wouldn't be necessary, but it needs to be smarter about 
+        // things like parent relationships first)
+        if self.deck!.cards.isEmpty {
+            self.deck!.view.layer.borderWidth = 1
+            self.deck!.view.layer.borderColor = UIColor.white.cgColor
+        }
+        
+        if self.deal!.cards.isEmpty {
+            // Reset the size of the rectangle for the deal
+            var rec  = self.deal!.view.frame
+            rec.size = CGSizeMake(rec.size.width, self.deck!.view.frame.size.height)
+            self.deal!.view.frame = rec
+            self.deal!.view.layer.borderWidth = 1
+            self.deal!.view.layer.borderColor = UIColor.white.cgColor
+
+        }
+    }
+    
+    // Everything that happens after the player moves: automatic moves, layout, and checking for a win
+    func finishTurn() {
         // Make all possible moves to suitstacks
         if self.autoMoves {
             while self.findCardForSuitstack() {
@@ -850,7 +856,6 @@ class ViewController: UIViewController {
             self.runVictory()
         }
     }
-    // MARK: End of touches implementations
     
     func findStackUnderHover(hover: UIImageView) -> CardStack? {
         // Get the coordinates of hover relative to its stack (its super view)
@@ -924,6 +929,7 @@ class ViewController: UIViewController {
     
     func runVictory() {
         if !self.justWon {
+            self.announce("You won! $250")
             self.activeCard = nil
             self.score += 250
             self.wins += 1

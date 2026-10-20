@@ -10,6 +10,13 @@ final class Suze_SolitaireTests: XCTestCase {
 
     var vc: ViewController!
 
+    override class func setUp() {
+        super.setUp()
+        // The first accessibilityActivate() in a fresh process once returned false without running the view's activate
+        // block, presumably while UIKit's accessibility support loaded; make that first call here, before any test
+        _ = UIView().accessibilityActivate()
+    }
+
     override func setUpWithError() throws {
         // Keep tests away from the real saved game
         ViewController.savedGameURL = FileManager.default.temporaryDirectory.appendingPathComponent("SavedGame-\(UUID().uuidString).json")
@@ -225,6 +232,83 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.setCardBack(nil)
         XCTAssertFalse(vc.deck!.cards.contains { $0.view.image === back })
         XCTAssertFalse(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
+    }
+
+    // MARK: VoiceOver
+
+    func activate(_ stack: CardStack) {
+        // What VoiceOver calls on a double-tap
+        XCTAssertTrue(stack.view.accessibilityActivate())
+    }
+
+    func testCardAccessibilityNames() {
+        let names = Set(allStacks(vc).flatMap { $0!.cards.map { $0.accessibilityName } })
+        XCTAssertEqual(names.count, 52)
+        XCTAssertTrue(names.contains("Ace of Spades"))
+        XCTAssertTrue(names.contains("10 of Hearts"))
+        XCTAssertTrue(names.contains("Queen of Diamonds"))
+    }
+
+    func testStacksDescribeThemselves() {
+        vc.redrawTable()
+        XCTAssertEqual(vc.deck!.view.accessibilityLabel, "Deck")
+        XCTAssertEqual(vc.deck!.view.accessibilityValue, "34 cards")
+        XCTAssertEqual(vc.deal!.view.accessibilityValue, "Empty")
+        XCTAssertEqual(vc.fub!.view.accessibilityValue, "\(vc.fub!.cards.last!.accessibilityName) on top, 13 cards")
+        XCTAssertEqual(vc.cardStacks[2]!.view.accessibilityLabel, "Lower stack 3")
+        XCTAssertEqual(vc.cardStacks[2]!.view.accessibilityValue, vc.cardStacks[2]!.cards[0].accessibilityName)
+        XCTAssertEqual(vc.suitStacks[0]!.view.accessibilityLabel, "Upper stack 1")
+        // Only the stacks and the toolbar are exposed; the individual card images aren't
+        XCTAssertEqual(vc.view.accessibilityElements?.count, 12)
+    }
+
+    func testActivatingDeckDeals() {
+        vc.redrawTable()
+        activate(vc.deck!)
+        XCTAssertEqual(vc.deal!.cards.count, 3)
+        XCTAssertEqual(vc.deck!.cards.count, 31)
+    }
+
+    func testSelectThenActivateDestinationMovesCard() {
+        // Empty a lower stack; the blind's top card may always fill an empty lower stack
+        let target = vc.cardStacks[0]!
+        vc.deck!.addCard(toadd: target.getTopCard()!)
+        vc.redrawTable()
+        let card = vc.fub!.cards.last!
+
+        activate(vc.fub!)
+        XCTAssertTrue(vc.accessibilitySelection?.card === card)
+        XCTAssertTrue(vc.fub!.view.accessibilityTraits.contains(.selected))
+        XCTAssertEqual(target.view.accessibilityHint, "Double-tap to move \(card.accessibilityName) here")
+
+        activate(target)
+        XCTAssertTrue(target.cards.last === card)
+        XCTAssertNil(vc.accessibilitySelection)
+        XCTAssertTrue(vc.undoBarButtonItem.isEnabled)
+    }
+
+    func testIllegalMoveLeavesBoardAlone() {
+        vc.redrawTable()
+        // An upper stack only takes the starting rank or the next card of its suit; a lower stack's single card that
+        // isn't one of those can't go onto the empty second upper stack
+        guard let source = vc.cardStacks.first(where: { $0!.cards.last!.rank != vc.suitStackStarter })! else { return }
+        let card = source.cards.last!
+        activate(source)
+        activate(vc.suitStacks[1]!)
+        XCTAssertTrue(source.cards.last === card)
+        XCTAssertTrue(vc.suitStacks[1]!.cards.isEmpty)
+        XCTAssertNil(vc.accessibilitySelection)
+    }
+
+    func testLowerStacksOfferSelectActionForEveryCard() {
+        let stack = vc.cardStacks[0]!
+        stack.addCard(toadd: vc.deck!.getTopCard()!)
+        vc.redrawTable()
+        let names = stack.view.accessibilityCustomActions?.map { $0.name } ?? []
+        for card in stack.cards {
+            XCTAssertTrue(names.contains("Select \(card.accessibilityName)"), "\(names)")
+        }
+        XCTAssertTrue(names.contains("Move \(stack.cards.last!.accessibilityName) to an upper stack"))
     }
 
     func testMovedRunStaysTogether() {
