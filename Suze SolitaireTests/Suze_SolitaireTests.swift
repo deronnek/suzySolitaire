@@ -234,6 +234,67 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
     }
 
+    // MARK: Undoing New Game
+
+    func testNewGameCanBeUndone() {
+        vc.score  = 100
+        vc.losses = 2
+        vc.autoMoves = true
+        for _ in 0..<3 {
+            vc.deal!.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        let board = allStacks(vc).map(tags)
+
+        vc.startNewGameWithSender(sender: vc)
+        XCTAssertNotNil(vc.newGameUndoBanner)
+        XCTAssertEqual(vc.score, 55)
+        XCTAssertEqual(vc.losses, 3)
+        XCTAssertTrue(vc.deal!.cards.isEmpty)
+
+        vc.undoNewGame()
+        XCTAssertNil(vc.newGameUndoBanner)
+        XCTAssertEqual(allStacks(vc).map(tags), board)
+        XCTAssertEqual(vc.score, 100)
+        XCTAssertEqual(vc.losses, 2)
+        XCTAssertTrue(vc.autoMoves)
+        // The restored table is fully wired up for play
+        XCTAssertTrue(allStacks(vc).allSatisfy { stack in stack!.cards.allSatisfy { vc.viewTagToStack[$0.view.tag]! === stack } })
+        XCTAssertTrue(allStacks(vc).allSatisfy { $0!.view.superview === vc.view })
+    }
+
+    func testNoUndoAfterAWin() {
+        vc.justWon = true
+        vc.startNewGameWithSender(sender: vc)
+        XCTAssertNil(vc.newGameUndoBanner)
+        XCTAssertNil(vc.gameBeforeNewGame)
+    }
+
+    func testUndoGoesBackOnlyOneNewGame() {
+        let losses = vc.losses
+        vc.startNewGameWithSender(sender: vc)
+        let secondBoard = allStacks(vc).map(tags)
+        vc.startNewGameWithSender(sender: vc)
+        vc.undoNewGame()
+        XCTAssertEqual(allStacks(vc).map(tags), secondBoard)
+        XCTAssertEqual(vc.losses, losses + 1)
+    }
+
+    func testNewGameUndoBannerGoesAway() {
+        ViewController.newGameUndoDuration = 0.1
+        defer { ViewController.newGameUndoDuration = 5 }
+        vc.startNewGameWithSender(sender: vc)
+        let banner = vc.newGameUndoBanner
+        XCTAssertNotNil(banner)
+        let gone = expectation(description: "banner removed")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            XCTAssertNil(self.vc.newGameUndoBanner)
+            XCTAssertNil(self.vc.gameBeforeNewGame)
+            XCTAssertNil(banner?.superview)
+            gone.fulfill()
+        }
+        wait(for: [gone], timeout: 2)
+    }
+
     // MARK: VoiceOver
 
     func activate(_ stack: CardStack) {

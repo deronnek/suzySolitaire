@@ -96,6 +96,12 @@ class ViewController: UIViewController {
     
     var activeCard:                      Card? = nil
     var activeCardSourceStack:      CardStack? = nil
+    // While the banner after New Game is showing, the game it would bring back (see ViewController+NewGameUndo.swift)
+    var gameBeforeNewGame: SavedGame? = nil
+    var newGameUndoBanner: UIView? = nil
+    var newGameUndoTimer: DispatchWorkItem? = nil
+    static var newGameUndoDuration: TimeInterval = 5
+    
     // The card a VoiceOver user has selected to move, and the stack it's in (see ViewController+Accessibility.swift)
     var accessibilitySelection: (card: Card, stack: CardStack)? = nil
     
@@ -200,15 +206,22 @@ class ViewController: UIViewController {
     
     static var savedGameURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("SavedGame.json")
     
-    @objc func saveGame() {
+    // A snapshot of the game as it stands, or nil before the first deal
+    func currentGame() -> SavedGame? {
         guard let fub = self.fub, let deck = self.deck, let deal = self.deal else {
-            return
+            return nil
         }
         let tags = { (stack: CardStack?) in stack!.cards.map { $0.view.tag } }
         let board = SavedGame.Board(fub: tags(fub), deck: tags(deck), deal: tags(deal),
                                     suitStacks: self.suitStacks.map(tags), cardStacks: self.cardStacks.map(tags))
-        let game = SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoMoves,
-                             suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board)
+        return SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoMoves,
+                         suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board)
+    }
+    
+    @objc func saveGame() {
+        guard let game = self.currentGame() else {
+            return
+        }
         do {
             try JSONEncoder().encode(game).write(to: ViewController.savedGameURL, options: .atomic)
         }
@@ -301,14 +314,21 @@ class ViewController: UIViewController {
     }
 
     
-    @IBAction func startNewGameWithSender(sender: AnyObject) {
-        
+    // Removes every stack and its cards from the screen
+    func clearTable() {
         self.cards.removeAll()
         
         for viewContainer in [self.deck, self.deal, self.fub] + self.suitStacks + self.cardStacks {
             viewContainer!.view.subviews.forEach({ $0.removeFromSuperview() })
             viewContainer!.view.removeFromSuperview()
         }
+    }
+    
+    @IBAction func startNewGameWithSender(sender: AnyObject) {
+        // A game that's already won has nothing to lose, so only unfinished games can be brought back
+        let previousGame = self.justWon ? nil : self.currentGame()
+        
+        self.clearTable()
         
         if self.justWon {
             // Have to get rid of the cards differently if we just won, as they are now just subviews of our view
@@ -330,6 +350,13 @@ class ViewController: UIViewController {
         self.activeCard = nil
         self.redrawTable()
         print("Found \(self.suitStacks.count) suitstacks")
+        
+        if let previousGame = previousGame {
+            self.offerNewGameUndo(restoring: previousGame)
+        }
+        else {
+            self.dismissNewGameUndo(animated: false)
+        }
     }
     
     // The storyboard connects the undo button to undoMove:, so the parameter must be unlabeled
