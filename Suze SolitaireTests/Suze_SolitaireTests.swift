@@ -407,13 +407,18 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.tapDeck()
         vc.finishTurn()
         assertLinksConsistent()
-        let starter = vc.deck!.cards.first { $0.rank == vc.suitStackStarter } ?? vc.deal!.cards.first { $0.rank == vc.suitStackStarter }
-        if let starter = starter, let from = vc.viewTagToStack[starter.view.tag]! {
-            from.removeCard(toRemove: starter)
-            from.cards.last?.cardParent = nil
-            vc.cardStacks[1]!.addCard(toadd: starter)
-            vc.viewTagToStack[starter.view.tag] = vc.cardStacks[1]
+        // Another card of the starting rank is somewhere outside the upper stacks; lift it out, keeping its old stack's
+        // links intact, and put it on a lower stack
+        let starter = ([vc.fub!, vc.deck!, vc.deal!] + vc.cardStacks.map { $0! }).flatMap { $0.cards }.first { $0.rank == vc.suitStackStarter }!
+        let from  = vc.viewTagToStack[starter.view.tag]!!
+        let index = from.cards.firstIndex(of: starter)!
+        from.removeCard(toRemove: starter)
+        if index > 0 && from.stackType != .deck {
+            from.cards[index - 1].cardParent = index < from.cards.count ? from.cards[index] : nil
         }
+        starter.cardParent = nil
+        vc.cardStacks[1]!.addCard(toadd: starter)
+        vc.viewTagToStack[starter.view.tag] = vc.cardStacks[1]
         vc.autoMoves = true
         vc.finishTurn()
         XCTAssertTrue(vc.suitStacks.contains { $0!.cards.contains { $0 === starter } }, "auto moves should have put the card up")
