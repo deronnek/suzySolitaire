@@ -793,6 +793,8 @@ class ViewController: UIViewController {
         
         if self.activeCard != nil && (self.justWon || self.activeCardSourceStack?.stackType != .deck) {
             self.activeCard!.setPos(point: CGPoint(x: point!.x - CGFloat(self.xCap), y: point!.y - CGFloat(self.yCap)))
+            // Show what the drag uncovers (only once the card moves, so taps don't flash it)
+            self.activeCardSourceStack?.updateFaces(lifting: self.activeCard)
         }
     }
     
@@ -848,6 +850,8 @@ class ViewController: UIViewController {
                 }
             }
         }
+        // A card that went back covers the one under it again
+        self.activeCardSourceStack?.updateFaces()
         
         self.finishTurn()
     }

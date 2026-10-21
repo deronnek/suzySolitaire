@@ -219,6 +219,23 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(try autoState(), .on)
     }
 
+    func testDraggingFromTheBlindShowsTheCardUnderneath() throws {
+        let fub   = try XCTUnwrap(vc.fub)
+        let top   = try XCTUnwrap(fub.cards.last)
+        let under = fub.cards[fub.cards.count - 2]
+        XCTAssertTrue(under.view.image === Card.blankFaceImage)
+        fub.updateFaces(lifting: top)
+        XCTAssertTrue(under.view.image === under.faceImage)
+        XCTAssertTrue(top.view.image === top.faceImage)
+        XCTAssertTrue(fub.cards[0].view.image === Card.blankFaceImage)
+        // Dropped back where it was
+        fub.updateFaces()
+        XCTAssertTrue(under.view.image === Card.blankFaceImage)
+        // Dragging a card that isn't on top reveals nothing
+        fub.updateFaces(lifting: under)
+        XCTAssertTrue(under.view.image === Card.blankFaceImage)
+    }
+
     func testCloselyStackedCardsDontPileUpShadows() throws {
         vc.redrawTable()
         func shadowed(_ stack: CardStack?) -> [Int] {

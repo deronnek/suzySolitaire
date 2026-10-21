@@ -37,12 +37,7 @@ class CardStack: NSObject {
     var cards = [Card]() {
         didSet {
             self.updateShadows()
-            // Only the top card of the blind and deal can be played, so the ones under it show blank faces
-            if self.stackType == .fub || self.stackType == .deal {
-                for card in self.cards {
-                    card.view.image = card === self.cards.last ? card.faceImage : Card.blankFaceImage
-                }
-            }
+            self.updateFaces()
         }
     }
     var stackType = cardStackType.cardstack
@@ -131,6 +126,24 @@ class CardStack: NSObject {
             self.cards[i].savedCap = self.cardSliceHeight
         }
         self.updateShadows()
+    }
+
+    // Only the top card of the blind and deal can be played, so the ones under it show blank faces.  While the top
+    // card is being dragged away, the card it uncovers shows its face, as it will once the move is made.
+    func updateFaces(lifting lifted: Card? = nil) {
+        guard self.stackType == .fub || self.stackType == .deal, let top = self.cards.last else {
+            return
+        }
+        let uncovered = lifted === top && self.cards.count > 1 ? self.cards[self.cards.count - 2] : nil
+        for card in self.cards {
+            card.view.image = card === top || card === uncovered ? card.faceImage : Card.blankFaceImage
+        }
+        if let uncovered = uncovered {
+            uncovered.view.layer.shadowOpacity = Card.shadowOpacity
+        }
+        else {
+            self.updateShadows()
+        }
     }
 
     // Overlapping shadows add up, so stacks whose cards sit close together only give shadows to the cards needed to
