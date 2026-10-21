@@ -855,6 +855,15 @@ class ViewController: UIViewController {
         
         self.finishTurn()
     }
+    // iOS cancels touches it takes over mid-drag, such as for an incoming call or a system gesture; put the cards back
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if self.justWon {
+            return
+        }
+        self.activeCard?.cancelMove()
+        self.activeCardSourceStack?.updateFaces()
+        self.activeCard = nil
+    }
     // MARK: End of touches implementations
     
     // Deals up to three cards from the deck, or turns the deal back over when the deck is empty

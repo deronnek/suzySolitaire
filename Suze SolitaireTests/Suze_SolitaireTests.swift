@@ -236,6 +236,26 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(under.view.image === Card.blankFaceImage)
     }
 
+    func testInterruptedDragPutsCardsBack() throws {
+        vc.redrawTable()
+        let fub   = try XCTUnwrap(vc.fub)
+        let top   = try XCTUnwrap(fub.cards.last)
+        let under = fub.cards[fub.cards.count - 2]
+        let start = top.view.frame.origin
+        // Mid-drag, as touchesBegan and touchesMoved leave it
+        vc.activeCard            = top
+        vc.activeCardSourceStack = fub
+        top.savePos()
+        top.setPos(point: CGPoint(x: start.x + 120, y: start.y + 200))
+        fub.updateFaces(lifting: top)
+
+        vc.touchesCancelled([], with: nil)
+        XCTAssertEqual(top.view.frame.origin, start)
+        XCTAssertTrue(under.view.image === Card.blankFaceImage)
+        XCTAssertNil(vc.activeCard)
+        XCTAssertEqual(fub.cards.last, top)
+    }
+
     func testCloselyStackedCardsDontPileUpShadows() throws {
         vc.redrawTable()
         func shadowed(_ stack: CardStack?) -> [Int] {
