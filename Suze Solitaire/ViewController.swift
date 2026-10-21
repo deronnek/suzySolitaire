@@ -665,8 +665,9 @@ class ViewController: UIViewController {
         
         if !isPad && bounds.width > bounds.height {
             // iPhone landscape: size the cards so two rows fit in the height, with the blind, deck and deal side by side on
-            // the left, then a wider gap and the four stacks
-            cardHeight = (tableBottom - toolbarBottom) * 0.36
+            // the left, then a wider gap and the four stacks.  The top row takes 1.6 card heights (a margin, the upper
+            // stacks' cards with the one under them peeking out below, and a gap), leaving the lower stacks 1.4 to fan in.
+            cardHeight = (tableBottom - toolbarBottom) / 3
             cardWidth  = cardHeight / Card.aspectRatio
             var gap    = cardWidth / 5
             let rowWidth       = { 7*cardWidth + 5*gap + cardWidth*0.6 }
@@ -677,7 +678,9 @@ class ViewController: UIViewController {
             }
             let left = safe.left + (availableWidth - rowWidth()) / 2
             toprowSpacer = toolbarBottom + cardHeight*0.1
-            secondSpacer = toprowSpacer + cardHeight*1.15
+            // Upper stacks show the card under their top one this far below it (see CardStack.resize)
+            let peek     = CGFloat(Int(cardHeight/2.5))
+            secondSpacer = toprowSpacer + cardHeight + peek + cardHeight*0.1
             fubPoint  = CGPoint(x: left, y: toprowSpacer)
             deckPoint = CGPoint(x: left + cardWidth + gap, y: toprowSpacer)
             dealPoint = CGPoint(x: left + 2*(cardWidth + gap), y: toprowSpacer)

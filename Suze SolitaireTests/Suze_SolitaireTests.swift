@@ -136,6 +136,22 @@ final class Suze_SolitaireTests: XCTestCase {
         }
     }
 
+    func testUpperStacksClearLowerStacks() {
+        // An upper stack with two or more cards shows the one under its top card peeking out below it
+        for stack in vc.suitStacks {
+            stack!.addCard(toadd: vc.deck!.getTopCard()!)
+            stack!.addCard(toadd: vc.deck!.getTopCard()!)
+        }
+        for (width, height) in [(390.0, 844.0), (844.0, 390.0), (932.0, 430.0), (874.0, 402.0), (667.0, 375.0)] {
+            vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            vc.redrawTable()
+            for i in 0..<4 {
+                XCTAssertLessThanOrEqual(vc.suitStacks[i]!.view.frame.maxY, vc.cardStacks[i]!.view.frame.minY,
+                                         "upper stack \(i + 1) overlaps the lower one at \(width)x\(height)")
+            }
+        }
+    }
+
     func testLongStacksSqueezeAboveToolbar() {
         // Pile most of the deck onto one lower stack
         let stack = vc.cardStacks[0]!
