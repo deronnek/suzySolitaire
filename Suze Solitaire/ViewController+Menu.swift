@@ -54,6 +54,7 @@ extension ViewController: PHPickerViewControllerDelegate {
 
     func updateMenu() {
         self.menuBarButtonItem?.menu = self.buildMenu()
+        self.sideColumns?.menu.menu  = self.menuBarButtonItem?.menu
     }
 
     // MARK: Card back

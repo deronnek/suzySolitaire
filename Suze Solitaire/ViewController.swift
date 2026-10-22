@@ -41,6 +41,11 @@ class ViewController: UIViewController {
     @IBOutlet weak var undoBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var toolbar: UIToolbar!
     var menuBarButtonItem: UIBarButtonItem? = nil
+    // The toolbar's buttons, beside the table in iPhone landscape (see ViewController+SideColumns.swift)
+    var sideColumns: (left: UIStackView, right: UIStackView, stats: [UIButton], menu: UIButton)? = nil
+    // Banners sit this far above the toolbar, and the table stops short of them
+    static let bannerSpacing: CGFloat = 12
+    static let bannerHeight: CGFloat  = 44
     
     // Whether any card that can go up to a suit stack is moved there automatically
     var autoMoves = false {
@@ -58,11 +63,12 @@ class ViewController: UIViewController {
         set(newScore) {
             bucksBarButtonItem.title = String(format: "$%d", newScore)
             if newScore < 0 {
-                bucksBarButtonItem.tintColor = UIColor.red
+                bucksBarButtonItem.tintColor = .systemRed
             }
             else {
-                bucksBarButtonItem.tintColor = UIColor.black
+                bucksBarButtonItem.tintColor = .label
             }
+            self.updateSideColumns()
         }
     }
     
@@ -73,6 +79,7 @@ class ViewController: UIViewController {
         }
         set(newWins) {
             winsBarButtonItem.title = String(format: "Wins: %d", newWins)
+            self.updateSideColumns()
         }
     }
     
@@ -83,6 +90,7 @@ class ViewController: UIViewController {
         }
         set(newLosses) {
             lossesBarButtonItem.title = String(format:"Losses: %d", newLosses)
+            self.updateSideColumns()
         }
     }
     
@@ -153,6 +161,7 @@ class ViewController: UIViewController {
         // By default every touch's end waits until the double tap fails, which made taps and drops feel slow
         tapGesture.delaysTouchesEnded = false
         self.view.addGestureRecognizer(tapGesture)
+        self.setUpAppearance()
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
         
@@ -163,6 +172,8 @@ class ViewController: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        // The view's traits aren't settled in viewDidLoad, so cards could be dealt in the wrong appearance
+        self.applyAppearance()
         if self.doInitTable {
             if let saved = self.loadSavedGame() {
                 print("Restoring saved game")
@@ -458,9 +469,7 @@ class ViewController: UIViewController {
                 card.view.frame = end
             }
         }
-        if let banner = self.newGameUndoBanner {
-            self.view.bringSubviewToFront(banner)
-        }
+        self.keepControlsInFront()
     }
     
     func undoDeckTap() {
@@ -672,12 +681,17 @@ class ViewController: UIViewController {
             // No table yet
             return
         }
+        self.updateControlPlacement()
         self.view.layoutIfNeeded()
         let bounds = self.view.bounds
         let safe   = self.view.safeAreaInsets
         let toolbarBottom = CGRectGetHeight((self.navigationController?.navigationBar.bounds)!)+(self.navigationController?.navigationBar.frame.origin.y)!
-        // Fanned stacks may reach down to just above the bottom toolbar
-        let tableBottom = self.toolbar.frame.minY - 8
+        let sideColumns = self.usesSideColumns
+        // Fanned stacks may reach down to just above the banners over the bottom toolbar, or to the bottom of the screen
+        // when the controls are beside the table
+        let tableBottom = sideColumns
+            ? bounds.height - safe.bottom - 8
+            : self.toolbar.frame.minY - ViewController.bannerSpacing - ViewController.bannerHeight - 8
         // The iPad layout needs room; narrow iPad windows (Split View, Slide Over, Stage Manager) use the iPhone layout
         let isPad = UIDevice.current.userInterfaceIdiom == .pad && bounds.width >= 600 && bounds.height >= 600
         
@@ -686,20 +700,22 @@ class ViewController: UIViewController {
         var stackXs = [CGFloat]()
         var toprowSpacer, secondSpacer: CGFloat
         
-        if !isPad && bounds.width > bounds.height {
+        if sideColumns {
             // iPhone landscape: size the cards so two rows fit in the height, with the blind, deck and deal side by side on
-            // the left, then a wider gap and the four stacks.  The top row takes 1.6 card heights (a margin, the upper
+            // the left, then a wider gap and the four stacks, all between the side columns.  The top row takes 1.6 card heights (a margin, the upper
             // stacks' cards with the one under them peeking out below, and a gap), leaving the lower stacks 1.4 to fan in.
             cardHeight = (tableBottom - toolbarBottom) / 3
             cardWidth  = cardHeight / Card.aspectRatio
             var gap    = cardWidth / 5
             let rowWidth       = { 7*cardWidth + 5*gap + cardWidth*0.6 }
-            let availableWidth = bounds.width - safe.left - safe.right
+            // Between the side columns, which line up with the navigation bar's buttons
+            let columns        = self.sideColumns.map { ($0.left.frame.maxX + 12, $0.right.frame.minX - 12) } ?? (safe.left, bounds.width - safe.right)
+            let availableWidth = columns.1 - columns.0
             if rowWidth() > availableWidth {
                 let scale = availableWidth / rowWidth()
                 cardWidth *= scale; cardHeight *= scale; gap *= scale
             }
-            let left = safe.left + (availableWidth - rowWidth()) / 2
+            let left = columns.0 + (availableWidth - rowWidth()) / 2
             toprowSpacer = toolbarBottom + cardHeight*0.1
             // Upper stacks show the card under their top one this far below it (see CardStack.resize)
             let peek     = CGFloat(Int(cardHeight/2.5))

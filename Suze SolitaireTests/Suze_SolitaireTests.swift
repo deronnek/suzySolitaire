@@ -29,6 +29,7 @@ final class Suze_SolitaireTests: XCTestCase {
         Card.customBackImage        = nil
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
+        Card.isDark = false
         vc = try self.makeViewController()
         vc.score  = -45
         vc.wins   = 0
@@ -40,6 +41,7 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: ViewController.savedGameURL)
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
+        Card.isDark          = false
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = nil
@@ -148,9 +150,62 @@ final class Suze_SolitaireTests: XCTestCase {
             for stack in allStacks(vc) {
                 XCTAssertGreaterThanOrEqual(stack!.view.frame.minX, 0)
                 XCTAssertLessThanOrEqual(stack!.view.frame.maxX, CGFloat(width), "\(stack!.stackType) runs off a \(width)pt screen")
-                XCTAssertLessThanOrEqual(stack!.view.frame.maxY, vc.toolbar.frame.minY, "\(stack!.stackType) runs under the toolbar at \(width)x\(height)")
+                XCTAssertLessThanOrEqual(stack!.view.frame.maxY, vc.view.bounds.height, "\(stack!.stackType) runs off a \(height)pt screen")
             }
         }
+    }
+
+    func testLandscapeMovesTheToolbarBesideTheTable() throws {
+        vc.score  = -725
+        vc.wins   = 3
+        vc.losses = 17
+        vc.view.frame = CGRect(x: 0, y: 0, width: 874, height: 402)
+        vc.redrawTable()
+        let columns = try XCTUnwrap(vc.sideColumns)
+        XCTAssertTrue(vc.toolbar.isHidden)
+        XCTAssertFalse(columns.left.isHidden)
+        XCTAssertEqual(columns.stats.map { $0.configuration?.title }, ["$-725", "Wins: 3", "Losses: 17"])
+        XCTAssertEqual(columns.stats[0].configuration?.baseForegroundColor, .systemRed)
+        XCTAssertNotNil(columns.menu.menu, "the ... button has the menu")
+        for stack in allStacks(vc) {
+            XCTAssertGreaterThan(stack!.view.frame.minX, columns.left.frame.maxX, "\(stack!.stackType) is under the stats")
+            XCTAssertLessThan(stack!.view.frame.maxX, columns.right.frame.minX, "\(stack!.stackType) is under the menu")
+        }
+
+        // A banner goes in the right column, and back above the toolbar in portrait
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts)])
+        vc.updateNoMovesBanner()
+        let banner = try XCTUnwrap(vc.noMovesBanner)
+        vc.view.layoutIfNeeded()
+        XCTAssertEqual(banner.frame.maxX, columns.right.frame.maxX, accuracy: 0.5)
+        XCTAssertGreaterThan(banner.frame.minY, columns.menu.frame.maxY)
+        vc.view.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
+        vc.redrawTable()
+        vc.view.layoutIfNeeded()
+        XCTAssertFalse(vc.toolbar.isHidden)
+        XCTAssertTrue(columns.left.isHidden)
+        XCTAssertEqual(banner.frame.maxY, vc.toolbar.frame.minY - ViewController.bannerSpacing, accuracy: 0.5)
+        XCTAssertEqual(vc.view.subviews.last, banner, "banners stay above the cards")
+    }
+
+    func testDarkModeSwitchesTheCards() throws {
+        vc.redrawTable()
+        let top   = try XCTUnwrap(vc.fub!.cards.last)
+        let under = vc.fub!.cards[0]
+        vc.overrideUserInterfaceStyle = .dark
+        vc.applyAppearance()
+        XCTAssertTrue(top.view.image === top.faceImages.dark)
+        XCTAssertTrue(under.view.image === Card.blankFaceImages.dark)
+        XCTAssertTrue(vc.deck!.cards.last!.view.image === vc.deck!.cards.last!.backImage, "card backs don't change")
+        XCTAssertEqual(UIColor(cgColor: top.view.layer.borderColor!), Card.outlineColor)
+        // Cards dealt or turned over in dark mode come up dark too
+        vc.tapDeck()
+        XCTAssertTrue(vc.deal!.cards.last!.view.image === vc.deal!.cards.last!.faceImages.dark)
+
+        vc.overrideUserInterfaceStyle = .light
+        vc.applyAppearance()
+        XCTAssertTrue(top.view.image === top.faceImages.light)
+        XCTAssertTrue(under.view.image === Card.blankFaceImages.light)
     }
 
     func testUpperStacksClearLowerStacks() {
@@ -178,7 +233,9 @@ final class Suze_SolitaireTests: XCTestCase {
         for (width, height) in [(390.0, 844.0), (844.0, 390.0)] {
             vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
             vc.redrawTable()
-            XCTAssertLessThanOrEqual(stack.view.frame.maxY, vc.toolbar.frame.minY, "\(width)x\(height)")
+            // Above the banners over the toolbar, or above the bottom of the screen in landscape, where there's no toolbar
+            let bottom = width > height ? height : vc.toolbar.frame.minY - ViewController.bannerSpacing - ViewController.bannerHeight
+            XCTAssertLessThanOrEqual(stack.view.frame.maxY, bottom, "\(width)x\(height)")
             XCTAssertLessThan(stack.cardSliceHeight, stack.baseSliceHeight)
             // Every card should still show a sliver
             XCTAssertGreaterThanOrEqual(stack.cardSliceHeight, 2)

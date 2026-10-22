@@ -57,19 +57,22 @@ extension ViewController {
     }
 
     // A Liquid Glass capsule above the toolbar with a message and a button, styled like the toolbar's buttons: the same
-    // height, font and black text
+    // height, font and label-colored text
     func addBanner(message: String, buttonTitle: String, symbol: String, hint: String, action: @escaping () -> Void) -> UIView {
         let label = UILabel()
         label.text      = message
-        label.textColor = .black
+        label.textColor = .label
         label.font      = UIFont.preferredFont(forTextStyle: .body)
         label.adjustsFontForContentSizeCategory = true
+        // Wraps when the banner is in the narrow landscape column
+        label.numberOfLines = 0
+        label.textAlignment = .center
 
         var config = UIButton.Configuration.plain()
         config.title        = buttonTitle
         config.image        = UIImage(systemName: symbol)
         config.imagePadding = 6
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .label
         config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(textStyle: .body, scale: .medium)
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
             var attributes = attributes
@@ -87,7 +90,8 @@ extension ViewController {
         let banner: UIVisualEffectView
         if #available(iOS 26.0, *) {
             banner = UIVisualEffectView(effect: UIGlassEffect())
-            banner.cornerConfiguration = .capsule()
+            // A capsule on one line, rounded corners when stacked in the landscape column
+            banner.cornerConfiguration = .capsule(maximumRadius: 22)
         }
         else {
             banner = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterialLight))
@@ -102,10 +106,10 @@ extension ViewController {
             row.trailingAnchor.constraint(equalTo: banner.contentView.trailingAnchor, constant: -8),
             row.topAnchor.constraint(equalTo: banner.contentView.topAnchor, constant: 2),
             row.bottomAnchor.constraint(equalTo: banner.contentView.bottomAnchor, constant: -2),
-            banner.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
-            banner.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-            banner.bottomAnchor.constraint(equalTo: self.toolbar.topAnchor, constant: -12),
+            banner.heightAnchor.constraint(greaterThanOrEqualToConstant: ViewController.bannerHeight),
         ])
+        self.placeBanner(banner)
+        self.keepControlsInFront()
 
         banner.alpha = 0
         UIView.animate(withDuration: 0.25) {

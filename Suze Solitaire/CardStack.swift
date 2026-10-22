@@ -50,6 +50,10 @@ class CardStack: NSObject {
     let outline = CALayer()
     // How far apart cards in the blind (fub) and deal are fanned
     static let fannedSliceHeight = 5
+    // Softer on the dimmer dark-mode felt
+    static var outlineColor: UIColor {
+        Card.isDark ? UIColor.white.withAlphaComponent(0.45) : .white
+    }
     
     init(type: cardStackType) {
 //        var point = CGPoint(x: x, y: y)
@@ -75,7 +79,7 @@ class CardStack: NSObject {
         }
         self.stackType = type
         self.outline.borderWidth = 1
-        self.outline.borderColor = UIColor.white.cgColor
+        self.outline.borderColor = CardStack.outlineColor.cgColor
         self.view.layer.insertSublayer(self.outline, at: 0)
     }
     
