@@ -161,6 +161,8 @@ class ViewController: UIViewController {
         tapGesture.numberOfTapsRequired = 2
         // By default every touch's end waits until the double tap fails, which made taps and drops feel slow
         tapGesture.delaysTouchesEnded = false
+        // Quick taps on the deck or the table each deal, rather than the second being taken as a double tap
+        tapGesture.delegate = self
         self.view.addGestureRecognizer(tapGesture)
         self.setUpAppearance()
         
@@ -316,6 +318,14 @@ class ViewController: UIViewController {
         }
     }
     
+    // Whether a double tap starting on view could put up a card: it has to be a card that isn't in the deck
+    func doubleTapCouldPutUp(_ view: UIView?) -> Bool {
+        guard let view = view as? UIImageView, let stack = self.viewTagToStack[view.tag] ?? nil else {
+            return false
+        }
+        return stack.stackType != .deck
+    }
+
     func tryToPutUpCardAtPoint(point: CGPoint) {
         // The second tap's touch is cancelled once the double tap is recognized, before or after this; either way the card
         // is no longer being moved
@@ -450,6 +460,11 @@ class ViewController: UIViewController {
     
     // Lays out the table, then slides each card that moved from where it was (see cardFrames) to its new place
     func layOutAndSlide(from oldFrames: [Int: CGRect]) {
+        // Cards still sliding from the last move, such as when the deck is tapped quickly, jump to where they were going
+        for case let card? in self.viewTagToCard.values {
+            card.view.layer.removeAnimation(forKey: "position")
+            card.view.layer.removeAnimation(forKey: "bounds")
+        }
         self.redrawTable()
         if UIAccessibility.isReduceMotionEnabled {
             return
@@ -1319,5 +1334,11 @@ class ViewController: UIViewController {
             return true
         }
         return false
+    }
+}
+
+extension ViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return self.doubleTapCouldPutUp(touch.view)
     }
 }

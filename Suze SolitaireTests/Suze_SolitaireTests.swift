@@ -749,6 +749,25 @@ final class Suze_SolitaireTests: XCTestCase {
         let deckAce = try XCTUnwrap(vc.deck!.cards.last)
         vc.tryToPutUpCardAtPoint(point: vc.view.convert(deckAce.view.center, from: deckAce.view.superview))
         XCTAssertTrue(vc.deck!.cards.last === deckAce)
+
+        // Taps on the deck or the table don't wait to be a double tap, so tapping quickly deals each time
+        XCTAssertTrue(doubleTap.delegate === vc)
+        XCTAssertFalse(vc.doubleTapCouldPutUp(deckAce.view))
+        XCTAssertFalse(vc.doubleTapCouldPutUp(vc.deck!.view))
+        XCTAssertFalse(vc.doubleTapCouldPutUp(vc.view))
+        XCTAssertTrue(vc.doubleTapCouldPutUp(vc.cardStacks[0]!.cards.last!.view))
+    }
+
+    func testDealingAgainFinishesTheLastDealsSlide() throws {
+        setUpBoard(lower: deadLowerStacks(), deck: (2...7).map { take($0, .Clubs) })
+        let first = try XCTUnwrap(vc.deck!.cards.last)
+        let slide = CABasicAnimation(keyPath: "position")
+        slide.duration = 10
+        first.view.layer.add(slide, forKey: "position")
+        vc.tapDeck()
+        XCTAssertTrue(vc.deal!.cards.contains { $0 === first })
+        let restarted = first.view.layer.animation(forKey: "position")
+        XCTAssertTrue(restarted == nil || restarted!.duration < 1, "the old slide is replaced by a quick one or none")
     }
 
     func testDropGoesToTheValidStackTheCardOverlaps() throws {
