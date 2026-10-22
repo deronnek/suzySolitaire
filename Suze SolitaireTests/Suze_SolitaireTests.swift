@@ -630,9 +630,10 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.finishTurn()
         XCTAssertNil(vc.noMovesBanner)
 
-        // Playing it leaves nothing
+        // Playing it leaves nothing, once the deal is a few seconds old
         let four = vc.deal!.cards.last!
         vc.performMove(card: four, from: vc.deal!, to: vc.cardStacks[0]!)
+        vc.dealtDate = nil
         vc.finishTurn()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
 
@@ -646,18 +647,25 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testNoMovesLeftWaitsAfterTheDeal() {
         setUpBoard(lower: deadLowerStacks())
-        vc.gameDealtDate = Date()
+        vc.dealtDate = Date()
         vc.updateNoMovesBanner()
         XCTAssertNil(vc.noMovesBanner, "a game that was just dealt gets a few seconds before it's called")
-        XCTAssertNotNil(vc.stuckBannerTimer)
-        vc.gameDealtDate = Date(timeIntervalSinceNow: -ViewController.stuckBannerDelay)
+        XCTAssertNotNil(vc.noMovesBannerTimer)
+        vc.dealtDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay)
         vc.updateNoMovesBanner()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
-        XCTAssertNil(vc.stuckBannerTimer)
+        XCTAssertNil(vc.noMovesBannerTimer)
 
-        // "Nothing to play" doesn't wait: it offers the deal
-        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts)])
-        vc.gameDealtDate = Date()
+        // "Nothing to play" goes away when the deck is tapped, and waits again before coming back
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts), take(2, .Clubs), take(10, .Hearts), take(8, .Clubs)])
+        vc.dealtDate = nil
+        vc.updateNoMovesBanner()
+        XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "Nothing to play")
+        vc.tapDeck()
+        vc.finishTurn()
+        XCTAssertNil(vc.noMovesBanner, "dealing hides the banner")
+        XCTAssertNotNil(vc.noMovesBannerTimer)
+        vc.dealtDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay)
         vc.updateNoMovesBanner()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "Nothing to play")
     }
@@ -680,7 +688,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Asking for a hint shows "No moves left" even with the banner turned off and the game just dealt
         vc.showsNoMoves = false
         setUpBoard(lower: deadLowerStacks())
-        vc.gameDealtDate = Date()
+        vc.dealtDate = Date()
         vc.showHint()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
     }

@@ -7,7 +7,7 @@ import UIKit
 
 // After each turn, a banner points out when nothing on the table can be played: it offers to deal when a card the deck
 // would turn up can be played, and a new game when going through the whole deck wouldn't help either.  It can be
-// turned off in the "..." menu.  "No moves left" waits a few seconds after a new game is dealt.
+// turned off in the "..." menu.  It goes away whenever cards are dealt, and waits a few seconds before coming back.
 extension ViewController {
 
     enum PlayState: Equatable {
@@ -20,8 +20,8 @@ extension ViewController {
     }
 
     static let showsNoMovesKey = "ShowsNoMoves"
-    // How long after a new game is dealt before saying it can't be won, so the player gets a look at it first
-    static let stuckBannerDelay: TimeInterval = 8
+    // How long after cards are dealt before saying there's nothing to play, so the player gets a look at them first
+    static let noMovesBannerDelay: TimeInterval = 8
 
     var showsNoMoves: Bool {
         get {
@@ -129,15 +129,15 @@ extension ViewController {
 
     // forHint shows the banner even when it's turned off or the game was just dealt
     func updateNoMovesBanner(forHint: Bool = false) {
-        self.stuckBannerTimer?.cancel()
-        self.stuckBannerTimer = nil
+        self.noMovesBannerTimer?.cancel()
+        self.noMovesBannerTimer = nil
         var state = self.justWon || !(self.showsNoMoves || forHint) ? .canPlay : self.playState()
-        if state == .stuck, !forHint, let dealt = self.gameDealtDate, -dealt.timeIntervalSinceNow < ViewController.stuckBannerDelay {
+        if state != .canPlay, !forHint, let dealt = self.dealtDate, -dealt.timeIntervalSinceNow < ViewController.noMovesBannerDelay {
             let timer = DispatchWorkItem { [weak self] in
                 self?.updateNoMovesBanner()
             }
-            self.stuckBannerTimer = timer
-            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.stuckBannerDelay + dealt.timeIntervalSinceNow, execute: timer)
+            self.noMovesBannerTimer = timer
+            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.noMovesBannerDelay + dealt.timeIntervalSinceNow, execute: timer)
             state = .canPlay
         }
         let message: String?
@@ -146,7 +146,7 @@ extension ViewController {
             case .needsDeal: message = "Nothing to play"
             case .stuck:     message = "No moves left"
         }
-        // Leave a banner that already says the same thing alone, so it doesn't flicker as the deck is tapped through
+        // Leave a banner that already says the same thing alone, so it doesn't flicker
         if let banner = self.noMovesBanner, banner.accessibilityIdentifier == message {
             return
         }

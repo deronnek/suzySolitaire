@@ -110,9 +110,10 @@ class ViewController: UIViewController {
     static var newGameUndoDuration: TimeInterval = 5
     // The banner saying there's nothing to play (see ViewController+NoMoves.swift)
     var noMovesBanner: UIView? = nil
-    // When the current game was dealt, and the timer that shows "No moves left" once it's been a few seconds
-    var gameDealtDate: Date? = nil
-    var stuckBannerTimer: DispatchWorkItem? = nil
+    // When cards were last dealt, by a new game or the deck, and the timer that shows the no-moves banner once it's been a
+    // few seconds
+    var dealtDate: Date? = nil
+    var noMovesBannerTimer: DispatchWorkItem? = nil
     // Outlines where the card being dragged would land (see ViewController+Hints.swift)
     var dropHighlight: UIView? = nil
     weak var dropHighlightTarget: CardStack? = nil
@@ -382,7 +383,7 @@ class ViewController: UIViewController {
         // self.initTableTrivial()
         self.activeCard = nil
         self.redrawTable()
-        self.gameDealtDate = Date()
+        self.dealtDate = Date()
         print("Found \(self.suitStacks.count) suitstacks")
         
         if let previousGame = previousGame {
@@ -1010,6 +1011,7 @@ class ViewController: UIViewController {
         self.undoBarButtonItem.isEnabled = true
         self.lastMove   = nil
         self.activeCard = nil
+        self.dealtDate  = Date()
         
         // Refresh the appropriate rectangles (if used the moveCardBetweenStacks function above this wouldn't be necessary, but it needs to be smarter about 
         // things like parent relationships first)
