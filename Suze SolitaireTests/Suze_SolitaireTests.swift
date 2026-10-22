@@ -112,6 +112,19 @@ final class Suze_SolitaireTests: XCTestCase {
         let cardSize = vc.cardStacks[1]!.cards[0].view.frame.size
         XCTAssertEqual(stack.view.frame.size, cardSize)
         XCTAssertEqual(vc.deal!.view.frame.size, cardSize)
+        XCTAssertEqual(stack.outline.frame.size, cardSize)
+    }
+
+    func testOutlineStaysUnderCardsMovedOffIt() throws {
+        vc.redrawTable()
+        for stack in allStacks(vc) {
+            let outline = stack!.outline
+            XCTAssertEqual(outline.borderWidth, 1)
+            XCTAssertTrue(outline.superlayer === stack!.view.layer)
+            XCTAssertEqual(stack!.view.layer.sublayers?.first, outline, "under the cards")
+            XCTAssertEqual(outline.frame.size, vc.cardStacks[0]!.cards[0].view.frame.size)
+            XCTAssertEqual(stack!.view.layer.borderWidth, 0, "the stack itself isn't outlined, or tall stacks would show a long box")
+        }
     }
 
     // iPad Split View, Slide Over and Stage Manager windows can be any size; small ones get the iPhone layout

@@ -46,6 +46,8 @@ class CardStack: NSObject {
     var baseSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
+    // The card-sized outline of the stack's spot, painted under its cards so it shows whenever they're moved off it
+    let outline = CALayer()
     // How far apart cards in the blind (fub) and deal are fanned
     static let fannedSliceHeight = 5
     
@@ -72,17 +74,21 @@ class CardStack: NSObject {
                 break // default value is fine for these
         }
         self.stackType = type
-        // Assume we have no cards and need a border
-        self.view.layer.borderWidth = 1
-        self.view.layer.borderColor = UIColor.white.cgColor
+        self.outline.borderWidth = 1
+        self.outline.borderColor = UIColor.white.cgColor
+        self.view.layer.insertSublayer(self.outline, at: 0)
     }
     
     // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it.  compact
     // is true for the iPhone-style layout, which also fans lower stacks more tightly.
     func resize(point: CGPoint, width: Int, cardHeight: Int, maxHeight: Int? = nil, compact: Bool = true) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
-        // Round the empty-stack outline to match the cards
-        self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
+        // Size the outline to a card and round it to match, without the implicit animation
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        self.outline.frame        = CGRect(x: 0, y: 0, width: width, height: cardHeight)
+        self.outline.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
+        CATransaction.commit()
         // Make stacking tighter in the iPhone-style layout
         if self.stackType == .suitstack || self.stackType == .cardstack {
             self.baseSliceHeight = compact ? Int(Double(cardHeight)/2.5) : 30
@@ -229,12 +235,6 @@ class CardStack: NSObject {
             childCard?.cardParent = toadd
         }
         
-        // If we're adding a card, we have at least one and don't want the border
-        self.view.layer.borderWidth = 0;
-        
-        // MARK: Debug: turn on borders
-        //self.view.layer.borderWidth = 2;
-        
         // Card ownership is transfered to array
         self.cards.append(toadd)
         
@@ -256,11 +256,6 @@ class CardStack: NSObject {
         }
         let index = self.cards.firstIndex(of:toRemove)
         self.cards.remove(at:index!)
-        
-        if self.cards.isEmpty {
-            self.view.layer.borderWidth = 1;
-            self.view.layer.borderColor = UIColor.white.cgColor
-        }
         // KDR a little awkward that I send a message to the card to remove itself from us, effectively
         toRemove.view.removeFromSuperview();
 

@@ -496,11 +496,6 @@ class ViewController: UIViewController {
             }
         }
         
-        if self.deal!.cards.isEmpty {
-            self.deal!.view.layer.borderWidth = 1;
-            self.deal!.view.layer.borderColor = UIColor.white.cgColor
-        }
-        
         self.activeCard = nil
 
         print("Deck has \(self.deck!.cards.count) cards")
@@ -1001,19 +996,11 @@ class ViewController: UIViewController {
         
         // Refresh the appropriate rectangles (if used the moveCardBetweenStacks function above this wouldn't be necessary, but it needs to be smarter about 
         // things like parent relationships first)
-        if self.deck!.cards.isEmpty {
-            self.deck!.view.layer.borderWidth = 1
-            self.deck!.view.layer.borderColor = UIColor.white.cgColor
-        }
-        
         if self.deal!.cards.isEmpty {
             // Reset the size of the rectangle for the deal
             var rec  = self.deal!.view.frame
             rec.size = CGSizeMake(rec.size.width, self.deck!.view.frame.size.height)
             self.deal!.view.frame = rec
-            self.deal!.view.layer.borderWidth = 1
-            self.deal!.view.layer.borderColor = UIColor.white.cgColor
-
         }
     }
     
