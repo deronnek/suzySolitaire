@@ -136,10 +136,15 @@ class CardStack: NSObject {
         }
         let uncovered = lifted === top && self.cards.count > 1 ? self.cards[self.cards.count - 2] : nil
         for card in self.cards {
-            card.view.image = card === top || card === uncovered ? card.faceImage : Card.blankFaceImage
+            // Called on every move of a drag, so leave images that are already right alone
+            let image = card === top || card === uncovered ? card.faceImage : Card.blankFaceImage
+            if card.view.image !== image {
+                card.view.image = image
+            }
         }
         if let uncovered = uncovered {
             uncovered.view.layer.shadowOpacity = Card.shadowOpacity
+            uncovered.setShadowPath(trimmingTop: 0)
         }
         else {
             self.updateShadows()
@@ -162,8 +167,12 @@ class CardStack: NSObject {
             case .cardstack, .suitstack:
                 shadowed = { _ in true }
         }
+        // The shadow along the top of a card in the middle of the fan would fall on the card above it as a dark line, so
+        // those cards only shadow their sides; the cards above them already cover the top of the sides
+        let middleTrim = self.stackType == .fub || self.stackType == .deal ? CGFloat(self.cardSliceHeight) + 4 : 0
         for (i, card) in self.cards.enumerated() {
             card.view.layer.shadowOpacity = shadowed(i) ? Card.shadowOpacity : 0
+            card.setShadowPath(trimmingTop: i == 0 || i == self.cards.count - 1 ? 0 : middleTrim)
         }
     }
     

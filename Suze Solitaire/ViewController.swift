@@ -107,6 +107,9 @@ class ViewController: UIViewController {
     var stuckBannerTimer: DispatchWorkItem? = nil
     // Outlines where the card being dragged would land (see ViewController+Hints.swift)
     var dropHighlight: UIView? = nil
+    weak var dropHighlightTarget: CardStack? = nil
+    // Where the card being moved was picked up, to tell a drag from a tap
+    var dragStart: CGPoint? = nil
     // Where a touch that started on the empty table went down, so lifting it nearby deals
     var tableTapStart: CGPoint? = nil
     
@@ -147,6 +150,8 @@ class ViewController: UIViewController {
         //let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.handleTapGesture(sender:_:)))
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.handleTapGesture))
         tapGesture.numberOfTapsRequired = 2
+        // By default every touch's end waits until the double tap fails, which made taps and drops feel slow
+        tapGesture.delaysTouchesEnded = false
         self.view.addGestureRecognizer(tapGesture)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
@@ -295,16 +300,24 @@ class ViewController: UIViewController {
             
             let point = sender.location(in: self.view)
             // Put up the card under point if possible
-            //NSLog(@"double tap recognized at %f,%f",point.x,point.y);
             self.tryToPutUpCardAtPoint(point: point)
         }
     }
     
     func tryToPutUpCardAtPoint(point: CGPoint) {
-        if let sourceStack = self.findActiveStack(point: point), let card = self.activeCard {
-            if self.putUp(card: card, from: sourceStack) {
-                self.finishTurn()
-            }
+        // The second tap's touch is cancelled once the double tap is recognized, before or after this; either way the card
+        // is no longer being moved
+        self.activeTouch = nil
+        self.activeCard  = nil
+        guard let view = self.view.hitTest(point, with: nil) as? UIImageView, let card = self.viewTagToCard[view.tag] ?? nil,
+              let sourceStack = self.viewTagToStack[view.tag] ?? nil, sourceStack.stackType != .deck, card === sourceStack.cards.last else {
+            return
+        }
+        card.cancelMove()
+        sourceStack.updateFaces()
+        if self.putUp(card: card, from: sourceStack) {
+            self.activeCard = nil
+            self.finishTurn()
         }
     }
     
@@ -789,6 +802,7 @@ class ViewController: UIViewController {
     // Picks up the card in viewTapped, if it can be played, or notes a touch on the empty table
     func beginTouch(at point: CGPoint?, on viewTapped: UIView?) {
         self.tableTapStart = nil
+        self.dragStart     = point
         if viewTapped!.isKind(of:UIImageView.self) {
             let card  = self.viewTagToCard[viewTapped!.tag]!
             let stack = self.viewTagToStack[viewTapped!.tag]!
@@ -801,6 +815,9 @@ class ViewController: UIViewController {
                 self.activeCardSourceStack = stack
                 self.activeCard?.savePos()
                 self.liftRun(startingAt: self.activeCard!)
+                if stack?.stackType != .deck {
+                    UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.6)
+                }
             }
         }
         else {
@@ -861,6 +878,14 @@ class ViewController: UIViewController {
     func endTouch(at point: CGPoint?) {
         var droppedOnCardStack: CardStack? = nil
         self.removeDropHighlight()
+        // A card dragged somewhere it can't go buzzes when it goes back (a tap that doesn't move it doesn't)
+        let draggedCard = self.activeCardSourceStack?.stackType == .deck ? nil : self.activeCard
+        let dragged = draggedCard != nil && self.dragStart.map { hypot(point!.x - $0.x, point!.y - $0.y) >= 10 } == true
+        defer {
+            if dragged, let card = draggedCard, self.viewTagToStack[card.view.tag] ?? nil === self.activeCardSourceStack {
+                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            }
+        }
         
         // A tap anywhere off the cards deals, as if the deck had been tapped
         if let start = self.tableTapStart, hypot(point!.x - start.x, point!.y - start.y) < 10 {

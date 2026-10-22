@@ -640,6 +640,37 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNil(vc.dropHighlight, "dropping the card clears it")
     }
 
+    func testMiddleOfTheBlindDoesntShadowTheCardAboveIt() throws {
+        vc.redrawTable()
+        let fub = try XCTUnwrap(vc.fub)
+        for (i, card) in fub.cards.enumerated() {
+            let top = try XCTUnwrap(card.view.layer.shadowPath).boundingBox.minY
+            if i == 0 || i == fub.cards.count - 1 {
+                XCTAssertEqual(top, 0, "the first and top cards shadow all the way round")
+            }
+            else {
+                XCTAssertGreaterThan(top, CGFloat(fub.cardSliceHeight), "card \(i)'s shadow would show on the card above it")
+            }
+        }
+    }
+
+    func testDoubleTapPutsUpTheTopCardWithoutDelayingTouches() throws {
+        let doubleTap = try XCTUnwrap(vc.view.gestureRecognizers?.compactMap { $0 as? UITapGestureRecognizer }.first { $0.numberOfTapsRequired == 2 })
+        XCTAssertFalse(doubleTap.delaysTouchesEnded, "taps and drops would wait for the double tap to fail")
+
+        setUpBoard(lower: deadLowerStacks(), fub: [take(1, .Clubs)])
+        let ace = try XCTUnwrap(vc.fub!.cards.last)
+        vc.tryToPutUpCardAtPoint(point: vc.view.convert(ace.view.center, from: ace.view.superview))
+        XCTAssertTrue(vc.suitStacks.contains { $0!.cards.last === ace })
+        XCTAssertNil(vc.activeCard)
+
+        // Double-tapping the deck doesn't put up the face-down card on top
+        setUpBoard(lower: deadLowerStacks(), deck: [take(1, .Hearts)])
+        let deckAce = try XCTUnwrap(vc.deck!.cards.last)
+        vc.tryToPutUpCardAtPoint(point: vc.view.convert(deckAce.view.center, from: deckAce.view.superview))
+        XCTAssertTrue(vc.deck!.cards.last === deckAce)
+    }
+
     func testCoveredBlindCardCantBePickedUp() {
         let fub = vc.fub!
         vc.beginTouch(at: .zero, on: fub.cards[5].view)

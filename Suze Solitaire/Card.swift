@@ -153,7 +153,15 @@ class Card: NSObject {
     func resize(point: CGPoint, width:Int, height:Int) {
         self.view.frame = CGRect(origin: point, size: CGSize(width: width, height: height))
         self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
-        self.view.layer.shadowPath   = UIBezierPath(roundedRect: self.view.bounds, cornerRadius: self.view.layer.cornerRadius).cgPath
+        self.setShadowPath(trimmingTop: 0)
+    }
+
+    // Casts the shadow from the card's outline, less `trim` points off the top
+    func setShadowPath(trimmingTop trim: CGFloat) {
+        var rect = self.view.bounds
+        rect.origin.y    += trim
+        rect.size.height -= trim
+        self.view.layer.shadowPath = UIBezierPath(roundedRect: rect, cornerRadius: self.view.layer.cornerRadius).cgPath
     }
     
     func cancelMove() {

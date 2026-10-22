@@ -81,7 +81,8 @@ xcodebuild -exportArchive -archivePath "$archive" -exportPath "$export_dir" \
 if [[ "$destination" == upload ]]; then
     echo "Uploaded build $build_number.  It will appear in App Store Connect > TestFlight once processing finishes."
     if [[ -n "${TESTFLIGHT_GROUP:-}" ]]; then
-        BUNDLE_ID="$bundle_id" scripts/testflight-distribute.py "$build_number" "$TESTFLIGHT_GROUP" \
+        BUNDLE_ID="$bundle_id" ASC_KEY_ID="$ASC_KEY_ID" ASC_ISSUER_ID="$ASC_ISSUER_ID" ASC_KEY_PATH="${ASC_KEY_PATH:-}" \
+            scripts/testflight-distribute.py "$build_number" "$TESTFLIGHT_GROUP" \
             "${WHATS_NEW:-$(git log -1 --format=%s)}"
     fi
 else

@@ -6,7 +6,7 @@
 import UIKit
 
 // Help seeing moves: Hint in the "..." menu wiggles a card that can be played (or the deck, when only dealing helps),
-// and, if turned on in the menu, an outline shows where the card being dragged would land.
+// and, if turned on in the menu, an outline (and a tick of haptic feedback) shows where the card being dragged would land.
 extension ViewController {
 
     static let highlightsDropsKey = "HighlightsDrops"
@@ -85,6 +85,12 @@ extension ViewController {
             self.removeDropHighlight()
             return
         }
+        // Called on every move of a drag, so only redo the highlight when the target changes
+        if target === self.dropHighlightTarget, self.dropHighlight?.superview != nil {
+            return
+        }
+        self.dropHighlightTarget = target
+        UISelectionFeedbackGenerator().selectionChanged()
         let frame = target.cards.last.map { self.view.convert($0.view.frame, from: $0.view.superview) } ?? target.view.frame
         let highlight = self.dropHighlight ?? {
             let view = UIView()
@@ -106,6 +112,7 @@ extension ViewController {
 
     func removeDropHighlight() {
         self.dropHighlight?.removeFromSuperview()
-        self.dropHighlight = nil
+        self.dropHighlight       = nil
+        self.dropHighlightTarget = nil
     }
 }
