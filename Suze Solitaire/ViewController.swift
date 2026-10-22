@@ -873,12 +873,12 @@ class ViewController: UIViewController {
     func endTouch(at point: CGPoint?) {
         var droppedOnCardStack: CardStack? = nil
         self.removeDropHighlight()
-        // A card dragged somewhere it can't go buzzes when it goes back (a tap that doesn't move it doesn't)
+        // A card dragged somewhere it can't go taps as it goes back, as gently as picking it up (a tap that doesn't move it doesn't)
         let draggedCard = self.activeCardSourceStack?.stackType == .deck ? nil : self.activeCard
         let dragged = draggedCard != nil && self.dragStart.map { hypot(point!.x - $0.x, point!.y - $0.y) >= 10 } == true
         defer {
             if dragged, let card = draggedCard, self.viewTagToStack[card.view.tag] ?? nil === self.activeCardSourceStack {
-                UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.6)
             }
         }
         
