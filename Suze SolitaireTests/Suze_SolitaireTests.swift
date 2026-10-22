@@ -185,6 +185,8 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertFalse(vc.toolbar.isHidden)
         XCTAssertTrue(columns.left.isHidden)
         XCTAssertEqual(banner.frame.maxY, vc.toolbar.frame.minY - ViewController.bannerSpacing, accuracy: 0.5)
+        XCTAssertGreaterThan(banner.frame.width, ViewController.sideColumnWidth, "back on one line, not still column-width")
+        XCTAssertLessThan(banner.frame.height, 60)
         XCTAssertEqual(vc.view.subviews.last, banner, "banners stay above the cards")
     }
 
@@ -739,6 +741,29 @@ final class Suze_SolitaireTests: XCTestCase {
         let deckAce = try XCTUnwrap(vc.deck!.cards.last)
         vc.tryToPutUpCardAtPoint(point: vc.view.convert(deckAce.view.center, from: deckAce.view.superview))
         XCTAssertTrue(vc.deck!.cards.last === deckAce)
+    }
+
+    func testDropGoesToTheValidStackTheCardOverlaps() throws {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        vc.highlightsDrops = true
+        let four = try XCTUnwrap(vc.deal!.cards.last)
+        vc.activeCard            = four
+        vc.activeCardSourceStack = vc.deal
+        four.savePos()
+        func hover(_ rect: CGRect) {
+            four.view.frame = four.view.superview!.convert(rect, from: vc.view)
+            vc.updateDropHighlight()
+        }
+        // Mostly over the 5 of Hearts, which won't take it, but partly over the 5 of Spades, which will
+        let spades = vc.cardStacks[0]!.view.frame, hearts = vc.cardStacks[1]!.view.frame
+        hover(hearts.offsetBy(dx: -(hearts.minX - spades.maxX) - spades.width * 0.3, dy: 0))
+        XCTAssertTrue(vc.dropHighlightTarget === vc.cardStacks[0])
+
+        // Just short of the 5 of Spades still counts
+        hover(spades.offsetBy(dx: 0, dy: spades.height + spades.width * 0.1))
+        XCTAssertTrue(vc.dropHighlightTarget === vc.cardStacks[0])
+        vc.endTouch(at: four.view.center)
+        XCTAssertTrue(vc.cardStacks[0]!.cards.last === four, "dropped where the highlight was")
     }
 
     func testCoveredBlindCardCantBePickedUp() {

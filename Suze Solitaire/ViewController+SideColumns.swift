@@ -116,14 +116,38 @@ extension ViewController {
         }
     }
 
-    // Under the table's toolbar, or in the right column under the "..." button with its text stacked to fit
+    // Under the table's toolbar on one line, or in the right column under the "..." button with the message, symbol and
+    // button title stacked to fit
     func placeBanner(_ banner: UIView) {
-        let old = self.view.constraints.filter { $0.identifier == "bannerPlacement" && $0.firstItem === banner }
+        // The width constraint lives on the banner, the others on the view
+        let old = (self.view.constraints + banner.constraints).filter { $0.identifier == "bannerPlacement" && $0.firstItem === banner }
         NSLayoutConstraint.deactivate(old)
-        let row = (banner as? UIVisualEffectView)?.contentView.subviews.first as? UIStackView
+        let stacked = self.usesSideColumns && self.sideColumns != nil
+        if let content = (banner as? UIVisualEffectView)?.contentView, let row = content.subviews.first as? UIStackView {
+            row.axis    = stacked ? .vertical : .horizontal
+            row.spacing = stacked ? 2 : 4
+            for inset in content.constraints where inset.identifier == "bannerInset" {
+                // Even in the column; on one line the button's own padding evens out the right side
+                switch inset.firstAttribute {
+                    case .leading:  inset.constant = stacked ? 10 : 20
+                    case .trailing: inset.constant = stacked ? -10 : -8
+                    case .top:      inset.constant = stacked ? 8 : 2
+                    default:        inset.constant = stacked ? -8 : -2
+                }
+            }
+            for case let label as UILabel in row.arrangedSubviews {
+                label.numberOfLines = stacked ? 0 : 1
+            }
+            for case let button as UIButton in row.arrangedSubviews {
+                button.configuration?.imagePlacement = stacked ? .top : .leading
+                button.configuration?.imagePadding   = stacked ? 2 : 6
+                // On one line the button keeps its whole title; the message gives way first
+                button.setContentCompressionResistancePriority(stacked ? .defaultHigh : .required, for: .horizontal)
+                button.invalidateIntrinsicContentSize()
+            }
+        }
         let constraints: [NSLayoutConstraint]
-        if self.usesSideColumns, let columns = self.sideColumns {
-            row?.axis = .vertical
+        if stacked, let columns = self.sideColumns {
             constraints = [
                 banner.trailingAnchor.constraint(equalTo: columns.right.trailingAnchor),
                 banner.topAnchor.constraint(equalTo: columns.menu.bottomAnchor, constant: 12),
@@ -131,7 +155,6 @@ extension ViewController {
             ]
         }
         else {
-            row?.axis = .horizontal
             constraints = [
                 banner.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
                 banner.bottomAnchor.constraint(equalTo: self.toolbar.topAnchor, constant: -ViewController.bannerSpacing),

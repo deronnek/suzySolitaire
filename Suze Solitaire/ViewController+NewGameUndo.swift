@@ -64,8 +64,6 @@ extension ViewController {
         label.textColor = .label
         label.font      = UIFont.preferredFont(forTextStyle: .body)
         label.adjustsFontForContentSizeCategory = true
-        // Wraps when the banner is in the narrow landscape column
-        label.numberOfLines = 0
         label.textAlignment = .center
 
         var config = UIButton.Configuration.plain()
@@ -101,11 +99,15 @@ extension ViewController {
         banner.translatesAutoresizingMaskIntoConstraints = false
         banner.contentView.addSubview(row)
         self.view.addSubview(banner)
-        NSLayoutConstraint.activate([
-            row.leadingAnchor.constraint(equalTo: banner.contentView.leadingAnchor, constant: 20),
-            row.trailingAnchor.constraint(equalTo: banner.contentView.trailingAnchor, constant: -8),
-            row.topAnchor.constraint(equalTo: banner.contentView.topAnchor, constant: 2),
-            row.bottomAnchor.constraint(equalTo: banner.contentView.bottomAnchor, constant: -2),
+        // placeBanner sets these insets to suit the banner's shape
+        let insets = [row.leadingAnchor.constraint(equalTo: banner.contentView.leadingAnchor),
+                      row.trailingAnchor.constraint(equalTo: banner.contentView.trailingAnchor),
+                      row.topAnchor.constraint(equalTo: banner.contentView.topAnchor),
+                      row.bottomAnchor.constraint(equalTo: banner.contentView.bottomAnchor)]
+        for inset in insets {
+            inset.identifier = "bannerInset"
+        }
+        NSLayoutConstraint.activate(insets + [
             banner.heightAnchor.constraint(greaterThanOrEqualToConstant: ViewController.bannerHeight),
         ])
         self.placeBanner(banner)

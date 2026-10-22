@@ -907,7 +907,8 @@ class ViewController: UIViewController {
         }
         self.tableTapStart = nil
         if self.activeCard != nil {
-            droppedOnCardStack = self.findStackUnderHover(hover: self.activeCard!.view)
+            // Where the drop highlight shows, or else wherever the card is, to be turned down there
+            droppedOnCardStack = self.dropTarget() ?? self.findStackUnderHover(hover: self.activeCard!.view)
             
         }
         

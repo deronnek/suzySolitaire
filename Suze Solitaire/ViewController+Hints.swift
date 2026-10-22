@@ -68,15 +68,35 @@ extension ViewController {
 
     // MARK: Drop highlight
 
-    // The stack the card being dragged would go to if dropped now, if it would be accepted there
+    // How far around a stack a dragged card still counts as over it, as a fraction of the card's width
+    static let dropReach: CGFloat = 0.25
+
+    // The stack the card being dragged would go to if dropped now: of the stacks that would take it, the one it overlaps
+    // most, counting a margin around each stack so near misses still land.  The margin doesn't count when the card is
+    // squarely on another stack, so a card dropped on a stack that won't take it doesn't go next door.
     func dropTarget() -> CardStack? {
         guard let card = self.activeCard, let source = self.activeCardSourceStack, source.stackType != .deck,
-              let target = self.findStackUnderHover(hover: card.view),
-              target.stackType == .cardstack || target.stackType == .suitstack,
-              self.canMove(card, from: source, to: target, onTopOfCard: target.cards.last) else {
+              let superview = card.view.superview else {
             return nil
         }
-        return target
+        let dragged = self.view.convert(card.view.frame, from: superview)
+        let reach   = dragged.width * ViewController.dropReach
+        let center  = CGPoint(x: dragged.midX, y: dragged.midY)
+        let stacks  = (self.suitStacks + self.cardStacks).compactMap { $0 }
+        let squarelyOn = stacks.first { $0 !== source && $0.view.frame.contains(center) }
+        var best: (stack: CardStack, overlap: CGFloat)? = nil
+        for target in stacks where target !== source {
+            let margin  = squarelyOn == nil || squarelyOn === target ? reach : 0
+            let overlap = target.view.frame.insetBy(dx: -margin, dy: -margin).intersection(dragged)
+            guard !overlap.isNull, !overlap.isEmpty, self.canMove(card, from: source, to: target, onTopOfCard: target.cards.last) else {
+                continue
+            }
+            let area = overlap.width * overlap.height
+            if area > (best?.overlap ?? 0) {
+                best = (target, area)
+            }
+        }
+        return best?.stack
     }
 
     // Outlines the card the dragged card would land on (or the empty stack), just under the dragged cards
