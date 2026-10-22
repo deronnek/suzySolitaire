@@ -100,6 +100,10 @@ class ViewController: UIViewController {
     var newGameUndoBanner: UIView? = nil
     var newGameUndoTimer: DispatchWorkItem? = nil
     static var newGameUndoDuration: TimeInterval = 5
+    // The banner saying there's nothing to play (see ViewController+NoMoves.swift)
+    var noMovesBanner: UIView? = nil
+    // Where a touch that started on the empty table went down, so lifting it nearby deals
+    var tableTapStart: CGPoint? = nil
     
     // The card a VoiceOver user has selected to move, and the stack it's in (see ViewController+Accessibility.swift)
     var accessibilitySelection: (card: Card, stack: CardStack)? = nil
@@ -173,6 +177,7 @@ class ViewController: UIViewController {
             self.doInitTable = false;
         }
         self.redrawTable()
+        self.updateNoMovesBanner()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -356,6 +361,7 @@ class ViewController: UIViewController {
         else {
             self.dismissNewGameUndo(animated: false)
         }
+        self.updateNoMovesBanner()
     }
     
     // The storyboard connects the undo button to undoMove:, so the parameter must be unlabeled
@@ -383,6 +389,7 @@ class ViewController: UIViewController {
         self.lastMove   = nil
         self.activeCard = nil
         self.layOutAndSlide(from: frames)
+        self.updateNoMovesBanner()
     }
     
     // Moves a card, and any cards on top of it, and remembers the move so it can be undone
@@ -769,16 +776,34 @@ class ViewController: UIViewController {
             return
         }
         self.activeTouch = touch
-        let point: CGPoint? = touch.location(in: self.view)
-        let viewTapped = self.view.hitTest(point!, with: event)
+        let point = touch.location(in: self.view)
+        self.beginTouch(at: point, on: self.view.hitTest(point, with: event))
+    }
+    
+    // Picks up the card in viewTapped, if it can be played, or notes a touch on the empty table
+    func beginTouch(at point: CGPoint?, on viewTapped: UIView?) {
+        self.tableTapStart = nil
         if viewTapped!.isKind(of:UIImageView.self) {
-            self.activeCard            = self.viewTagToCard[viewTapped!.tag]!
-            self.activeCardSourceStack = self.viewTagToStack[viewTapped!.tag]!
-            self.activeCard?.savePos()
-            self.liftRun(startingAt: self.activeCard!)
+            let card  = self.viewTagToCard[viewTapped!.tag]!
+            let stack = self.viewTagToStack[viewTapped!.tag]!
+            // Cards under the top of the blind and deal can't be played, and picking one up would drag the blank cards above it
+            if (stack?.stackType == .fub || stack?.stackType == .deal) && card !== stack?.cards.last {
+                self.activeCard = nil
+            }
+            else {
+                self.activeCard            = card
+                self.activeCardSourceStack = stack
+                self.activeCard?.savePos()
+                self.liftRun(startingAt: self.activeCard!)
+            }
         }
         else {
             self.activeCard = nil
+            // The table itself or an empty stack's outline, not a banner
+            let stackViews = ([self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks).compactMap { $0?.view }
+            if viewTapped === self.view || stackViews.contains(where: { $0 === viewTapped }) {
+                self.tableTapStart = point
+            }
         }
         
         if (self.activeCard != nil) {
@@ -822,9 +847,21 @@ class ViewController: UIViewController {
         if self.justWon {
             return
         }
-        
+        self.endTouch(at: touch.location(in: self.view))
+    }
+    
+    // Drops the card being moved at point, or deals if the touch was a tap on the empty table
+    func endTouch(at point: CGPoint?) {
         var droppedOnCardStack: CardStack? = nil
-        let point: CGPoint? = touch.location(in: self.view)
+        
+        // A tap anywhere off the cards deals, as if the deck had been tapped
+        if let start = self.tableTapStart, hypot(point!.x - start.x, point!.y - start.y) < 10 {
+            self.tableTapStart = nil
+            self.tapDeck()
+            self.finishTurn()
+            return
+        }
+        self.tableTapStart = nil
         if self.activeCard != nil {
             droppedOnCardStack = self.findStackUnderHover(hover: self.activeCard!.view)
             
@@ -970,6 +1007,7 @@ class ViewController: UIViewController {
         if won {
             self.runVictory()
         }
+        self.updateNoMovesBanner()
     }
     
     func findStackUnderHover(hover: UIImageView) -> CardStack? {
@@ -1141,15 +1179,34 @@ class ViewController: UIViewController {
         }
     }
     
+    // Whether activeCard (and any cards on top of it) can move onto destinationStack, adding $5 if it's going to an upper stack
     func acceptCardMove(sourceStack: CardStack, destinationStack: CardStack, onTopOfCard: Card?) -> Bool {
-        print("Acceptance testing for move from stack type \(sourceStack.stackType) to \(destinationStack.stackType)")
-        //self.autoSwitch.setOn(false, animated: true); return true // debug only
-        
+        guard let card = self.activeCard, self.canMove(card, from: sourceStack, to: destinationStack, onTopOfCard: onTopOfCard) else {
+            return false
+        }
+        if destinationStack.stackType == .suitstack {
+            self.score += 5
+        }
+        return true
+    }
+    
+    func canMove(_ card: Card, from sourceStack: CardStack, to destinationStack: CardStack, onTopOfCard: Card?) -> Bool {
+        // Cards on top of the one picked up go with it.  Only the top card can leave the blind or deal, a single card at a
+        // time goes to an upper stack, and runs only move between lower stacks.
+        if card !== sourceStack.cards.last {
+            if sourceStack.stackType != .cardstack || destinationStack.stackType != .cardstack || !self.isRun(from: card, in: sourceStack) {
+                return false
+            }
+        }
         if sourceStack === destinationStack {
             return false
         }
-        
-        if sourceStack.stackType == .suitstack || sourceStack.stackType == .deck {
+        return self.destinationAccepts(card, from: sourceStack.stackType, to: destinationStack, onTopOfCard: onTopOfCard)
+    }
+    
+    // The rules for what each stack takes, given the card that would go on top of it
+    func destinationAccepts(_ card: Card, from sourceType: cardStackType, to destinationStack: CardStack, onTopOfCard: Card?) -> Bool {
+        if sourceType == .suitstack || sourceType == .deck {
             return false
         }
         
@@ -1161,54 +1218,40 @@ class ViewController: UIViewController {
             return false
         }
         
-        if self.activeCard == nil {
-            return false
-        }
-        
-        // Cards on top of the one picked up go with it.  Only the top card can leave the blind or deal, a single card at a
-        // time goes to an upper stack, and runs only move between lower stacks.
-        if self.activeCard !== sourceStack.cards.last {
-            if sourceStack.stackType != .cardstack || destinationStack.stackType != .cardstack || !self.isRun(from: self.activeCard!, in: sourceStack) {
-                return false
-            }
-        }
-        
         if destinationStack.stackType == .suitstack {
-            if destinationStack.cards.isEmpty && self.activeCard!.rank == self.suitStackStarter {
-                self.score += 5
+            if destinationStack.cards.isEmpty && card.rank == self.suitStackStarter {
                 return true
             }
             // Corner cases
             if let onTopOfCardRank = onTopOfCard?.rank {
-                if(!destinationStack.cards.isEmpty && (self.activeCard!.suit == onTopOfCard!.suit) && (self.activeCard!.rank == onTopOfCardRank+1 || (self.activeCard!.rank == 1 && onTopOfCardRank == 13))) {
-                    self.score += 5
-                    return true
+                if(!destinationStack.cards.isEmpty && (card.suit == onTopOfCard!.suit) && (card.rank == onTopOfCardRank+1 || (card.rank == 1 && onTopOfCardRank == 13))) {
+                        return true
                 }
             }
         }
 
         if destinationStack.stackType == .cardstack {
             if destinationStack.cards.isEmpty {
-                if sourceStack.stackType == .fub {
+                if sourceType == .fub {
                     // until the face up blind is empty, allow cards from the fub to fill empty spaces
                     return true
                 }
                 else if self.fub!.cards.isEmpty {
                     // face up blind is empty; only allow cards of the appropriate rank
                     // suit stack starter minus one, or king if ace is starter
-                    if self.activeCard!.rank == self.suitStackStarter-1 || (self.suitStackStarter == 1 && self.activeCard!.rank == 13) {
+                    if card.rank == self.suitStackStarter-1 || (self.suitStackStarter == 1 && card.rank == 13) {
                         return true
                     }
                 }
             }
-            else if(sourceStack.stackType == .fub || sourceStack.stackType == .cardstack || sourceStack.stackType == .deal) {
+            else if(sourceType == .fub || sourceType == .cardstack || sourceType == .deal) {
                 if let onTopOfCardColor = onTopOfCard?.color {
-                    if(self.activeCard!.color == onTopOfCardColor) {
+                    if(card.color == onTopOfCardColor) {
                     return false
                     }
                 }
                 if let onTopOfCardRank = onTopOfCard?.rank {
-                    if(self.activeCard!.rank == onTopOfCardRank-1 || (self.activeCard!.rank == 13 && onTopOfCardRank == 1)) {
+                    if(card.rank == onTopOfCardRank-1 || (card.rank == 13 && onTopOfCardRank == 1)) {
                         return true
                     }
                 }

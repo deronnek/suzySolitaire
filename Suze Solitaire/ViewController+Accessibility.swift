@@ -86,7 +86,7 @@ extension ViewController {
             }
             view.accessibilityCustomActions = self.accessibilityActions(for: stack)
         }
-        self.view.accessibilityElements = stacks.map { $0.view } + [self.toolbar!] + (self.newGameUndoBanner.map { [$0] } ?? [])
+        self.view.accessibilityElements = stacks.map { $0.view } + [self.toolbar!] + [self.newGameUndoBanner, self.noMovesBanner].compactMap { $0 }
     }
 
     func accessibilityHint(for stack: CardStack) -> String? {

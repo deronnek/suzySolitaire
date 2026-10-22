@@ -27,6 +27,7 @@ final class Suze_SolitaireTests: XCTestCase {
         ViewController.savedGameURL = FileManager.default.temporaryDirectory.appendingPathComponent("SavedGame-\(UUID().uuidString).json")
         Card.customBackImageURL     = FileManager.default.temporaryDirectory.appendingPathComponent("CardBack-\(UUID().uuidString).png")
         Card.customBackImage        = nil
+        UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         vc = try self.makeViewController()
         vc.score  = -45
         vc.wins   = 0
@@ -38,6 +39,7 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: ViewController.savedGameURL)
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
+        UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         vc = nil
         navigationControllers = []
     }
@@ -463,7 +465,9 @@ final class Suze_SolitaireTests: XCTestCase {
     // Takes a particular card off the table, to build stacks for a test
     func take(_ rank: Int, _ suit: cardSuit) -> Card {
         let card = vc.viewTagToCard.values.compactMap { $0 }.first { $0.rank == rank && $0.suit == suit }!
-        vc.viewTagToStack[card.view.tag]!!.removeCard(toRemove: card)
+        if let stack = vc.viewTagToStack[card.view.tag] ?? nil, stack.cards.contains(card) {
+            stack.removeCard(toRemove: card)
+        }
         return card
     }
 
@@ -476,6 +480,120 @@ final class Suze_SolitaireTests: XCTestCase {
     func accepts(_ card: Card, from source: CardStack, to destination: CardStack) -> Bool {
         vc.activeCard = card
         return vc.acceptCardMove(sourceStack: source, destinationStack: destination, onTopOfCard: destination.cards.last)
+    }
+
+    // Clears the table and sets up just the given cards, with Aces starting the upper stacks
+    func setUpBoard(lower: [[Card]], deck: [Card] = [], deal: [Card] = [], fub: [Card] = []) {
+        for stack in allStacks(vc) {
+            for card in stack!.cards {
+                stack!.removeCard(toRemove: card)
+            }
+        }
+        vc.suitStackStarter = 1
+        func put(_ cards: [Card], on stack: CardStack?) {
+            for card in cards {
+                stack!.addCard(toadd: card)
+                vc.viewTagToStack[card.view.tag] = stack
+            }
+        }
+        for (i, stack) in lower.enumerated() {
+            put(stack, on: vc.cardStacks[i])
+        }
+        put(deck, on: vc.deck)
+        put(deal, on: vc.deal)
+        put(fub, on: vc.fub)
+        vc.redrawTable()
+    }
+
+    // Lower stacks with nothing to play among them
+    func deadLowerStacks() -> [[Card]] {
+        return [[take(5, .Spades)], [take(5, .Hearts)], [take(9, .Clubs)], [take(9, .Diamonds)]]
+    }
+
+    func testStuckWhenNothingCanMove() {
+        setUpBoard(lower: deadLowerStacks())
+        XCTAssertEqual(vc.playState(), .stuck)
+    }
+
+    func testPlayableCardOnTheTable() {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        XCTAssertEqual(vc.playState(), .canPlay, "the 4 of Hearts goes on the 5 of Spades")
+        setUpBoard(lower: deadLowerStacks(), fub: [take(1, .Clubs)])
+        XCTAssertEqual(vc.playState(), .canPlay, "the Ace goes up")
+    }
+
+    func testNeedsDealWhenTheDeckHasAPlayableCard() {
+        // Dealing turns up the last card of the three, the 4 of Hearts
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts), take(2, .Clubs), take(3, .Clubs)])
+        XCTAssertEqual(vc.playState(), .needsDeal)
+    }
+
+    func testStuckWhenTheDeckNeverTurnsUpThePlayableCard() {
+        // Dealt three at a time, the 4 of Hearts is always under the 2 of Clubs
+        setUpBoard(lower: deadLowerStacks(), deck: [take(2, .Clubs), take(3, .Clubs), take(4, .Hearts)])
+        XCTAssertEqual(vc.playState(), .stuck)
+    }
+
+    func testSwappingARunBetweenMatchingCardsIsntAMove() {
+        // The 5 of Spades could go from the 6 of Diamonds to the 6 of Hearts, but that only swaps the red sixes
+        setUpBoard(lower: [[take(6, .Diamonds), take(5, .Spades)], [take(6, .Hearts)], [take(9, .Clubs)], [take(9, .Diamonds)]])
+        XCTAssertEqual(vc.playState(), .stuck)
+        // Off the Jack, it uncovers a new card
+        setUpBoard(lower: [[take(11, .Clubs), take(5, .Spades)], [take(6, .Hearts)], [take(9, .Clubs)], [take(9, .Diamonds)]])
+        XCTAssertEqual(vc.playState(), .canPlay)
+    }
+
+    func testNoMovesBannerFollowsTheGameAndTheMenu() throws {
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts)])
+        vc.updateNoMovesBanner()
+        XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "Nothing to play")
+
+        // Dealing the 4 of Hearts gives something to play
+        vc.tapDeck()
+        vc.finishTurn()
+        XCTAssertNil(vc.noMovesBanner)
+
+        // Playing it leaves nothing
+        let four = vc.deal!.cards.last!
+        vc.performMove(card: four, from: vc.deal!, to: vc.cardStacks[0]!)
+        vc.finishTurn()
+        XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
+
+        let menu   = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+        let toggle = try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" })
+        XCTAssertEqual(toggle.state, .on)
+        vc.showsNoMoves = false
+        XCTAssertNil(vc.noMovesBanner)
+        XCTAssertEqual(try XCTUnwrap(vc.menuBarButtonItem?.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" }).state, .off)
+    }
+
+    func testCoveredBlindCardCantBePickedUp() {
+        let fub = vc.fub!
+        vc.beginTouch(at: .zero, on: fub.cards[5].view)
+        XCTAssertNil(vc.activeCard)
+        XCTAssertNil(vc.tableTapStart, "a touch on the blind isn't a tap on the table")
+        vc.beginTouch(at: .zero, on: fub.cards.last!.view)
+        XCTAssertTrue(vc.activeCard === fub.cards.last)
+    }
+
+    func testTappingTheTableDeals() {
+        vc.redrawTable()
+        let deckCount = vc.deck!.cards.count
+        let spot = CGPoint(x: 5, y: vc.toolbar.frame.minY - 20)
+        vc.beginTouch(at: spot, on: vc.view)
+        vc.endTouch(at: CGPoint(x: spot.x + 3, y: spot.y + 2))
+        XCTAssertEqual(vc.deck!.cards.count, deckCount - 3)
+        XCTAssertEqual(vc.deal!.cards.count, 3)
+
+        // A drag across the table isn't a tap
+        vc.beginTouch(at: spot, on: vc.view)
+        vc.endTouch(at: CGPoint(x: spot.x + 100, y: spot.y))
+        XCTAssertEqual(vc.deck!.cards.count, deckCount - 3)
+
+        // Nor is a tap on a banner
+        let banner = vc.addBanner(message: "Test", buttonTitle: "OK", symbol: "checkmark", hint: "") {}
+        vc.beginTouch(at: spot, on: banner)
+        XCTAssertNil(vc.tableTapStart)
     }
 
     func testOnlyTheBlindsTopCardCanMove() {

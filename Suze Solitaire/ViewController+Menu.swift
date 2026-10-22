@@ -6,12 +6,17 @@
 import PhotosUI
 import UIKit
 
-// The "..." menu in the bottom toolbar: auto moves, the card back, resetting wins and losses, and the About box
+// The "..." menu in the bottom toolbar: auto moves, the no-moves banner, the card back, resetting wins and losses, and the
+// About box
 extension ViewController: PHPickerViewControllerDelegate {
 
     func buildMenu() -> UIMenu {
         let auto = UIAction(title: "Auto Moves", image: UIImage(systemName: "wand.and.stars"), state: self.autoMoves ? .on : .off) { _ in
             self.autoMoves.toggle()
+        }
+
+        let noMoves = UIAction(title: "Show When Stuck", image: UIImage(systemName: "lightbulb"), state: self.showsNoMoves ? .on : .off) { _ in
+            self.showsNoMoves.toggle()
         }
 
         let choosePhoto = UIAction(title: "Choose Photo…", image: UIImage(systemName: "photo.on.rectangle")) { _ in
@@ -36,7 +41,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         let about = UIAction(title: "About", image: UIImage(systemName: "info.circle")) { _ in
             self.showAbout()
         }
-        return UIMenu(children: [auto, cardBack, resetStats, about])
+        return UIMenu(children: [auto, noMoves, cardBack, resetStats, about])
     }
 
     func updateMenu() {
