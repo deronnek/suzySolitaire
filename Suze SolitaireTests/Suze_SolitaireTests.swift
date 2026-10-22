@@ -259,16 +259,19 @@ final class Suze_SolitaireTests: XCTestCase {
         let under = fub.cards[fub.cards.count - 2]
         let start = top.view.frame.origin
         // Mid-drag, as touchesBegan and touchesMoved leave it
+        let touch = UITouch()
+        vc.activeTouch           = touch
         vc.activeCard            = top
         vc.activeCardSourceStack = fub
         top.savePos()
         top.setPos(point: CGPoint(x: start.x + 120, y: start.y + 200))
         fub.updateFaces(lifting: top)
 
-        vc.touchesCancelled([], with: nil)
+        vc.touchesCancelled([touch], with: nil)
         XCTAssertEqual(top.view.frame.origin, start)
         XCTAssertTrue(under.view.image === Card.blankFaceImage)
         XCTAssertNil(vc.activeCard)
+        XCTAssertNil(vc.activeTouch)
         XCTAssertEqual(fub.cards.last, top)
     }
 
@@ -455,6 +458,67 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(target.cards.last === card)
         XCTAssertNil(vc.accessibilitySelection)
         XCTAssertTrue(vc.undoBarButtonItem.isEnabled)
+    }
+
+    // Takes a particular card off the table, to build stacks for a test
+    func take(_ rank: Int, _ suit: cardSuit) -> Card {
+        let card = vc.viewTagToCard.values.compactMap { $0 }.first { $0.rank == rank && $0.suit == suit }!
+        vc.viewTagToStack[card.view.tag]!!.removeCard(toRemove: card)
+        return card
+    }
+
+    func stack(_ type: cardStackType, _ cards: [Card]) -> CardStack {
+        let stack = CardStack(type: type)
+        cards.forEach { stack.addCard(toadd: $0) }
+        return stack
+    }
+
+    func accepts(_ card: Card, from source: CardStack, to destination: CardStack) -> Bool {
+        vc.activeCard = card
+        return vc.acceptCardMove(sourceStack: source, destinationStack: destination, onTopOfCard: destination.cards.last)
+    }
+
+    func testOnlyTheBlindsTopCardCanMove() {
+        let fub   = vc.fub!
+        let empty = stack(.cardstack, [])
+        XCTAssertFalse(accepts(fub.cards[5], from: fub, to: empty), "a card under the top one would bring the rest of the blind")
+        XCTAssertTrue(accepts(fub.cards.last!, from: fub, to: empty))
+    }
+
+    func testOnlyTheDealsTopCardCanMove() {
+        let deal  = stack(.deal, [take(9, .Hearts), take(5, .Clubs)])
+        let lower = stack(.cardstack, [take(10, .Spades)])
+        XCTAssertFalse(accepts(deal.cards[0], from: deal, to: lower))
+    }
+
+    func testRunsCantGoToUpperStacks() {
+        let upper = stack(.suitstack, [take(4, .Hearts)])
+        let lower = stack(.cardstack, [take(5, .Hearts), take(4, .Clubs)])
+        XCTAssertFalse(accepts(lower.cards[0], from: lower, to: upper), "the 4 of Clubs would land on the Hearts")
+        lower.removeCard(toRemove: lower.cards[1])
+        XCTAssertTrue(accepts(lower.cards[0], from: lower, to: upper))
+    }
+
+    func testOnlyRealRunsMoveBetweenLowerStacks() {
+        let target = stack(.cardstack, [take(10, .Hearts)])
+        let run    = stack(.cardstack, [take(9, .Spades), take(8, .Diamonds), take(7, .Clubs)])
+        XCTAssertTrue(accepts(run.cards[0], from: run, to: target))
+        let notRun = stack(.cardstack, [take(9, .Clubs), take(3, .Diamonds)])
+        XCTAssertFalse(accepts(notRun.cards[0], from: notRun, to: target))
+        let sameColor = stack(.cardstack, [take(9, .Diamonds), take(8, .Hearts)])
+        XCTAssertFalse(accepts(sameColor.cards[0], from: sameColor, to: stack(.cardstack, [take(10, .Clubs)])))
+    }
+
+    func testSecondFingerIsIgnoredWhileDragging() {
+        let first = UITouch(), second = UITouch()
+        vc.activeTouch = first
+        let card = vc.fub!.cards.last!
+        vc.activeCard = card
+        vc.touchesBegan([second], with: nil)
+        XCTAssertTrue(vc.activeTouch === first)
+        XCTAssertTrue(vc.activeCard === card)
+        vc.touchesEnded([second], with: nil)
+        XCTAssertTrue(vc.activeTouch === first, "lifting the other finger doesn't end the drag")
     }
 
     func testIllegalMoveLeavesBoardAlone() {

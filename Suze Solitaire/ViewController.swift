@@ -92,6 +92,8 @@ class ViewController: UIViewController {
     var yCap = 0;
     
     var activeCard:                      Card? = nil
+    // The finger moving activeCard; other fingers are ignored until it lifts
+    var activeTouch:                  UITouch? = nil
     var activeCardSourceStack:      CardStack? = nil
     // While the banner after New Game is showing, the game it would bring back (see ViewController+NewGameUndo.swift)
     var gameBeforeNewGame: SavedGame? = nil
@@ -759,7 +761,15 @@ class ViewController: UIViewController {
     
     // MARK: Touches Implementations
     override dynamic func touchesBegan(_ touches:Set<UITouch>, with event: UIEvent?) {
-        let point = touches.first?.location(in: self.view)
+        // Ignore a second finger while one is moving a card, unless that finger's touch went away without telling us
+        if let active = self.activeTouch, active.phase != .ended && active.phase != .cancelled {
+            return
+        }
+        guard let touch = touches.first else {
+            return
+        }
+        self.activeTouch = touch
+        let point: CGPoint? = touch.location(in: self.view)
         let viewTapped = self.view.hitTest(point!, with: event)
         if viewTapped!.isKind(of:UIImageView.self) {
             self.activeCard            = self.viewTagToCard[viewTapped!.tag]!
@@ -791,8 +801,10 @@ class ViewController: UIViewController {
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        let point = touches.first?.location(in: self.view)
+        guard let touch = self.activeTouch, touches.contains(touch) else {
+            return
+        }
+        let point: CGPoint? = touch.location(in: self.view)
         
         if self.activeCard != nil && (self.justWon || self.activeCardSourceStack?.stackType != .deck) {
             self.activeCard!.setPos(point: CGPoint(x: point!.x - CGFloat(self.xCap), y: point!.y - CGFloat(self.yCap)))
@@ -803,12 +815,16 @@ class ViewController: UIViewController {
     
     // TODO: refactor touchesEnded.  It's convoluted, does too much, and just bad all around.
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = self.activeTouch, touches.contains(touch) else {
+            return
+        }
+        self.activeTouch = nil
         if self.justWon {
             return
         }
         
         var droppedOnCardStack: CardStack? = nil
-        let point = touches.first?.location(in: self.view)
+        let point: CGPoint? = touch.location(in: self.view)
         if self.activeCard != nil {
             droppedOnCardStack = self.findStackUnderHover(hover: self.activeCard!.view)
             
@@ -860,6 +876,10 @@ class ViewController: UIViewController {
     }
     // iOS cancels touches it takes over mid-drag, such as for an incoming call or a system gesture; put the cards back
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = self.activeTouch, touches.contains(touch) else {
+            return
+        }
+        self.activeTouch = nil
         if self.justWon {
             return
         }
@@ -1110,6 +1130,17 @@ class ViewController: UIViewController {
     }
     
     // This function checks to see if an attempted card move is valid
+    // Whether card and the ones on top of it alternate colors and count down, as the lower stacks require
+    func isRun(from card: Card, in stack: CardStack) -> Bool {
+        guard let start = stack.cards.firstIndex(of: card) else {
+            return false
+        }
+        let run = stack.cards[start...]
+        return zip(run, run.dropFirst()).allSatisfy { lower, upper in
+            upper.color != lower.color && (upper.rank == lower.rank - 1 || (upper.rank == 13 && lower.rank == 1))
+        }
+    }
+    
     func acceptCardMove(sourceStack: CardStack, destinationStack: CardStack, onTopOfCard: Card?) -> Bool {
         print("Acceptance testing for move from stack type \(sourceStack.stackType) to \(destinationStack.stackType)")
         //self.autoSwitch.setOn(false, animated: true); return true // debug only
@@ -1132,6 +1163,14 @@ class ViewController: UIViewController {
         
         if self.activeCard == nil {
             return false
+        }
+        
+        // Cards on top of the one picked up go with it.  Only the top card can leave the blind or deal, a single card at a
+        // time goes to an upper stack, and runs only move between lower stacks.
+        if self.activeCard !== sourceStack.cards.last {
+            if sourceStack.stackType != .cardstack || destinationStack.stackType != .cardstack || !self.isRun(from: self.activeCard!, in: sourceStack) {
+                return false
+            }
         }
         
         if destinationStack.stackType == .suitstack {
