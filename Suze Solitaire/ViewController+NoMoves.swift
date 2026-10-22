@@ -7,7 +7,7 @@ import UIKit
 
 // After each turn, a banner points out when nothing on the table can be played: it offers to deal when a card the deck
 // would turn up can be played, and a new game when going through the whole deck wouldn't help either.  It can be
-// turned off in the "..." menu.
+// turned off in the "..." menu.  "No moves left" waits a few seconds after a new game is dealt.
 extension ViewController {
 
     enum PlayState: Equatable {
@@ -20,6 +20,8 @@ extension ViewController {
     }
 
     static let showsNoMovesKey = "ShowsNoMoves"
+    // How long after a new game is dealt before saying it can't be won, so the player gets a look at it first
+    static let stuckBannerDelay: TimeInterval = 8
 
     var showsNoMoves: Bool {
         get {
@@ -41,14 +43,18 @@ extension ViewController {
         return laterDeals.contains { self.hasDestination($0, from: .deal) } ? .needsDeal : .stuck
     }
 
-    // Whether a visible card can make a move that gets somewhere.  Moving a run off a card it could equally sit on
-    // only swaps it between two matching cards, so it doesn't count unless the card under it can then go up.
+    // Whether a visible card can make a move that gets somewhere
     func tableHasMove() -> Bool {
-        if let top = self.fub?.cards.last, self.hasDestination(top, from: .fub) {
-            return true
-        }
-        if let top = self.deal?.cards.last, self.hasDestination(top, from: .deal) {
-            return true
+        return self.findMove() != nil
+    }
+
+    // A move of a visible card that gets somewhere.  Moving a run off a card it could equally sit on only swaps it
+    // between two matching cards, so it doesn't count unless the card under it can then go up.
+    func findMove() -> (card: Card, from: CardStack, to: CardStack)? {
+        for source in [self.fub, self.deal] {
+            if let source = source, let top = source.cards.last, let destination = self.destination(for: top, from: source) {
+                return (top, source, destination)
+            }
         }
         for case let source? in self.cardStacks {
             for (i, card) in source.cards.enumerated() where self.isRun(from: card, in: source) {
@@ -59,7 +65,7 @@ extension ViewController {
                         continue
                     }
                     if destination.stackType == .suitstack {
-                        return true
+                        return (card, source, destination)
                     }
                     if let below = below {
                         // Uncovers a card that isn't part of the run, frees one to go up, or splits the run into an
@@ -67,23 +73,30 @@ extension ViewController {
                         let uncoversNewCard = !self.isRun(from: below, in: source)
                         let belowCanGoUp = self.suitStacks.contains { self.destinationAccepts(below, from: .cardstack, to: $0!, onTopOfCard: $0!.cards.last) }
                         if uncoversNewCard || belowCanGoUp || destination.cards.isEmpty {
-                            return true
+                            return (card, source, destination)
                         }
                     }
                     else if !destination.cards.isEmpty {
                         // Empties a lower stack
-                        return true
+                        return (card, source, destination)
                     }
                 }
             }
         }
-        return false
+        return nil
     }
 
     // Whether card, at the top of a stack of sourceType, could go to an upper or lower stack
     func hasDestination(_ card: Card, from sourceType: cardStackType) -> Bool {
         return (self.suitStacks + self.cardStacks).contains { destination in
             self.destinationAccepts(card, from: sourceType, to: destination!, onTopOfCard: destination!.cards.last)
+        }
+    }
+
+    // An upper or lower stack that card, at the top of source, could go to
+    func destination(for card: Card, from source: CardStack) -> CardStack? {
+        return (self.suitStacks + self.cardStacks).compactMap { $0 }.first { destination in
+            self.destinationAccepts(card, from: source.stackType, to: destination, onTopOfCard: destination.cards.last)
         }
     }
 
@@ -114,8 +127,19 @@ extension ViewController {
         return shown
     }
 
-    func updateNoMovesBanner() {
-        let state = self.justWon || !self.showsNoMoves ? .canPlay : self.playState()
+    // forHint shows the banner even when it's turned off or the game was just dealt
+    func updateNoMovesBanner(forHint: Bool = false) {
+        self.stuckBannerTimer?.cancel()
+        self.stuckBannerTimer = nil
+        var state = self.justWon || !(self.showsNoMoves || forHint) ? .canPlay : self.playState()
+        if state == .stuck, !forHint, let dealt = self.gameDealtDate, -dealt.timeIntervalSinceNow < ViewController.stuckBannerDelay {
+            let timer = DispatchWorkItem { [weak self] in
+                self?.updateNoMovesBanner()
+            }
+            self.stuckBannerTimer = timer
+            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.stuckBannerDelay + dealt.timeIntervalSinceNow, execute: timer)
+            state = .canPlay
+        }
         let message: String?
         switch state {
             case .canPlay:   message = nil

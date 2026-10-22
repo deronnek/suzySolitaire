@@ -6,7 +6,7 @@
 import PhotosUI
 import UIKit
 
-// The "..." menu in the bottom toolbar: auto moves, the no-moves banner, the card back, resetting wins and losses, and the
+// The "..." menu in the bottom toolbar: a hint, auto moves, the no-moves banner, the drop highlight, the card back, resetting wins and losses, and the
 // About box
 extension ViewController: PHPickerViewControllerDelegate {
 
@@ -15,8 +15,16 @@ extension ViewController: PHPickerViewControllerDelegate {
             self.autoMoves.toggle()
         }
 
-        let noMoves = UIAction(title: "Show When Stuck", image: UIImage(systemName: "lightbulb"), state: self.showsNoMoves ? .on : .off) { _ in
+        let hint = UIAction(title: "Hint", image: UIImage(systemName: "lightbulb")) { _ in
+            self.showHint()
+        }
+
+        let noMoves = UIAction(title: "Show When Stuck", image: UIImage(systemName: "exclamationmark.bubble"), state: self.showsNoMoves ? .on : .off) { _ in
             self.showsNoMoves.toggle()
+        }
+
+        let drops = UIAction(title: "Highlight Drop Spot", image: UIImage(systemName: "scope"), state: self.highlightsDrops ? .on : .off) { _ in
+            self.highlightsDrops.toggle()
         }
 
         let choosePhoto = UIAction(title: "Choose Photo…", image: UIImage(systemName: "photo.on.rectangle")) { _ in
@@ -41,7 +49,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         let about = UIAction(title: "About", image: UIImage(systemName: "info.circle")) { _ in
             self.showAbout()
         }
-        return UIMenu(children: [auto, noMoves, cardBack, resetStats, about])
+        return UIMenu(children: [UIMenu(options: .displayInline, children: [hint]), auto, noMoves, drops, cardBack, resetStats, about])
     }
 
     func updateMenu() {

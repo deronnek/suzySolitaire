@@ -102,6 +102,11 @@ class ViewController: UIViewController {
     static var newGameUndoDuration: TimeInterval = 5
     // The banner saying there's nothing to play (see ViewController+NoMoves.swift)
     var noMovesBanner: UIView? = nil
+    // When the current game was dealt, and the timer that shows "No moves left" once it's been a few seconds
+    var gameDealtDate: Date? = nil
+    var stuckBannerTimer: DispatchWorkItem? = nil
+    // Outlines where the card being dragged would land (see ViewController+Hints.swift)
+    var dropHighlight: UIView? = nil
     // Where a touch that started on the empty table went down, so lifting it nearby deals
     var tableTapStart: CGPoint? = nil
     
@@ -353,6 +358,7 @@ class ViewController: UIViewController {
         // self.initTableTrivial()
         self.activeCard = nil
         self.redrawTable()
+        self.gameDealtDate = Date()
         print("Found \(self.suitStacks.count) suitstacks")
         
         if let previousGame = previousGame {
@@ -835,6 +841,7 @@ class ViewController: UIViewController {
             self.activeCard!.setPos(point: CGPoint(x: point!.x - CGFloat(self.xCap), y: point!.y - CGFloat(self.yCap)))
             // Show what the drag uncovers (only once the card moves, so taps don't flash it)
             self.activeCardSourceStack?.updateFaces(lifting: self.activeCard)
+            self.updateDropHighlight()
         }
     }
     
@@ -853,6 +860,7 @@ class ViewController: UIViewController {
     // Drops the card being moved at point, or deals if the touch was a tap on the empty table
     func endTouch(at point: CGPoint?) {
         var droppedOnCardStack: CardStack? = nil
+        self.removeDropHighlight()
         
         // A tap anywhere off the cards deals, as if the deck had been tapped
         if let start = self.tableTapStart, hypot(point!.x - start.x, point!.y - start.y) < 10 {
@@ -917,6 +925,7 @@ class ViewController: UIViewController {
             return
         }
         self.activeTouch = nil
+        self.removeDropHighlight()
         if self.justWon {
             return
         }

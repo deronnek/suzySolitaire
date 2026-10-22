@@ -28,6 +28,7 @@ final class Suze_SolitaireTests: XCTestCase {
         Card.customBackImageURL     = FileManager.default.temporaryDirectory.appendingPathComponent("CardBack-\(UUID().uuidString).png")
         Card.customBackImage        = nil
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
+        UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = try self.makeViewController()
         vc.score  = -45
         vc.wins   = 0
@@ -40,6 +41,7 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
+        UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = nil
         navigationControllers = []
     }
@@ -230,7 +232,7 @@ final class Suze_SolitaireTests: XCTestCase {
     func testMenuShowsAutoMovesState() throws {
         func autoState() throws -> UIMenuElement.State {
             let menu = try XCTUnwrap(vc.menuBarButtonItem?.menu)
-            return try XCTUnwrap(menu.children.first as? UIAction).state
+            return try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title == "Auto Moves" }).state
         }
         XCTAssertEqual(try autoState(), .off)
         vc.autoMoves = true
@@ -467,7 +469,10 @@ final class Suze_SolitaireTests: XCTestCase {
         let card = vc.viewTagToCard.values.compactMap { $0 }.first { $0.rank == rank && $0.suit == suit }!
         if let stack = vc.viewTagToStack[card.view.tag] ?? nil, stack.cards.contains(card) {
             stack.removeCard(toRemove: card)
+            stack.cards.last?.cardParent = nil
         }
+        // Unlink it from the card that was on top of it, so moving it later doesn't carry that card along
+        card.cardParent = nil
         return card
     }
 
@@ -565,6 +570,74 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.showsNoMoves = false
         XCTAssertNil(vc.noMovesBanner)
         XCTAssertEqual(try XCTUnwrap(vc.menuBarButtonItem?.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" }).state, .off)
+    }
+
+    func testNoMovesLeftWaitsAfterTheDeal() {
+        setUpBoard(lower: deadLowerStacks())
+        vc.gameDealtDate = Date()
+        vc.updateNoMovesBanner()
+        XCTAssertNil(vc.noMovesBanner, "a game that was just dealt gets a few seconds before it's called")
+        XCTAssertNotNil(vc.stuckBannerTimer)
+        vc.gameDealtDate = Date(timeIntervalSinceNow: -ViewController.stuckBannerDelay)
+        vc.updateNoMovesBanner()
+        XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
+        XCTAssertNil(vc.stuckBannerTimer)
+
+        // "Nothing to play" doesn't wait: it offers the deal
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts)])
+        vc.gameDealtDate = Date()
+        vc.updateNoMovesBanner()
+        XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "Nothing to play")
+    }
+
+    func testHintWigglesTheCardToMove() throws {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        let move = try XCTUnwrap(vc.findMove())
+        XCTAssertEqual(move.card.rank, 4)
+        XCTAssertTrue(move.to === vc.cardStacks[0], "the 4 of Hearts goes on the 5 of Spades")
+        vc.showHint()
+        XCTAssertNotNil(move.card.view.layer.animation(forKey: "hint"))
+        XCTAssertNil(vc.cardStacks[0]!.cards.last!.view.layer.animation(forKey: "hint"))
+    }
+
+    func testHintPointsAtTheDeckOrSaysThereAreNoMoves() throws {
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts), take(2, .Clubs), take(3, .Clubs)])
+        vc.showHint()
+        XCTAssertNotNil(vc.deck!.cards.last!.view.layer.animation(forKey: "hint"))
+
+        // Asking for a hint shows "No moves left" even with the banner turned off and the game just dealt
+        vc.showsNoMoves = false
+        setUpBoard(lower: deadLowerStacks())
+        vc.gameDealtDate = Date()
+        vc.showHint()
+        XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
+    }
+
+    func testDropHighlightIsOffByDefaultAndOnlyMarksValidSpots() throws {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        let four = try XCTUnwrap(vc.deal!.cards.last)
+        vc.activeCard            = four
+        vc.activeCardSourceStack = vc.deal
+        func hover(over stack: CardStack) {
+            four.view.frame = four.view.superview!.convert(stack.view.frame, from: vc.view)
+            vc.updateDropHighlight()
+        }
+        hover(over: vc.cardStacks[0]!)
+        XCTAssertNil(vc.dropHighlight, "off unless turned on in the menu")
+
+        let toggle = try XCTUnwrap(vc.menuBarButtonItem?.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Highlight Drop Spot" })
+        XCTAssertEqual(toggle.state, .off)
+        vc.highlightsDrops = true
+        hover(over: vc.cardStacks[0]!)
+        let highlight = try XCTUnwrap(vc.dropHighlight, "the 4 of Hearts can go on the 5 of Spades")
+        XCTAssertNotNil(highlight.superview)
+        hover(over: vc.cardStacks[1]!)
+        XCTAssertNil(vc.dropHighlight, "but not on the 5 of Hearts")
+        XCTAssertNil(highlight.superview)
+
+        hover(over: vc.cardStacks[0]!)
+        vc.endTouch(at: four.view.center)
+        XCTAssertNil(vc.dropHighlight, "dropping the card clears it")
     }
 
     func testCoveredBlindCardCantBePickedUp() {
