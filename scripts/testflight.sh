@@ -14,6 +14,9 @@
 # Without a key, signing and upload use your keychain and the account Xcode is signed in to.
 #
 # The build number defaults to the current date and time; set BUILD_NUMBER to override it.
+#
+# To send the build on to an external TestFlight group, set TESTFLIGHT_GROUP to the group's name (this needs the API
+# key).  Its "What to Test" notes come from WHATS_NEW, or the latest commit's subject if that isn't set.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -41,8 +44,9 @@ if [[ -n "${ASC_KEY_ID:-}" ]]; then
 fi
 
 # An unsigned archive doesn't record its team, so tell the export which one to sign for
-team=$(xcodebuild -project "Suze Solitaire.xcodeproj" -target "Suze Solitaire" -configuration Release -showBuildSettings 2>/dev/null \
-    | awk '$1 == "DEVELOPMENT_TEAM" { print $3 }')
+settings=$(xcodebuild -project "Suze Solitaire.xcodeproj" -target "Suze Solitaire" -configuration Release -showBuildSettings 2>/dev/null)
+team=$(awk '$1 == "DEVELOPMENT_TEAM" { print $3 }' <<< "$settings")
+bundle_id=$(awk '$1 == "PRODUCT_BUNDLE_IDENTIFIER" { print $3 }' <<< "$settings")
 
 mkdir -p build
 cat > build/ExportOptions.plist <<EOF
@@ -76,6 +80,10 @@ xcodebuild -exportArchive -archivePath "$archive" -exportPath "$export_dir" \
 
 if [[ "$destination" == upload ]]; then
     echo "Uploaded build $build_number.  It will appear in App Store Connect > TestFlight once processing finishes."
+    if [[ -n "${TESTFLIGHT_GROUP:-}" ]]; then
+        BUNDLE_ID="$bundle_id" scripts/testflight-distribute.py "$build_number" "$TESTFLIGHT_GROUP" \
+            "${WHATS_NEW:-$(git log -1 --format=%s)}"
+    fi
 else
     echo "Exported to $export_dir"
 fi
