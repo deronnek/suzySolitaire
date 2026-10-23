@@ -543,7 +543,14 @@ class ViewController: UIViewController {
         
         // Create cards and shuffle them
         self.createCards()
-        self.cards.shuffle()
+        // scripts/screenshots.sh passes -ScreenshotSeed so the App Store screenshots always show the same deal
+        if UserDefaults.standard.object(forKey: "ScreenshotSeed") != nil {
+            var generator = SeededGenerator(seed: UInt64(UserDefaults.standard.integer(forKey: "ScreenshotSeed")))
+            self.cards.shuffle(using: &generator)
+        }
+        else {
+            self.cards.shuffle()
+        }
         
         // Make sure the suitStack and cardStack arrays are clear (maybe this should be in startNewGame instead?)
         self.suitStacks.removeAll()
@@ -1340,5 +1347,22 @@ class ViewController: UIViewController {
 extension ViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         return self.doubleTapCouldPutUp(touch.view)
+    }
+}
+
+// A repeatable shuffle (SplitMix64), for screenshots
+struct SeededGenerator: RandomNumberGenerator {
+    var state: UInt64
+
+    init(seed: UInt64) {
+        self.state = seed
+    }
+
+    mutating func next() -> UInt64 {
+        self.state &+= 0x9E3779B97F4A7C15
+        var z = self.state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        return z ^ (z >> 31)
     }
 }

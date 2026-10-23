@@ -27,7 +27,8 @@ final class Suze_SolitaireTests: XCTestCase {
         ViewController.savedGameURL = FileManager.default.temporaryDirectory.appendingPathComponent("SavedGame-\(UUID().uuidString).json")
         Card.customBackImageURL     = FileManager.default.temporaryDirectory.appendingPathComponent("CardBack-\(UUID().uuidString).png")
         Card.customBackImage        = nil
-        UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
+        // Most tests exercise the banner, which a fresh install has turned off (see testHintsAreOffOnAFreshInstall)
+        UserDefaults.standard.set(true, forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         Card.isDark = false
         vc = try self.makeViewController()
@@ -643,6 +644,20 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.showsNoMoves = false
         XCTAssertNil(vc.noMovesBanner)
         XCTAssertEqual(try XCTUnwrap(vc.menuBarButtonItem?.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" }).state, .off)
+    }
+
+    func testHintsAreOffOnAFreshInstall() {
+        UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
+        XCTAssertFalse(vc.showsNoMoves)
+        XCTAssertFalse(vc.highlightsDrops)
+        setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts)])
+        vc.updateNoMovesBanner()
+        XCTAssertNil(vc.noMovesBanner)
+    }
+
+    func testSeededShuffleRepeats() {
+        var a = SeededGenerator(seed: 7), b = SeededGenerator(seed: 7)
+        XCTAssertEqual(Array(0..<52).shuffled(using: &a), Array(0..<52).shuffled(using: &b))
     }
 
     func testNoMovesLeftWaitsAfterTheDeal() {

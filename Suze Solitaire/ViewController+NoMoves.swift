@@ -7,7 +7,7 @@ import UIKit
 
 // After each turn, a banner points out when nothing on the table can be played: it offers to deal when a card the deck
 // would turn up can be played, and a new game when going through the whole deck wouldn't help either.  It can be
-// turned off in the "..." menu.  It goes away whenever cards are dealt, and waits a few seconds before coming back.
+// turned on in the "..." menu (it's off on a fresh install, like the other hints).  It goes away whenever cards are dealt, and waits a few seconds before coming back.
 extension ViewController {
 
     enum PlayState: Equatable {
@@ -25,7 +25,7 @@ extension ViewController {
 
     var showsNoMoves: Bool {
         get {
-            UserDefaults.standard.object(forKey: ViewController.showsNoMovesKey) as? Bool ?? true
+            UserDefaults.standard.object(forKey: ViewController.showsNoMovesKey) as? Bool ?? false
         }
         set {
             UserDefaults.standard.set(newValue, forKey: ViewController.showsNoMovesKey)
