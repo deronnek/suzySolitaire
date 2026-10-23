@@ -30,7 +30,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Most tests exercise the banner, which a fresh install has turned off (see testHintsAreOffOnAFreshInstall)
         UserDefaults.standard.set(true, forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
-        Card.isDark = false
+        CardStack.isDark = false
         vc = try self.makeViewController()
         vc.score  = -45
         vc.wins   = 0
@@ -42,7 +42,7 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: ViewController.savedGameURL)
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
-        Card.isDark          = false
+        CardStack.isDark     = false
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = nil
@@ -191,24 +191,19 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(vc.view.subviews.last, banner, "banners stay above the cards")
     }
 
-    func testDarkModeSwitchesTheCards() throws {
+    func testDarkModeDimsTheOutlinesButNotTheCards() throws {
         vc.redrawTable()
         let top   = try XCTUnwrap(vc.fub!.cards.last)
         let under = vc.fub!.cards[0]
         vc.overrideUserInterfaceStyle = .dark
         vc.applyAppearance()
-        XCTAssertTrue(top.view.image === top.faceImages.dark)
-        XCTAssertTrue(under.view.image === Card.blankFaceImages.dark)
-        XCTAssertTrue(vc.deck!.cards.last!.view.image === vc.deck!.cards.last!.backImage, "card backs don't change")
-        XCTAssertEqual(UIColor(cgColor: top.view.layer.borderColor!), Card.outlineColor)
-        // Cards dealt or turned over in dark mode come up dark too
-        vc.tapDeck()
-        XCTAssertTrue(vc.deal!.cards.last!.view.image === vc.deal!.cards.last!.faceImages.dark)
+        XCTAssertTrue(top.view.image === top.faceImage)
+        XCTAssertTrue(under.view.image === Card.blankFaceImage)
+        XCTAssertEqual(UIColor(cgColor: vc.cardStacks[0]!.outline.borderColor!), UIColor.white.withAlphaComponent(0.45))
 
         vc.overrideUserInterfaceStyle = .light
         vc.applyAppearance()
-        XCTAssertTrue(top.view.image === top.faceImages.light)
-        XCTAssertTrue(under.view.image === Card.blankFaceImages.light)
+        XCTAssertEqual(UIColor(cgColor: vc.cardStacks[0]!.outline.borderColor!), .white)
     }
 
     func testUpperStacksClearLowerStacks() {

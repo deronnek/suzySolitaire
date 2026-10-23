@@ -50,9 +50,10 @@ class CardStack: NSObject {
     let outline = CALayer()
     // How far apart cards in the blind (fub) and deal are fanned
     static let fannedSliceHeight = 5
-    // Softer on the dimmer dark-mode felt
+    // Softer on the dimmer dark-mode felt.  ViewController.applyAppearance sets isDark.
+    static var isDark = false
     static var outlineColor: UIColor {
-        Card.isDark ? UIColor.white.withAlphaComponent(0.45) : .white
+        CardStack.isDark ? UIColor.white.withAlphaComponent(0.45) : .white
     }
     
     init(type: cardStackType) {

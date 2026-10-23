@@ -60,20 +60,10 @@ class Card: NSObject {
     static let cornerRadiusFraction: CGFloat = 0.06
     static let shadowOpacity: Float = 0.35
     
-    // In dark mode cards use the "-dark" versions of their images (near-black faces, softer red, light gray for black
-    // suits) and a faint light outline instead of a dark one.  ViewController.applyAppearance sets this.
-    static var isDark = false
-    // The face color of the dark card images
-    static let darkFaceColor = UIColor(red: 30 / 255, green: 30 / 255, blue: 32 / 255, alpha: 1)
-    static var outlineColor: UIColor {
-        Card.isDark ? UIColor.white.withAlphaComponent(0.25) : UIColor.black.withAlphaComponent(0.8)
-    }
+    static let outlineColor = UIColor.black.withAlphaComponent(0.8)
 
     // A plain face, shown on covered cards in the blind and deal so their fanned edges don't give away rank or suit
-    static var blankFaceImage: UIImage {
-        Card.isDark ? Card.blankFaceImages.dark : Card.blankFaceImages.light
-    }
-    static let blankFaceImages = (light: Card.blankFace(.white), dark: Card.blankFace(Card.darkFaceColor))
+    static let blankFaceImage = Card.blankFace(.white)
 
     static func blankFace(_ color: UIColor) -> UIImage {
         let size   = CGSize(width: 500, height: 500 * Card.aspectRatio)
@@ -117,10 +107,7 @@ class Card: NSObject {
     var cardParent: Card? = nil
     var view       = UIImageView()
     var backImage  = UIImage()
-    var faceImages = (light: UIImage(), dark: UIImage())
-    var faceImage: UIImage {
-        Card.isDark ? self.faceImages.dark : self.faceImages.light
-    }
+    var faceImage  = UIImage()
     //var identifier =
     
     init(suit: cardSuit, rank: Int, faceImageFilename: String, backImageFilename: String, tag: Int) {
@@ -130,10 +117,8 @@ class Card: NSObject {
         self.backImageFilename = backImageFilename
         //self.zLocation         = zLocation
         
-        let faces = (light: UIImage(imageLiteralResourceName: faceImageFilename),
-                     dark:  UIImage(imageLiteralResourceName: faceImageFilename.replacingOccurrences(of: ".png", with: "-dark.png")))
-        self.faceImages = faces
-        self.view       = UIImageView(image: Card.isDark ? faces.dark : faces.light)
+        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
+        self.view      = UIImageView(image: self.faceImage)
         self.view.tag  = tag
         self.backImage = Card.customBackImage ?? UIImage(imageLiteralResourceName: backImageFilename)
       
@@ -183,18 +168,6 @@ class Card: NSObject {
         self.view.layer.shadowPath = UIBezierPath(roundedRect: rect, cornerRadius: self.view.layer.cornerRadius).cgPath
     }
     
-    // Switches a face-up card's image and outline to the current appearance (see Card.isDark)
-    func updateAppearance() {
-        let image = self.view.image
-        if image === self.faceImages.light || image === self.faceImages.dark {
-            self.view.image = self.faceImage
-        }
-        else if image === Card.blankFaceImages.light || image === Card.blankFaceImages.dark {
-            self.view.image = Card.blankFaceImage
-        }
-        self.view.layer.borderColor = Card.outlineColor.cgColor
-    }
-
     func cancelMove() {
         self.setPos(point: self.savedPos)
         self.cardParent?.cancelMove()
