@@ -142,7 +142,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // The bigger table, 24 points in
         vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 1180)
         vc.redrawTable()
-        XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, CGFloat(Int((820 - 48) / 8.2)))
+        XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, CGFloat(Int((820 - 48) / 7.6)))
     }
 
     func testLandscapeTableFitsOnScreen() {
@@ -277,6 +277,20 @@ final class Suze_SolitaireTests: XCTestCase {
         let newGame = try XCTUnwrap(vc.newGameBarButtonItem)
         XCTAssertNil(newGame.title)
         XCTAssertEqual(newGame.accessibilityLabel, "New Game")
+    }
+
+    func testScoreFollowsTheTextSize() throws {
+        func size(_ category: UIContentSizeCategory) throws -> CGFloat {
+            vc.traitOverrides.preferredContentSizeCategory = category
+            vc.updateChalk()
+            let font = try XCTUnwrap(vc.chalkLine.attributedText?.attribute(.font, at: 0, effectiveRange: nil) as? UIFont)
+            return font.pointSize
+        }
+        let standard = try size(.large)
+        XCTAssertEqual(standard, vc.roomyTable ? 24 : 17)
+        XCTAssertGreaterThan(try size(.extraExtraLarge), standard)
+        XCTAssertLessThan(try size(.extraSmall), standard)
+        XCTAssertEqual(try size(.accessibilityExtraExtraExtraLarge), standard * 2, "no more than twice as big")
     }
 
     func testHowToPlayIsInTheMenu() throws {

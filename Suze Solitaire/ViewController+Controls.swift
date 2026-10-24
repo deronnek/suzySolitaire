@@ -173,7 +173,7 @@ extension ViewController {
         self.toolbar.isHidden = true
         let line = self.chalkLine
         line.adjustsFontSizeToFitWidth = true
-        line.minimumScaleFactor = 0.6
+        line.minimumScaleFactor = 0.5
         line.translatesAutoresizingMaskIntoConstraints = false
         // Painted on the table, so under the cards
         self.view.insertSubview(line, at: 0)
@@ -188,6 +188,9 @@ extension ViewController {
         }
         NSLayoutConstraint.activate(placement)
         self.updateChalk()
+        self.registerForTraitChanges([UITraitPreferredContentSizeCategory.self]) { (vc: ViewController, _: UITraitCollection) in
+            vc.updateChalk()
+        }
     }
 
     // Writes the toolbar's numbers on the felt in Futura: the score in red when it's below zero
@@ -206,8 +209,10 @@ extension ViewController {
                 .shadow: shadow])
         }
         let titles = [bucks.title, wins.title, losses.title]
-        // Bigger on the bigger table
-        let size: CGFloat = self.roomyTable ? 24 : 17
+        // Bigger on the bigger table, and following the text size set in Settings, up to twice as big so it stays on
+        // the bottom row
+        let base: CGFloat = self.roomyTable ? 24 : 17
+        let size = min(UIFontMetrics(forTextStyle: .body).scaledValue(for: base, compatibleWith: self.traitCollection), base * 2)
         let line = NSMutableAttributedString(attributedString: chalk(titles[0], red: negative, size: size))
         for title in titles.dropFirst() {
             line.append(chalk("   " + (title ?? ""), size: size))
