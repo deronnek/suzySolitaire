@@ -468,30 +468,35 @@ class ViewController: UIViewController {
         return frames
     }
     
+    static let slideDuration: TimeInterval = 0.2
+
     // Lays out the table, then slides each card that moved from where it was (see cardFrames) to its new place
     func layOutAndSlide(from oldFrames: [Int: CGRect]) {
-        // Cards still sliding from the last move, such as when the deck is tapped quickly, jump to where they were going
-        for case let card? in self.viewTagToCard.values {
-            card.view.layer.removeAnimation(forKey: "position")
-            card.view.layer.removeAnimation(forKey: "bounds")
-        }
         self.redrawTable()
         if UIAccessibility.isReduceMotionEnabled {
             return
         }
-        for case let card? in self.viewTagToCard.values {
+        let moved = self.viewTagToCard.values.compactMap { $0 }.compactMap { card -> (Card, CGRect, CGRect)? in
             guard let superview = card.view.superview, let old = oldFrames[card.view.tag] else {
-                continue
+                return nil
             }
-            let end   = card.view.frame
             let start = superview.convert(old, from: self.view)
-            if start.origin == end.origin {
-                continue
+            return start.origin == card.view.frame.origin ? nil : (card, start, card.view.frame)
+        }
+        // Cards still sliding from the last move, such as when the deck is tapped quickly, jump to where they were
+        // going.  A layout that moves nothing, like the one at the end of each turn, leaves them to finish.
+        if !moved.isEmpty {
+            for case let card? in self.viewTagToCard.values {
+                card.view.layer.removeAnimation(forKey: "position")
+                card.view.layer.removeAnimation(forKey: "bounds")
             }
+        }
+        for (card, start, end) in moved {
+            let superview = card.view.superview!
             // Keep the moving card above the stacks it passes over
             self.view.bringSubviewToFront(superview)
             card.view.frame = start
-            UIView.animate(withDuration: 0.2, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+            UIView.animate(withDuration: ViewController.slideDuration, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
                 card.view.frame = end
             }
         }
@@ -1008,8 +1013,18 @@ class ViewController: UIViewController {
     // Deals up to three cards from the deck, or turns the deal back over when the deck is empty
     func tapDeck() {
         let frames = self.cardFrames()
+        let shown  = self.deal?.cards.last
         defer {
             self.layOutAndSlide(from: frames)
+            // The card on top of the deal keeps its face until the new cards slide over it, rather than going blank
+            // while they're still on their way
+            if let shown = shown, shown !== self.deal?.cards.last, self.viewTagToStack[shown.view.tag] ?? nil === self.deal,
+               !UIAccessibility.isReduceMotionEnabled {
+                shown.view.image = shown.faceImage
+                DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.slideDuration) { [weak self] in
+                    self?.deal?.updateFaces()
+                }
+            }
         }
         if self.deck!.cards.isEmpty {
             // tapped empty deck

@@ -795,6 +795,27 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(vc.doubleTapCouldPutUp(vc.cardStacks[0]!.cards.last!.view))
     }
 
+    func testTheEndOfTheTurnLetsTheDealSlide() throws {
+        try XCTSkipIf(UIAccessibility.isReduceMotionEnabled)
+        setUpBoard(lower: deadLowerStacks(), deck: (2...7).map { take($0, .Clubs) })
+        vc.tapDeck()
+        let dealt = try XCTUnwrap(vc.deal!.cards.last)
+        XCTAssertNotNil(dealt.view.layer.animation(forKey: "position"))
+        vc.finishTurn()
+        XCTAssertNotNil(dealt.view.layer.animation(forKey: "position"), "laying out again without moving anything doesn't cut it short")
+
+        // The card the new ones land on shows its face until they get there
+        let landedOn = try XCTUnwrap(vc.deal!.cards.last)
+        vc.tapDeck()
+        XCTAssertTrue(landedOn.view.image === landedOn.faceImage)
+        let covered = expectation(description: "covered once the slide is over")
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.slideDuration + 0.1) {
+            XCTAssertTrue(landedOn.view.image === Card.blankFaceImage)
+            covered.fulfill()
+        }
+        wait(for: [covered], timeout: 2)
+    }
+
     func testDealingAgainFinishesTheLastDealsSlide() throws {
         setUpBoard(lower: deadLowerStacks(), deck: (2...7).map { take($0, .Clubs) })
         let first = try XCTUnwrap(vc.deck!.cards.last)
