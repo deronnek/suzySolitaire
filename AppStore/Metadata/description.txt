@@ -6,6 +6,7 @@ PLAY YOUR WAY
 • Drag cards and runs, or double-tap a card to send it to an upper stack
 • Tap anywhere on the table to deal
 • Undo your last move, or undo New Game if you tapped it by mistake
+• Unlimited Undo, an optional in-app purchase, takes back as many moves as you like, even auto moves
 • Auto Moves puts cards up for you as soon as they can go
 • Ask for a Hint when you're stuck
 
@@ -21,4 +22,4 @@ MADE FOR YOUR DEVICE
 • Full VoiceOver support, with actions to select and move cards
 • Your game, score, wins and losses are saved automatically
 
-No ads, no accounts, no in-app purchases, and no data collected. Your game never leaves your device.
+No ads, no accounts, and no data collected. Your game never leaves your device.

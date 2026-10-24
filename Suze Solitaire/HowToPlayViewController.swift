@@ -11,7 +11,7 @@ class HowToPlayViewController: UIViewController {
     static let rules = [
         "Cards must alternate colors in the lower four stacks and count down.",
         "Cards must be of the same suit in the upper four stacks and count up.",
-        "Click on the deck to get three cards at a time.",
+        "Tap the deck to get three cards at a time.",
         "There are 13 face-up cards above the deck (the \"blind\").",
         "A King is \"below\" an Ace, and a Two is \"above\" an Ace.",
         "Upper stacks must start with the card dealt.",
@@ -20,7 +20,7 @@ class HowToPlayViewController: UIViewController {
         "$5 is awarded for each card placed in an upper stack.",
         "Winning the game gains you $250.",
         "Auto moves any available card to an upper stack.",
-        "Auto actions *cannot* be undone.",
+        "Auto moves *cannot* be undone, unless you have Unlimited Undo.",
     ]
 
     let textView = UITextView()
