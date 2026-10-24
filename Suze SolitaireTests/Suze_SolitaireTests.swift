@@ -1271,7 +1271,12 @@ final class Suze_SolitaireTests: XCTestCase {
         session.disableDialogs = true
         session.clearTransactions()
         let store = UndoStore()
-        let loaded = await store.loadProduct()
+        // The test session can take a moment to start serving its products
+        var loaded = await store.loadProduct()
+        for _ in 0..<20 where loaded == nil {
+            try await Task.sleep(for: .milliseconds(100))
+            loaded = await store.loadProduct()
+        }
         let product = try XCTUnwrap(loaded)
         XCTAssertEqual(product.displayName, "Unlimited Undo")
         XCTAssertFalse(store.isPurchased)
