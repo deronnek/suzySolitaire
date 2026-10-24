@@ -93,8 +93,8 @@ class TableLayoutTest {
         for ((name, t) in windows) {
             // A full run, King down to Ace
             val long = t.stackBox(Spot.lower(0), 13)
-            // In landscape the lower stacks run down beside the menu button, to the bottom of the screen
-            val bottom = if (t.landscape) t.height - t.insets.bottom else t.tableBottom
+            // In a phone's landscape the lower stacks run down beside the menu button, to the bottom of the screen
+            val bottom = if (t.landscape && !t.roomy) t.height - t.insets.bottom else t.tableBottom
             assertTrue("$name: ${long.bottom} vs $bottom", long.bottom <= bottom + 0.5f)
             assertFalse("$name: a long stack runs into the menu button", long.intersects(t.menu))
             val blind = t.stackBox(Spot.Blind, 13)
@@ -109,7 +109,13 @@ class TableLayoutTest {
             val banner = t.banner(minOf(300f, t.bannerMaxWidth))
             assertFalse("$name: banner over the menu button", banner.intersects(t.menu))
             assertFalse("$name: banner over the score", banner.intersects(t.score))
-            assertTrue(name, banner.bottom <= t.menu.top)
+            if (t.landscape && t.roomy) {
+                assertEquals("$name: banner level with the menu button", t.menu.centerY, banner.centerY, 0.01f)
+                assertTrue("$name: banner beside the score", banner.left > t.score.right)
+            }
+            else {
+                assertTrue(name, banner.bottom <= t.menu.top)
+            }
             for (spot in Spot.all) {
                 assertFalse("$name: banner over $spot", banner.intersects(t.outline(spot)))
             }

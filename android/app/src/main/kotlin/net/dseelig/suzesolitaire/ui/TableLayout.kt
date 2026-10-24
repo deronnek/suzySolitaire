@@ -26,10 +26,12 @@ data class Insets(val left: Float = 0f, val top: Float = 0f, val right: Float = 
 // - Portrait: the blind over the deck and deal on the left, the four upper stacks over the four lower ones on the right,
 //   lined up with the outer edges of New Game and Undo.
 // - Landscape: two long rows between New Game and Undo, starting level with them: the blind, deck and deal, then the upper
-//   stacks; and the lower stacks below the upper ones, running down to the bottom of the screen beside the menu button.
-//   The score and the banner go in the bottom left corner, under the blind, deck and deal.
+//   stacks; and the lower stacks below the upper ones.  On a tablet, as on the iPad, the cards stop above the row of the
+//   score and menu button, and the banner goes in that row, beside the menu button.  A phone needs more room to read its
+//   lower stacks than the iPhone layout gives them, so they run down to the bottom of the screen beside the menu button,
+//   and the score and the banner go in the bottom left corner, under the blind, deck and deal.
 // - A roomy window (600dp or more both ways: a tablet, or a foldable unfolded) gets bigger buttons and margins, the large
-//   card art, and cards a little closer together; anything smaller gets the phone layout.
+//   card art, cards a little closer together, and stacks fanned a fixed 30dp; anything smaller gets the phone layout.
 class TableLayout(val width: Float, val height: Float, val insets: Insets = Insets()) {
     val roomy = min(width, height) >= 600f
     val landscape = width > height
@@ -71,10 +73,10 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
             val top = undo.top
             val left = newGame.right + 16f
             val right = undo.left - 16f
-            lowerBottom = height - max(insets.bottom + 4f, 12f)
-            tableBottom = portraitBottom
+            tableBottom = if (roomy) menu.top - 8f else portraitBottom
+            lowerBottom = if (roomy) tableBottom else height - max(insets.bottom + 4f, 12f)
             // Two rows of cards, the upper stacks' starters peeking out, and room to fan the lower stacks
-            var h = (lowerBottom - top) / 3.4f
+            var h = (lowerBottom - top) / (if (roomy) 2.8f else 3.4f)
             var w = h / ASPECT
             var gap = w / (if (roomy) 8f else 5f)
             val stacksGap = if (roomy) 0.4f else 0.6f
@@ -85,8 +87,8 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
             }
             val rowLeft = left + (right - left - rowWidth()) / 2
             // Enough of the upper stacks' first card shows to read it, and of each card in a lower stack
-            val peek = if (roomy) h * 0.15f else h * 0.3f
-            val second = top + h + max(peek, if (roomy) 30f else 0f) + h * 0.08f
+            val peek = if (roomy) ROOMY_SLICE else h * 0.3f
+            val second = top + h + peek + h * (if (roomy) 0.1f else 0.08f)
             spots[Spot.Blind] = rowLeft to top
             spots[Spot.Deck] = rowLeft + w + gap to top
             spots[Spot.Deal] = rowLeft + 2 * (w + gap) to top
@@ -96,9 +98,10 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
                 spots[Spot.lower(i)] = stacksLeft + i * (w + gap) to second
             }
             cardWidth = w; cardHeight = h
-            // The large art's corner index takes about a fifth of the card
-            baseSlice = if (roomy) h * 0.22f else peek
-            score = Box(buttonsLeft + 4f, menu.top, max(0f, stacksLeft - 16f - buttonsLeft - 4f), buttonSize)
+            baseSlice = peek
+            // On a tablet the score leaves the rest of the row to the banner
+            val scoreRight = if (roomy) min(buttonsLeft + 4f + ROOMY_SCORE_WIDTH, menu.left - 16f) else stacksLeft - 16f
+            score = Box(buttonsLeft + 4f, menu.top, max(0f, scoreRight - buttonsLeft - 4f), buttonSize)
         }
         else {
             val left = newGame.left
@@ -118,7 +121,7 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
                 spots[Spot.lower(i)] = x to second
             }
             cardWidth = w; cardHeight = h
-            baseSlice = if (roomy) h * 0.22f else h / 2.5f
+            baseSlice = if (roomy) ROOMY_SLICE else h / 2.5f
             tableBottom = portraitBottom
             lowerBottom = portraitBottom
             score = Box(buttonsLeft + 4f, menu.top, max(0f, menu.left - 16f - buttonsLeft - 4f), buttonSize)
@@ -165,12 +168,20 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
     }
 
     // How wide the banner may be
-    val bannerMaxWidth: Float get() = if (landscape) score.width else width - 32f
+    val bannerMaxWidth: Float get() = when {
+        landscape && roomy -> max(0f, menu.left - BANNER_SPACING - score.right - BANNER_SPACING)
+        landscape -> score.width
+        else -> width - 32f
+    }
 
-    // Where the "nothing to play" banner goes: centered just above the menu button and the score in portrait, or in
-    // landscape above the score, in the corner the blind, deck and deal leave free
+    // Where the "nothing to play" banner goes: centered just above the menu button and the score in portrait; in a
+    // tablet's landscape beside the menu button, level with it; or in a phone's landscape above the score, in the corner
+    // the blind, deck and deal leave free
     fun banner(bannerWidth: Float): Box =
-        if (landscape) {
+        if (landscape && roomy) {
+            Box(menu.left - BANNER_SPACING - bannerWidth, menu.centerY - BANNER_HEIGHT / 2, bannerWidth, BANNER_HEIGHT)
+        }
+        else if (landscape) {
             Box(score.left, menu.top - BANNER_SPACING - BANNER_HEIGHT, bannerWidth, BANNER_HEIGHT)
         }
         else {
@@ -185,5 +196,9 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
         const val FANNED_SLICE = 5f
         const val BANNER_HEIGHT = 48f
         const val BANNER_SPACING = 8f
+        // How far apart a roomy table fans its stacks, as the iPad does
+        const val ROOMY_SLICE = 30f
+        // Room for the score, wins and losses beside the banner in a tablet's landscape
+        const val ROOMY_SCORE_WIDTH = 360f
     }
 }
