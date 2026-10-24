@@ -1,0 +1,13 @@
+// Signing and version settings for the Suze Solitaire app target.
+//
+// To build under your own Apple Developer team (e.g. for TestFlight), create Signing.local.xcconfig next to this
+// file and override DEVELOPMENT_TEAM and PRODUCT_BUNDLE_IDENTIFIER there.  That file is git-ignored.
+
+DEVELOPMENT_TEAM          = V28C6CTDW9
+PRODUCT_BUNDLE_IDENTIFIER = kdr-alternate.Suze-Solitaire
+
+// CFBundleShortVersionString and CFBundleVersion.  scripts/testflight.sh overrides the build number on each upload.
+MARKETING_VERSION         = 1.01
+CURRENT_PROJECT_VERSION   = 1
+
+#include? "Signing.local.xcconfig"
