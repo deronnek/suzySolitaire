@@ -186,6 +186,10 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         // The view's traits aren't settled in viewDidLoad, so cards could be dealt in the wrong appearance
         self.applyAppearance()
+        // scripts/layout-screenshots.sh passes -ScreenshotOrientation landscape to see the landscape layout
+        if UserDefaults.standard.string(forKey: "ScreenshotOrientation") == "landscape" {
+            self.view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+        }
         if self.doInitTable {
             if let saved = self.loadSavedGame() {
                 print("Restoring saved game")
