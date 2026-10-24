@@ -51,8 +51,10 @@ extension ViewController {
     var canUndo: Bool {
         get { self.undoBarButtonItem.isEnabled }
         set {
-            self.undoBarButtonItem.isEnabled = newValue
-            self.undoButton.isEnabled = newValue
+            // With Unlimited Undo, whenever there's a turn to take back
+            let enabled = self.hasUnlimitedUndo ? !self.undoHistory.isEmpty : newValue
+            self.undoBarButtonItem.isEnabled = enabled
+            self.undoButton.isEnabled = enabled
         }
     }
 

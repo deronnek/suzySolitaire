@@ -3,6 +3,7 @@
 //  Suze SolitaireTests
 //
 
+import StoreKitTest
 import XCTest
 @testable import Suze_Solitaire
 
@@ -1180,5 +1181,125 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertFalse(restored.restoreBoard(board, suitStackStarter: 1))
         XCTAssertNil(restored.fub)
         XCTAssertTrue(restored.suitStacks.isEmpty)
+    }
+
+    // MARK: Unlimited Undo
+
+    func testWithoutUnlimitedUndoOnlyTheLastTurnCanBeUndone() {
+        let start = allStacks(vc).map(tags)
+        vc.tapDeck()
+        let afterOne = allStacks(vc).map(tags)
+        vc.tapDeck()
+        vc.undoMove(self)
+        XCTAssertEqual(allStacks(vc).map(tags), afterOne)
+        XCTAssertFalse(vc.canUndo, "only one undo")
+        XCTAssertNotEqual(allStacks(vc).map(tags), start)
+    }
+
+    func testUnlimitedUndoStepsBackEveryTurn() {
+        vc.hasUnlimitedUndo = true
+        XCTAssertFalse(vc.canUndo, "nothing to undo yet")
+        var tables = [allStacks(vc).map(tags)]
+        for _ in 0..<4 {
+            vc.tapDeck()
+            vc.finishTurn()
+            tables.append(allStacks(vc).map(tags))
+        }
+        for table in tables.dropLast().reversed() {
+            XCTAssertTrue(vc.canUndo)
+            vc.undoMove(self)
+            XCTAssertEqual(allStacks(vc).map(tags), table)
+        }
+        XCTAssertFalse(vc.canUndo, "back to the start")
+    }
+
+    func testUnlimitedUndoTakesBackAutoMovesWithTheTurn() throws {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)], fub: [take(1, .Clubs)])
+        // Snapshots are of whole games, so the rest of the cards go in the deck
+        let placed = Set(allStacks(vc).flatMap(tags))
+        for card in vc.viewTagToCard.values.compactMap({ $0 }).filter({ !placed.contains($0.view.tag) }).sorted(by: { $0.view.tag < $1.view.tag }) {
+            card.cardParent = nil
+            vc.deck!.addCard(toadd: card)
+            vc.viewTagToStack[card.view.tag] = vc.deck
+        }
+        vc.score = 10
+        vc.autoMoves = true
+        vc.hasUnlimitedUndo = true
+        let before = allStacks(vc).map(tags)
+        vc.performMove(card: try XCTUnwrap(vc.deal!.cards.last), from: vc.deal!, to: vc.cardStacks[0]!)
+        vc.finishTurn()
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 1, "the ace went up by itself")
+        XCTAssertTrue(vc.canUndo, "auto moves don't use up the undo")
+        vc.undoMove(self)
+        XCTAssertEqual(allStacks(vc).map(tags), before)
+        XCTAssertEqual(vc.score, 10, "the ace's money is taken back too")
+    }
+
+    func testUnlimitedUndoBringsBackTheLastGameOnlyRightAfterNewGame() {
+        vc.hasUnlimitedUndo = true
+        vc.tapDeck()
+        let beforeNewGame = allStacks(vc).map(tags)
+        vc.startNewGameWithSender(sender: self)
+        vc.undoMove(self)
+        XCTAssertEqual(allStacks(vc).map(tags), beforeNewGame)
+        XCTAssertEqual(vc.losses, 0, "the loss New Game cost is taken back")
+        XCTAssertEqual(vc.score, -45)
+        XCTAssertTrue(vc.canUndo, "and the turns before it")
+
+        // Once the new game is under way, undo stops at its start
+        vc.startNewGameWithSender(sender: self)
+        let newGame = allStacks(vc).map(tags)
+        vc.tapDeck()
+        vc.undoMove(self)
+        XCTAssertEqual(allStacks(vc).map(tags), newGame)
+        XCTAssertFalse(vc.canUndo)
+        XCTAssertEqual(vc.losses, 1)
+    }
+
+    func testWinningEndsUnlimitedUndo() {
+        vc.hasUnlimitedUndo = true
+        vc.tapDeck()
+        XCTAssertTrue(vc.canUndo)
+        vc.runVictory()
+        XCTAssertFalse(vc.canUndo)
+        vc.startNewGameWithSender(sender: self)
+        XCTAssertFalse(vc.canUndo, "a won game can't be brought back")
+    }
+
+    func testBuyingUnlimitedUndoTurnsItOn() async throws {
+        let session = try SKTestSession(configurationFileNamed: "Products")
+        session.disableDialogs = true
+        session.clearTransactions()
+        let store = UndoStore()
+        let loaded = await store.loadProduct()
+        let product = try XCTUnwrap(loaded)
+        XCTAssertEqual(product.displayName, "Unlimited Undo")
+        XCTAssertFalse(store.isPurchased)
+
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.first)
+        let outcome = await store.purchase(confirmIn: scene)
+        XCTAssertEqual(outcome, .purchased)
+        XCTAssertTrue(store.isPurchased)
+
+        // A refund turns it off again
+        let transaction = try XCTUnwrap(session.allTransactions().first)
+        try session.refundTransaction(identifier: UInt(transaction.identifier))
+        // The refund can take a moment to reach the entitlements
+        for _ in 0..<50 where store.isPurchased {
+            await store.refresh()
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        XCTAssertFalse(store.isPurchased)
+    }
+
+    func testTheMenuOffersUnlimitedUndoUntilItsBought() throws {
+        func titles() throws -> [String] {
+            let menu = try XCTUnwrap(vc.menuButton.menu)
+            let section = try XCTUnwrap(menu.children.compactMap { $0 as? UIMenu }.first { $0.children.contains { $0.title == "Unlimited Undo" } })
+            return section.children.map { $0.title }
+        }
+        XCTAssertEqual(try titles(), ["Unlimited Undo", "Restore Purchase"])
+        vc.hasUnlimitedUndo = true
+        XCTAssertEqual(try titles(), ["Unlimited Undo"])
     }
 }

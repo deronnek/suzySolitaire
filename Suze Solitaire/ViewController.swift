@@ -112,6 +112,18 @@ class ViewController: UIViewController {
     var activeCardSourceStack:      CardStack? = nil
     // Until the first move or deal after New Game, the game Undo would bring back (see ViewController+NewGameUndo.swift)
     var gameBeforeNewGame: SavedGame? = nil
+    // The table before each turn this session, oldest first, for Unlimited Undo (see ViewController+UnlimitedUndo.swift)
+    var undoHistory = [SavedGame]() {
+        didSet {
+            self.refreshUndo()
+        }
+    }
+    var hasUnlimitedUndo = false {
+        didSet {
+            self.refreshUndo()
+            self.updateMenu()
+        }
+    }
     // The banner saying there's nothing to play (see ViewController+NoMoves.swift)
     var noMovesBanner: UIView? = nil
     // When cards were last dealt, by a new game or the deck, and the timer that shows the no-moves banner once it's been a
@@ -178,6 +190,8 @@ class ViewController: UIViewController {
         self.newGameBarButtonItem.title = nil
         self.newGameBarButtonItem.image = UIImage(systemName: "arrow.triangle.2.circlepath")
         self.newGameBarButtonItem.accessibilityLabel = "New Game"
+        self.hasUnlimitedUndo = UndoStore.shared.isPurchased
+        NotificationCenter.default.addObserver(self, selector: #selector(self.unlimitedUndoChanged), name: UndoStore.changedNotification, object: nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -417,6 +431,7 @@ class ViewController: UIViewController {
         
         self.gameBeforeNewGame = nil
         if let previousGame = previousGame {
+            self.undoHistory.append(previousGame)
             self.offerNewGameUndo(restoring: previousGame)
         }
         self.updateNoMovesBanner()
@@ -424,8 +439,13 @@ class ViewController: UIViewController {
     
     // The storyboard connects the undo button to undoMove:, so the parameter must be unlabeled
     @IBAction func undoMove(_ sender: Any) {
-        // You only get one undo
+        if self.hasUnlimitedUndo {
+            self.undoTurn()
+            return
+        }
+        // You only get one undo, which takes the table back to before the last turn
         self.canUndo = false
+        _ = self.undoHistory.popLast()
         if self.gameBeforeNewGame != nil {
             self.undoNewGame()
             return
@@ -456,6 +476,7 @@ class ViewController: UIViewController {
     
     // Moves a card, and any cards on top of it, and remembers the move so it can be undone
     func performMove(card: Card, from source: CardStack, to destination: CardStack) {
+        self.recordTurn()
         let frames = self.cardFrames()
         let countBefore = destination.cards.count
         self.moveCardBetweenStacks(cardToMove: card, sourceStack: source, destinationStack: destination)
@@ -1016,6 +1037,7 @@ class ViewController: UIViewController {
     
     // Deals up to three cards from the deck, or turns the deal back over when the deck is empty
     func tapDeck() {
+        self.recordTurn()
         let frames = self.cardFrames()
         let shown  = self.deal?.cards.last
         defer {
@@ -1180,6 +1202,8 @@ class ViewController: UIViewController {
             self.activeCard = nil
             self.score += 250
             self.wins += 1
+            // A won game is over, so there's nothing to go back to
+            self.undoHistory.removeAll()
             self.canUndo = false
             
             // Visual "reward" for winning

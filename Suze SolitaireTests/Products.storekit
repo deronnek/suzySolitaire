@@ -1,0 +1,33 @@
+{
+  "identifier" : "5F7B2C41",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "5.00",
+      "familyShareable" : true,
+      "internalID" : "6743118201",
+      "localizations" : [
+        {
+          "description" : "Undo as many moves as you like, even auto moves.",
+          "displayName" : "Unlimited Undo",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "unlimited_undo",
+      "referenceName" : "Unlimited Undo",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
