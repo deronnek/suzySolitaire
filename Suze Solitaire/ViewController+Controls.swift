@@ -6,7 +6,7 @@
 import UIKit
 
 // The table's buttons keep to its corners in every layout, all the same size: New Game at the top left, Undo at the top
-// right, and the "..." menu at the bottom right, under Undo.  The score, wins and losses are chalked on the felt along the
+// right, and the "..." menu at the bottom right, under Undo.  The score, wins and losses are written on the felt along the
 // bottom rather than shown as buttons, since they only show the numbers.  iPhone Duo folded is the exception: the system
 // puts the navigation bar's New Game and Undo in a strip down the side of the screen, so the "..." button goes at the
 // bottom of that strip.  redrawTable keeps the cards clear of all of them.
@@ -190,7 +190,7 @@ extension ViewController {
         self.updateChalk()
     }
 
-    // Chalks the toolbar's numbers on the felt: the score in red chalk when it's below zero
+    // Writes the toolbar's numbers on the felt in Futura: the score in red when it's below zero
     func updateChalk() {
         guard let bucks = self.bucksBarButtonItem, let wins = self.winsBarButtonItem, let losses = self.lossesBarButtonItem else {
             return
@@ -200,9 +200,10 @@ extension ViewController {
         shadow.shadowColor      = UIColor.white.withAlphaComponent(0.35)
         shadow.shadowBlurRadius = 1.5
         func chalk(_ string: String?, red: Bool = false, size: CGFloat) -> NSAttributedString {
-            let color = red ? UIColor(red: 1, green: 0.62, blue: 0.6, alpha: 0.92) : UIColor.white.withAlphaComponent(0.88)
-            return NSAttributedString(string: string ?? "", attributes: [
-                .font: UIFont(name: "Chalkduster", size: size) ?? .systemFont(ofSize: size), .foregroundColor: color, .shadow: shadow])
+            NSAttributedString(string: string ?? "", attributes: [
+                .font: UIFont(name: "Futura-Medium", size: size) ?? .systemFont(ofSize: size, weight: .medium),
+                .foregroundColor: red ? UIColor(red: 1, green: 0.62, blue: 0.6, alpha: 0.92) : UIColor.white.withAlphaComponent(0.88),
+                .shadow: shadow])
         }
         let titles = [bucks.title, wins.title, losses.title]
         // Bigger on the bigger table

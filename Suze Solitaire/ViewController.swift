@@ -46,7 +46,7 @@ class ViewController: UIViewController {
     lazy var newGameButton = self.makeCornerButton(symbol: "arrow.triangle.2.circlepath", label: "New Game") { [unowned self] in self.startNewGameWithSender(sender: self) }
     lazy var undoButton    = self.makeCornerButton(symbol: "arrow.uturn.backward", label: "Undo") { [unowned self] in self.undoMove(self) }
     lazy var menuButton    = self.makeMenuButton()
-    // The score, wins and losses chalked on the felt beside the "..." button
+    // The score, wins and losses written on the felt beside the "..." button
     let chalkLine = UILabel()
     // The size the table was last laid out for (see viewDidLayoutSubviews)
     var laidOutSize = CGSize.zero

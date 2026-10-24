@@ -46,43 +46,19 @@ class CardStack: NSObject {
     var baseSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
-    // The card-sized outline of the stack's spot, chalked on the felt like the score: under its cards, so it shows
-    // whenever they're moved off it.  It's a chalk texture with gaps worn into it, showing through a straight
-    // rounded-rectangle stroke with clumps of chalk along its edges.
+    // The card-sized outline of the stack's spot, drawn on the felt: under its cards, so it shows whenever they're moved
+    // off it.  It's the outline color showing through a rounded-rectangle stroke.
     let outline = CALayer()
     let outlineStroke = CAShapeLayer()
-    let outlineClumps = [CAShapeLayer(), CAShapeLayer(), CAShapeLayer(), CAShapeLayer()]
     // How far apart cards in the blind (fub) and deal are fanned
     static let fannedSliceHeight = 5
     // Softer on the dimmer dark-mode felt.  ViewController.applyAppearance sets isDark.
     static var isDark = false
     static var outlineColor: CGColor {
-        CardStack.isDark ? CardStack.darkChalk : CardStack.lightChalk
+        CardStack.isDark ? CardStack.darkOutline : CardStack.lightOutline
     }
-    static let lightChalk = CardStack.chalk(alpha: 1).cgColor
-    static let darkChalk  = CardStack.chalk(alpha: 0.6).cgColor
-
-    // Chalk: solid white, worn through in small irregular spots, the same every launch
-    static func chalk(alpha: CGFloat) -> UIColor {
-        var generator = SeededGenerator(seed: 52)
-        let format = UIGraphicsImageRendererFormat()
-        format.scale  = 2
-        format.opaque = false
-        let size  = CGFloat(64)
-        let image = UIGraphicsImageRenderer(size: CGSize(width: size, height: size), format: format).image { context in
-            UIColor.white.withAlphaComponent(alpha).setFill()
-            context.fill(CGRect(x: 0, y: 0, width: size, height: size))
-            context.cgContext.setBlendMode(.clear)
-            for _ in 0..<1800 {
-                let x = CGFloat.random(in: 0..<size, using: &generator)
-                let y = CGFloat.random(in: 0..<size, using: &generator)
-                let w = CGFloat.random(in: 0.3...1.4, using: &generator)
-                let h = CGFloat.random(in: 0.3...1.1, using: &generator)
-                context.cgContext.fillEllipse(in: CGRect(x: x, y: y, width: w, height: h))
-            }
-        }
-        return UIColor(patternImage: image)
-    }
+    static let lightOutline = UIColor.white.cgColor
+    static let darkOutline  = UIColor.white.withAlphaComponent(0.6).cgColor
     
     init(type: cardStackType) {
 //        var point = CGPoint(x: x, y: y)
@@ -109,32 +85,8 @@ class CardStack: NSObject {
         self.stackType = type
         self.outlineStroke.fillColor   = nil
         self.outlineStroke.strokeColor = UIColor.black.cgColor
-        self.outlineStroke.lineWidth   = 1
-        // Lumps of chalk of different sizes along the line make its edges ragged: a few wide ones far apart, more
-        // middling ones, and lots of small ones, at irregular lengths so they don't repeat in a pattern
-        var generator = SeededGenerator(seed: 7)
-        // The further out from the line, the fainter, so the chalk fades away at its edges
-        let clumps: [(width: CGFloat, dash: ClosedRange<CGFloat>, gap: ClosedRange<CGFloat>, cap: CAShapeLayerLineCap, opacity: Float)] = [
-            (2.5, 0.4...2.2, 2...7, .round, 0.6),
-            (2, 0.6...3.5, 0.8...3, .round, 0.8),
-            (1.7, 0.2...1, 0.2...1.2, .butt, 0.9),
-            // Stray flecks just off the line
-            (3.4, 0.2...0.6, 0.6...3, .butt, 0.35),
-        ]
-        let mask = CALayer()
-        mask.addSublayer(self.outlineStroke)
-        for (layer, clump) in zip(self.outlineClumps, clumps) {
-            layer.fillColor   = nil
-            layer.strokeColor = UIColor.black.cgColor
-            layer.lineWidth   = clump.width
-            layer.lineCap     = clump.cap
-            layer.opacity     = clump.opacity
-            layer.lineDashPattern = (0..<40).map { i in
-                NSNumber(value: Double(CGFloat.random(in: i % 2 == 0 ? clump.dash : clump.gap, using: &generator)))
-            }
-            mask.addSublayer(layer)
-        }
-        self.outline.mask = mask
+        self.outlineStroke.lineWidth   = 2
+        self.outline.mask = self.outlineStroke
         self.outline.backgroundColor = CardStack.outlineColor
         self.view.layer.insertSublayer(self.outline, at: 0)
     }
@@ -155,11 +107,8 @@ class CardStack: NSObject {
         let radius = CGFloat(width) * Card.cornerRadiusFraction
         let path = UIBezierPath(roundedRect: bounds.insetBy(dx: 1.8, dy: 1.8), cornerRadius: radius).cgPath
         self.outline.frame = bounds
-        self.outline.mask?.frame = bounds
-        for layer in [self.outlineStroke] + self.outlineClumps {
-            layer.frame = bounds
-            layer.path  = path
-        }
+        self.outlineStroke.frame = bounds
+        self.outlineStroke.path  = path
         CATransaction.commit()
         // Make stacking tighter in the iPhone-style layout
         if self.stackType == .suitstack || self.stackType == .cardstack {

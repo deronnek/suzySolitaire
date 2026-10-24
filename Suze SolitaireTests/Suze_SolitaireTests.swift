@@ -123,7 +123,7 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.redrawTable()
         for stack in allStacks(vc) {
             let outline = stack!.outline
-            XCTAssertNotNil(stack!.outlineStroke.path, "chalked around the spot")
+            XCTAssertNotNil(stack!.outlineStroke.path, "drawn around the spot")
             XCTAssertTrue(outline.superlayer === stack!.view.layer)
             XCTAssertEqual(stack!.view.layer.sublayers?.first, outline, "under the cards")
             XCTAssertEqual(outline.frame.size, vc.cardStacks[0]!.cards[0].view.frame.size)
@@ -267,10 +267,10 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.losses = 1
         XCTAssertEqual(vc.chalkLine.text, "$-45   Wins: 2   Losses: 1")
         XCTAssertEqual(vc.chalkLine.accessibilityLabel, "$-45, Wins: 2, Losses: 1")
-        XCTAssertEqual(vc.chalkLine.font.fontName, "Chalkduster")
+        XCTAssertEqual(vc.chalkLine.font.fontName, "Futura-Medium")
         let red = try XCTUnwrap(vc.chalkLine.attributedText?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor)
         let white = try XCTUnwrap(vc.chalkLine.attributedText?.attribute(.foregroundColor, at: 8, effectiveRange: nil) as? UIColor)
-        XCTAssertNotEqual(red, white, "a score below zero is in red chalk")
+        XCTAssertNotEqual(red, white, "a score below zero is in red")
         XCTAssertTrue(vc.view.subviews.first === vc.chalkLine, "painted on the table, under the cards")
         XCTAssertEqual([vc.bucksBarButtonItem, vc.winsBarButtonItem, vc.lossesBarButtonItem].map { $0!.isHidden }, [true, true, true])
         // New Game is a plus, still named for VoiceOver, on the table and in iPhone Duo's strip
@@ -293,11 +293,11 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.applyAppearance()
         XCTAssertTrue(top.view.image === top.faceImage)
         XCTAssertTrue(under.view.image === Card.blankFaceImage)
-        XCTAssertTrue(vc.cardStacks[0]!.outline.backgroundColor === CardStack.darkChalk)
+        XCTAssertTrue(vc.cardStacks[0]!.outline.backgroundColor === CardStack.darkOutline)
 
         vc.overrideUserInterfaceStyle = .light
         vc.applyAppearance()
-        XCTAssertTrue(vc.cardStacks[0]!.outline.backgroundColor === CardStack.lightChalk)
+        XCTAssertTrue(vc.cardStacks[0]!.outline.backgroundColor === CardStack.lightOutline)
     }
 
     func testUpperStacksClearLowerStacks() {
