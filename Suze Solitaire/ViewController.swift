@@ -1018,13 +1018,14 @@ class ViewController: UIViewController {
         let shown  = self.deal?.cards.last
         defer {
             self.layOutAndSlide(from: frames)
-            // The card on top of the deal keeps its face until the new cards slide over it, rather than going blank
-            // while they're still on their way
+            // The card on top of the deal fades to blank while the new cards slide over it, rather than going blank
+            // before they're on their way or still showing its rank once they've landed
             if let shown = shown, shown !== self.deal?.cards.last, self.viewTagToStack[shown.view.tag] ?? nil === self.deal,
                !UIAccessibility.isReduceMotionEnabled {
                 shown.view.image = shown.faceImage
-                DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.slideDuration) { [weak self] in
-                    self?.deal?.updateFaces()
+                UIView.transition(with: shown.view, duration: ViewController.slideDuration,
+                                  options: [.transitionCrossDissolve, .curveEaseOut, .allowUserInteraction]) {
+                    shown.view.image = Card.blankFaceImage
                 }
             }
         }

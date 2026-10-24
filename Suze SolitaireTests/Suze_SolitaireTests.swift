@@ -870,16 +870,13 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.finishTurn()
         XCTAssertNotNil(dealt.view.layer.animation(forKey: "position"), "laying out again without moving anything doesn't cut it short")
 
-        // The card the new ones land on shows its face until they get there
+        // The card the new ones land on fades to blank while they slide over it
         let landedOn = try XCTUnwrap(vc.deal!.cards.last)
         vc.tapDeck()
-        XCTAssertTrue(landedOn.view.image === landedOn.faceImage)
-        let covered = expectation(description: "covered once the slide is over")
-        DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.slideDuration + 0.1) {
-            XCTAssertTrue(landedOn.view.image === Card.blankFaceImage)
-            covered.fulfill()
-        }
-        wait(for: [covered], timeout: 2)
+        XCTAssertTrue(landedOn.view.image === Card.blankFaceImage)
+        let fade = try XCTUnwrap(landedOn.view.layer.animationKeys()?.compactMap { landedOn.view.layer.animation(forKey: $0) }
+            .first { $0 is CATransition }, "fades rather than switching")
+        XCTAssertEqual(fade.duration, ViewController.slideDuration, accuracy: 0.01)
     }
 
     func testDealingAgainFinishesTheLastDealsSlide() throws {
