@@ -149,9 +149,19 @@ final class UndoStore {
         }
     }
 
+    // Why the product couldn't be loaded last time, to tell the player
+    private(set) var loadFailure: String?
+
     func loadProduct() async -> Product? {
         if self.product == nil {
-            self.product = try? await Product.products(for: [UndoStore.productID]).first
+            do {
+                self.product = try await Product.products(for: [UndoStore.productID]).first
+                // The App Store answered but didn't have it: not set up, or not cleared for sale yet
+                self.loadFailure = self.product == nil ? "Unlimited Undo isn't available from the App Store yet. Try again later." : nil
+            }
+            catch {
+                self.loadFailure = "The App Store couldn't be reached (\(error.localizedDescription)). Try again later."
+            }
         }
         return self.product
     }
@@ -168,7 +178,7 @@ final class UndoStore {
 
     func purchase(confirmIn scene: UIScene) async -> Outcome {
         guard let product = await self.loadProduct() else {
-            return .failed("The App Store couldn't be reached. Try again later.")
+            return .failed(self.loadFailure ?? "The App Store couldn't be reached. Try again later.")
         }
         do {
             switch try await product.purchase(confirmIn: scene) {
