@@ -7,17 +7,19 @@
       "layers" : [
         {
           "image-name" : "ace.svg",
-          "name" : "ace"
+          "name" : "ace",
+          "glass" : false
         }
       ],
       "shadow" : {
-        "kind" : "layer-color",
+        "kind" : "none",
         "opacity" : 0.5
       },
       "translucency" : {
         "enabled" : false,
         "value" : 0.5
-      }
+      },
+      "specular" : false
     },
     {
       "layers" : [

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <g transform="rotate(8 552 522)" fill="#e3241b">
-    <path transform="translate(432 210) scale(0.8)" fill-rule="evenodd" d="M0 320 L127 0 L173 0 L300 320 L256 320 L224 240 L76 240 L44 320 Z M91 202 L209 202 L150 53 Z"/>
-    <path transform="translate(552 505) scale(0.48) translate(-512 -230)" d="M512 800 C300 640 200 520 200 400 C200 300 280 230 370 230 C430 230 480 260 512 310 C544 260 594 230 654 230 C744 230 824 300 824 400 C824 520 724 640 512 800 Z"/>
+    <path transform="translate(335 205) scale(0.7)" fill-rule="evenodd" d="M0 320 L127 0 L173 0 L300 320 L256 320 L224 240 L76 240 L44 320 Z M91 202 L209 202 L150 53 Z"/>
+    <path transform="translate(440 455) scale(0.38) translate(-512 -230)" d="M512 800 C300 640 200 520 200 400 C200 300 280 230 370 230 C430 230 480 260 512 310 C544 260 594 230 654 230 C744 230 824 300 824 400 C824 520 724 640 512 800 Z"/>
   </g>
 </svg>
