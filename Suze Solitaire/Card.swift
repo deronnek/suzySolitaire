@@ -100,6 +100,7 @@ class Card: NSObject {
     var suit   = cardSuit.Clubs
     var faceUp = false
     var faceImageFilename = String()
+    var largeFaceImageFilename = String()
     var backImageFilename = String()
     var zLocation  = Int()
     var savedPos   = CGPoint()
@@ -107,18 +108,28 @@ class Card: NSObject {
     var cardParent: Card? = nil
     var view       = UIImageView()
     var backImage  = UIImage()
-    var faceImage  = UIImage()
+    // Cards have two sets of art: big corner indexes for small cards, and the full design for the big cards of a roomy
+    // table (see ViewController.roomyTable).  The table can change size at any time, as when iPhone Duo folds.
+    static var largeArt = false
+    let smallFaceImage: UIImage
+    lazy var largeFaceImage = UIImage(imageLiteralResourceName: self.largeFaceImageFilename)
+    var faceImage: UIImage {
+        Card.largeArt ? self.largeFaceImage : self.smallFaceImage
+    }
     //var identifier =
     
-    init(suit: cardSuit, rank: Int, faceImageFilename: String, backImageFilename: String, tag: Int) {
+    init(suit: cardSuit, rank: Int, faceImageFilename: String, largeFaceImageFilename: String, backImageFilename: String, tag: Int) {
         self.suit              = suit
         self.rank              = rank
         self.faceImageFilename = faceImageFilename
+        self.largeFaceImageFilename = largeFaceImageFilename
         self.backImageFilename = backImageFilename
         //self.zLocation         = zLocation
         
-        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
-        self.view      = UIImageView(image: self.faceImage)
+        self.smallFaceImage = UIImage(imageLiteralResourceName: faceImageFilename)
+        self.view      = UIImageView()
+        super.init()
+        self.view.image = self.faceImage
         self.view.tag  = tag
         self.backImage = Card.customBackImage ?? UIImage(imageLiteralResourceName: backImageFilename)
       

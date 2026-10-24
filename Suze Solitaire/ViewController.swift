@@ -45,6 +45,8 @@ class ViewController: UIViewController {
     let chalkLine = UILabel()
     // The chalked numbers and the "..." button beside the table in iPhone landscape
     var sideColumns: (left: UIStackView, right: UIStackView, chalk: [UILabel], menu: UIButton)? = nil
+    // The size the table was last laid out for (see viewDidLayoutSubviews)
+    var laidOutSize = CGSize.zero
     // Banners sit this far above the toolbar, and the table stops short of them
     static let bannerSpacing: CGFloat = 12
     static let bannerHeight: CGFloat  = 44
@@ -211,6 +213,15 @@ class ViewController: UIViewController {
         self.updateNoMovesBanner()
     }
     
+    // Folding or unfolding iPhone Duo, or resizing a window, can change the table's size at any time, not just on rotation
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        if self.view.bounds.size != self.laidOutSize {
+            self.laidOutSize = self.view.bounds.size
+            self.redrawTable()
+        }
+    }
+
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: nil) { _ in
@@ -730,8 +741,10 @@ class ViewController: UIViewController {
         let tableBottom = sideColumns
             ? bounds.height - safe.bottom - 8
             : self.toolbar.frame.minY - ViewController.bannerSpacing - ViewController.bannerHeight - 8
-        // The iPad layout needs room; narrow iPad windows (Split View, Slide Over, Stage Manager) use the iPhone layout
-        let isPad = UIDevice.current.userInterfaceIdiom == .pad && bounds.width >= 600 && bounds.height >= 600
+        // The roomy layout and its big cards, whatever the device: a full iPad, or iPhone Duo unfolded.  Narrow windows
+        // (Split View, Slide Over, Stage Manager, a folded Duo) use the compact layout.
+        let isPad = self.roomyTable
+        self.useLargeCardArt(isPad)
         
         var cardWidth, cardHeight: CGFloat
         var fubPoint, deckPoint, dealPoint: CGPoint
@@ -820,14 +833,10 @@ class ViewController: UIViewController {
         
         for suit in [cardSuit.Clubs, .Diamonds, .Hearts, .Spades] {
             for i in 1...13 {
-                if(UIDevice.current.userInterfaceIdiom == .pad) {
-                    faceImgFile = String.init(format: suit.simpleDescription() + "%d.png", i)
-                }
-                else {
-                    faceImgFile = String.init(format: suit.simpleDescription() + "%d-iphone.png",i)
-                }
-                
-                let aCard = Card(suit: suit, rank: i, faceImageFilename: faceImgFile, backImageFilename: backImgFile, tag: tagCounter)
+                faceImgFile = String.init(format: suit.simpleDescription() + "%d-iphone.png", i)
+                let largeFaceImgFile = String.init(format: suit.simpleDescription() + "%d.png", i)
+                let aCard = Card(suit: suit, rank: i, faceImageFilename: faceImgFile, largeFaceImageFilename: largeFaceImgFile,
+                                 backImageFilename: backImgFile, tag: tagCounter)
                 self.cards.append(aCard)
                 tagCounter += 1;
             }

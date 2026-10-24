@@ -14,11 +14,29 @@ extension ViewController {
     static let sideColumnWidth: CGFloat = 116
     static let sideColumnSpacing: CGFloat = 8
 
-    // Whether the window is iPhone-sized and wider than it is tall (narrow iPad windows count too)
+    // Whether there's room for the big-card layout in both directions, on any device (a full iPad, iPhone Duo unfolded)
+    var roomyTable: Bool {
+        let bounds = self.view.bounds
+        return bounds.width >= 600 && bounds.height >= 600
+    }
+
+    // Whether the window is phone-sized and wider than it is tall (narrow iPad windows count too)
     var usesSideColumns: Bool {
         let bounds = self.view.bounds
-        let isPad  = UIDevice.current.userInterfaceIdiom == .pad && bounds.width >= 600 && bounds.height >= 600
-        return !isPad && bounds.width > bounds.height
+        return !self.roomyTable && bounds.width > bounds.height
+    }
+
+    // Switches every card between its small- and large-table art, keeping covered and face-down cards as they are
+    func useLargeCardArt(_ large: Bool) {
+        guard large != Card.largeArt else {
+            return
+        }
+        let cards = self.viewTagToCard.values.compactMap { $0 }
+        let showingFaces = cards.filter { $0.view.image === $0.faceImage }
+        Card.largeArt = large
+        for card in showingFaces {
+            card.view.image = card.faceImage
+        }
     }
 
     // Shows the toolbar or the side columns to suit the window, and puts the banners next to whichever is showing

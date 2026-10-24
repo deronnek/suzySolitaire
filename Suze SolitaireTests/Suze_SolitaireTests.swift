@@ -43,6 +43,7 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
         CardStack.isDark     = false
+        Card.largeArt        = false
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = nil
@@ -154,6 +155,38 @@ final class Suze_SolitaireTests: XCTestCase {
                 XCTAssertLessThanOrEqual(stack!.view.frame.maxY, vc.view.bounds.height, "\(stack!.stackType) runs off a \(height)pt screen")
             }
         }
+    }
+
+    func testTheTableFollowsAnySizeChange() throws {
+        // Like iPhone Duo unfolding mid-game: the roomy layout and big-card art, with no rotation involved
+        vc.view.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
+        vc.view.layoutIfNeeded()
+        let top = try XCTUnwrap(vc.fub!.cards.last)
+        let under = vc.fub!.cards[0]
+        XCTAssertFalse(Card.largeArt)
+        XCTAssertTrue(top.view.image === top.smallFaceImage)
+        let compactWidth = top.view.frame.width
+
+        vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 760)
+        vc.view.layoutIfNeeded()
+        XCTAssertTrue(vc.roomyTable)
+        XCTAssertFalse(vc.usesSideColumns)
+        XCTAssertTrue(Card.largeArt)
+        XCTAssertTrue(top.view.image === top.largeFaceImage)
+        XCTAssertTrue(under.view.image === Card.blankFaceImage, "covered cards stay blank")
+        XCTAssertTrue(vc.deck!.cards.last!.view.image === vc.deck!.cards.last!.backImage, "face-down cards stay face down")
+        XCTAssertGreaterThan(top.view.frame.width, compactWidth)
+        for stack in allStacks(vc) {
+            XCTAssertLessThanOrEqual(stack!.view.frame.maxX, 820)
+            XCTAssertLessThanOrEqual(stack!.view.frame.maxY, 760)
+        }
+
+        // and back when it folds
+        vc.view.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
+        vc.view.layoutIfNeeded()
+        XCTAssertFalse(Card.largeArt)
+        XCTAssertTrue(top.view.image === top.smallFaceImage)
+        XCTAssertEqual(top.view.frame.width, compactWidth, accuracy: 0.5)
     }
 
     func testLandscapeMovesTheToolbarBesideTheTable() throws {

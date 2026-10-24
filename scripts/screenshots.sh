@@ -47,8 +47,8 @@ shoot() {
     xcrun simctl uninstall "$sim" "$BUNDLE_ID" 2>/dev/null || true
     xcrun simctl install "$sim" "$APP"
     xcrun simctl launch "$sim" "$BUNDLE_ID" -ScreenshotSeed "$SEED" >/dev/null
-    # Let the deal finish and the launch screen fade
-    sleep 4
+    # Let the deal finish and the launch screen fade (a simulator that was just booted takes longer)
+    sleep 10
     xcrun simctl io "$sim" screenshot "$file" >/dev/null 2>&1
     xcrun simctl status_bar "$sim" clear
     xcrun simctl uninstall "$sim" "$BUNDLE_ID"
