@@ -7,7 +7,8 @@
 #     (the first version can't have release notes)
 #   Metadata/subtitle.txt, privacy_policy_url.txt and copyright.txt
 #   Metadata/age_rating.json, the answers to the age rating questions
-#   Screenshots/iPhone-6.9.png and iPad-13.png (from scripts/screenshots.sh), replacing the ones already there
+#   Screenshots/iPhone-6.9.png, iPad-13.png and iPhone-Duo.png (from scripts/screenshots.sh), replacing the ones already
+#     there
 #
 # It also sets the category to Games > Card and picks the build: BUILD, or else the newest processed build of that
 # version.  It never submits anything for review.  Run it again after changing any of those files:
@@ -24,8 +25,8 @@ from asc import call
 ROOT      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "AppStore")
 BUNDLE_ID = "net.dseelig.SuzeSolitaire"
 LOCALE    = "en-US"
-# The display types App Store Connect files each screenshot under: its 6.9" iPhone and 13" iPad sizes
-SCREENSHOTS = {"iPhone-6.9.png": "APP_IPHONE_67", "iPad-13.png": "APP_IPAD_PRO_3GEN_129"}
+# The display types App Store Connect files each screenshot under: its 6.9" iPhone and 13" iPad sizes, and iPhone Duo
+SCREENSHOTS = {"iPhone-6.9.png": "APP_IPHONE_67", "iPad-13.png": "APP_IPAD_PRO_3GEN_129", "iPhone-Duo.png": "APP_IPHONE_DUO"}
 EDITABLE = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "INVALID_BINARY"}
 
 
