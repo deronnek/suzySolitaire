@@ -32,17 +32,33 @@ enum cardStackType {
     }
 }
 
-class CardStack: NSObject, NSCoding {
-    func encode(with coder: NSCoder) {
-        
+@MainActor
+class CardStack: NSObject {
+    var cards = [Card]() {
+        didSet {
+            self.updateShadows()
+            self.updateFaces()
+        }
     }
-    
-    var cards = [Card]()
     var stackType = cardStackType.cardstack
     var cardSliceHeight = 30
+    // The fan spacing when there's room; resize squeezes cardSliceHeight below this so tall stacks still fit
+    var baseSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
-    let keysForEncoding = ["cards", "cardSliceHeight", "stackZ"]
+    // The card-sized outline of the stack's spot, drawn on the felt: under its cards, so it shows whenever they're moved
+    // off it.  It's the outline color showing through a rounded-rectangle stroke.
+    let outline = CALayer()
+    let outlineStroke = CAShapeLayer()
+    // How far apart cards in the blind (fub) and deal are fanned
+    static let fannedSliceHeight = 5
+    // Softer on the dimmer dark-mode felt.  ViewController.applyAppearance sets isDark.
+    static var isDark = false
+    static var outlineColor: CGColor {
+        CardStack.isDark ? CardStack.darkOutline : CardStack.lightOutline
+    }
+    static let lightOutline = UIColor.white.cgColor
+    static let darkOutline  = UIColor.white.withAlphaComponent(0.6).cgColor
     
     init(type: cardStackType) {
 //        var point = CGPoint(x: x, y: y)
@@ -61,85 +77,53 @@ class CardStack: NSObject, NSCoding {
         //self.identifier = NSUUID().UUIDString()
         switch type {
             case .fub, .deal:
-                self.cardSliceHeight = 2
+                self.cardSliceHeight = CardStack.fannedSliceHeight
+                self.baseSliceHeight = CardStack.fannedSliceHeight
             case .deck, .cardstack, .suitstack:
                 break // default value is fine for these
         }
         self.stackType = type
-        // Assume we have no cards and need a border
-        self.view.layer.borderWidth = 1
-        self.view.layer.borderColor = UIColor.white.cgColor
+        self.outlineStroke.fillColor   = nil
+        self.outlineStroke.strokeColor = UIColor.black.cgColor
+        self.outlineStroke.lineWidth   = 2
+        self.outline.mask = self.outlineStroke
+        self.outline.backgroundColor = CardStack.outlineColor
+        self.view.layer.insertSublayer(self.outline, at: 0)
     }
     
-    // MARK: State restoration
-    func encodeWithCoder(aCoder: NSCoder) {
-        for key in self.keysForEncoding {
-            aCoder.encode(self.value(forKey: key), forKey: key)
-        }
-        aCoder.encode(self.stackType.simpleDescription(), forKey:"stackType")
+    // ViewController.applyAppearance calls this when dark mode changes
+    func updateOutlineColor() {
+        self.outline.backgroundColor = CardStack.outlineColor
     }
     
-//    required convenience init?(coder aDecoder: NSCoder) {
-//        let stackType = aDecoder.decodeObjectForKey("stackType") as! cardStackType
-//        self.init(type: stackType)
-//    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init()
-        
-        self.view = UIView()
-        self.view.decodeRestorableState(with: aDecoder)
-        
-        for key in self.keysForEncoding {
-            self.setValue(aDecoder.decodeObject(forKey: key), forKey: key)
-        }
-        
-        self.stackType = self.descriptionToEnum(description: aDecoder.decodeObject(forKey: "stackType") as! String)
-
-        
-        for i in 0..<self.cards.count {
-            self.view.addSubview(self.cards[i].view)
-            if self.stackType == .deck {
-                self.cards[i].view.image = UIImage(imageLiteralResourceName: self.cards[i].backImageFilename)
-            }
-        }
-        
-        if self.cards.count == 0 {
-            self.view.layer.borderWidth = 1
-            self.view.layer.borderColor = UIColor.white.cgColor
-        }
-    }
-    
-    func descriptionToEnum(description: String) -> cardStackType {
-        switch description {
-            case "fub":
-                return .fub
-            case "suitstack":
-                return .suitstack
-            case "cardstack":
-                return .cardstack
-            case "deck":
-                return .deck
-            case "deal":
-                return .deal
-            default:
-                exit(1)
-        }
-    }
-    
-    func resize(point: CGPoint, width: Int, cardHeight: Int) {
+    // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it.  compact
+    // is true for the iPhone-style layout, which also fans lower stacks more tightly.
+    func resize(point: CGPoint, width: Int, cardHeight: Int, maxHeight: Int? = nil, compact: Bool = true) {
         var rect = CGRect(origin: point, size: CGSize(width: width, height: cardHeight))
-        // Make stacking tighter if we're not on an ipad
-        if UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiom.pad {
-            if self.stackType == .suitstack || self.stackType == .cardstack {
-                self.cardSliceHeight = Int(Double(cardHeight)/2.5)
-            }
+        // Size the outline to a card and round it to match, without the implicit animation
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        let bounds = CGRect(x: 0, y: 0, width: width, height: cardHeight)
+        let radius = CGFloat(width) * Card.cornerRadiusFraction
+        let path = UIBezierPath(roundedRect: bounds.insetBy(dx: 1.8, dy: 1.8), cornerRadius: radius).cgPath
+        self.outline.frame = bounds
+        self.outlineStroke.frame = bounds
+        self.outlineStroke.path  = path
+        CATransaction.commit()
+        // Make stacking tighter in the iPhone-style layout
+        if self.stackType == .suitstack || self.stackType == .cardstack {
+            self.baseSliceHeight = compact ? Int(Double(cardHeight)/2.5) : 30
+        }
+        self.cardSliceHeight = self.baseSliceHeight
+        if let maxHeight = maxHeight, self.cards.count > 1, self.stackType == .cardstack || self.stackType == .fub || self.stackType == .deal {
+            self.cardSliceHeight = max(2, min(self.baseSliceHeight, (maxHeight - cardHeight) / (self.cards.count - 1)))
         }
         switch self.stackType {
             case .deck:
                 rect.size.height = CGFloat(cardHeight)
             case .deal, .fub, .cardstack:
-                rect.size.height = CGFloat(cardHeight + (self.cards.count-1)*self.cardSliceHeight)
+                // An empty stack still gets a full card-sized outline
+                rect.size.height = CGFloat(cardHeight + max(self.cards.count-1, 0)*self.cardSliceHeight)
             case .suitstack:
                 if self.cards.count > 1 {
                     rect.size.height = CGFloat(cardHeight + self.cardSliceHeight)
@@ -166,6 +150,56 @@ class CardStack: NSObject, NSCoding {
                 
             }
             self.cards[i].resize(point: CGPoint(x: 0, y: y), width: width, height: cardHeight)
+            self.cards[i].savedCap = self.cardSliceHeight
+        }
+        self.updateShadows()
+    }
+
+    // Only the top card of the blind and deal can be played, so the ones under it show blank faces.  While the top
+    // card is being dragged away, the card it uncovers shows its face, as it will once the move is made.
+    func updateFaces(lifting lifted: Card? = nil) {
+        guard self.stackType == .fub || self.stackType == .deal, let top = self.cards.last else {
+            return
+        }
+        let uncovered = lifted === top && self.cards.count > 1 ? self.cards[self.cards.count - 2] : nil
+        for card in self.cards {
+            // Called on every move of a drag, so leave images that are already right alone
+            let image = card === top || card === uncovered ? card.faceImage : Card.blankFaceImage
+            if card.view.image !== image {
+                card.view.image = image
+            }
+        }
+        if let uncovered = uncovered {
+            uncovered.view.layer.shadowOpacity = Card.shadowOpacity
+            uncovered.setShadowPath(trimmingTop: 0)
+        }
+        else {
+            self.updateShadows()
+        }
+    }
+
+    // Overlapping shadows add up, so stacks whose cards sit close together only give shadows to the cards needed to
+    // outline the whole stack
+    func updateShadows() {
+        let shadowed: (Int) -> Bool
+        switch self.stackType {
+            case .deck:
+                // The cards sit exactly on top of each other
+                shadowed = { $0 == self.cards.count - 1 }
+            case .fub, .deal:
+                // A card's shadow reaches down a card's height, so every few cards are enough to cover the edges
+                let cardHeight = self.cards.first.map { Int($0.view.bounds.height) } ?? 0
+                let step = max(1, cardHeight / max(1, self.cardSliceHeight))
+                shadowed = { $0 % step == 0 || $0 == self.cards.count - 1 }
+            case .cardstack, .suitstack:
+                shadowed = { _ in true }
+        }
+        // The shadow along the top of a card in the middle of the fan would fall on the card above it as a dark line, so
+        // those cards only shadow their sides; the cards above them already cover the top of the sides
+        let middleTrim = self.stackType == .fub || self.stackType == .deal ? CGFloat(self.cardSliceHeight) + 4 : 0
+        for (i, card) in self.cards.enumerated() {
+            card.view.layer.shadowOpacity = shadowed(i) ? Card.shadowOpacity : 0
+            card.setShadowPath(trimmingTop: i == 0 || i == self.cards.count - 1 ? 0 : middleTrim)
         }
     }
     
@@ -222,12 +256,6 @@ class CardStack: NSObject, NSCoding {
             childCard?.cardParent = toadd
         }
         
-        // If we're adding a card, we have at least one and don't want the border
-        self.view.layer.borderWidth = 0;
-        
-        // MARK: Debug: turn on borders
-        //self.view.layer.borderWidth = 2;
-        
         // Card ownership is transfered to array
         self.cards.append(toadd)
         
@@ -247,14 +275,8 @@ class CardStack: NSObject, NSCoding {
             rec.size = CGSizeMake(rec.size.width, rec.size.height - CGFloat(self.cardSliceHeight))
             self.view.frame = rec
         }
-        print(self.cards[0], toRemove)
         let index = self.cards.firstIndex(of:toRemove)
         self.cards.remove(at:index!)
-        
-        if self.cards.isEmpty {
-            self.view.layer.borderWidth = 1;
-            self.view.layer.borderColor = UIColor.white.cgColor
-        }
         // KDR a little awkward that I send a message to the card to remove itself from us, effectively
         toRemove.view.removeFromSuperview();
 

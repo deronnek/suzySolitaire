@@ -3,12 +3,21 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 53;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0BAA5E1A2E9C000000000003 /* HowToPlayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */; };
+		0BAA5E1A2E9C000000000005 /* ViewController+Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000004 /* ViewController+Menu.swift */; };
+		0BAA5E1A2E9C000000000009 /* ViewController+Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000008 /* ViewController+Accessibility.swift */; };
+		0BAA5E1A2E9C00000000000B /* ViewController+NewGameUndo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000A /* ViewController+NewGameUndo.swift */; };
+		0BAA5E1A2E9C000000000017 /* ViewController+UnlimitedUndo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000016 /* ViewController+UnlimitedUndo.swift */; };
+		0BAA5E1A2E9C000000000019 /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000018 /* Products.storekit */; };
+		0BAA5E1A2E9C00000000000D /* ViewController+NoMoves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */; };
+		0BAA5E1A2E9C00000000000F /* ViewController+Hints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */; };
+		0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */; };
+		0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */; };
 		0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */; };
-		0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2DAFF71C7F5D69008C7B87 /* Util.swift */; };
 		0B478BF81C6B7D25008C7B87 /* spade1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BF71C6B7D25008C7B87 /* spade1.png */; };
 		0B478BFC1C6B81D0008C7B87 /* spade1-iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */; };
 		0B478C091C6B9199008C7B87 /* spade2-iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BFD1C6B9199008C7B87 /* spade2-iphone.png */; };
@@ -116,21 +125,19 @@
 		0B53A8DA1C6CE93D008C7B87 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B53A8D91C6CE93D008C7B87 /* Card.swift */; };
 		0B53A8DC1C6CF8A7008C7B87 /* CardStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */; };
 		0B5BD93B1CB6BB79008C7B87 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */; };
+		0BAA5E1A2E9C000000000007 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000006 /* PrivacyInfo.xcprivacy */; };
 		0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */; };
+		0BAA5E1A2E9C000000000014 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000015 /* AppIcon.icon */; };
 		0B825551175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825553175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B825555175B7C310064579C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825554175B7C310064579C /* CoreGraphics.framework */; };
 		0B82555B175B7C310064579C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B825559175B7C310064579C /* InfoPlist.strings */; };
-		0B825563175B7C310064579C /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825562175B7C310064579C /* Default.png */; };
-		0B825565175B7C310064579C /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825564175B7C310064579C /* Default@2x.png */; };
-		0B825567175B7C310064579C /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B825566175B7C310064579C /* Default-568h@2x.png */; };
 		0B82556A175B7C310064579C /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0B825568175B7C310064579C /* MainStoryboard.storyboard */; };
 		0B825576175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825577175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B82557F175B7C310064579C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 0B82557D175B7C310064579C /* InfoPlist.strings */; };
-		0B825582175B7C310064579C /* Suze_SolitaireTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B825581175B7C310064579C /* Suze_SolitaireTests.m */; };
+		0B825582175B7C310064579C /* Suze_SolitaireTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B825581175B7C310064579C /* Suze_SolitaireTests.swift */; };
 		0B82558C175B7D2C0064579C /* cardback.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B82558B175B7D2C0064579C /* cardback.png */; };
-		0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BB464A6183D690D00EE4F5D /* retina_icon.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -144,12 +151,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0B08A5B2176E5DD200E431D9 /* NSMutableArray+Shuffling.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSMutableArray+Shuffling.h"; path = "../NSMutableArray+Shuffling.h"; sourceTree = "<group>"; };
-		0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSMutableArray+Shuffling.m"; path = "../NSMutableArray+Shuffling.m"; sourceTree = "<group>"; };
-		0B0F5C7818E210E200CA3F9A /* ssTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ssTest.h; sourceTree = "<group>"; };
-		0B0F5C7918E210E200CA3F9A /* ssTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ssTest.m; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayViewController.swift; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000004 /* ViewController+Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Menu.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000008 /* ViewController+Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Accessibility.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C00000000000A /* ViewController+NewGameUndo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+NewGameUndo.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000016 /* ViewController+UnlimitedUndo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+UnlimitedUndo.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000018 /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
+		0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+NoMoves.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Hints.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Appearance.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Controls.swift"; sourceTree = "<group>"; };
 		0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		0B2DAFF71C7F5D69008C7B87 /* Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Util.swift; path = ../Util.swift; sourceTree = "<group>"; };
 		0B478BF71C6B7D25008C7B87 /* spade1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spade1.png; sourceTree = "<group>"; };
 		0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spade1-iphone.png"; sourceTree = "<group>"; };
 		0B478BFD1C6B9199008C7B87 /* spade2-iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spade2-iphone.png"; sourceTree = "<group>"; };
@@ -256,37 +268,22 @@
 		0B4E73981C0B956B008C7B87 /* spade13.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spade13.png; sourceTree = "<group>"; };
 		0B53A8D91C6CE93D008C7B87 /* Card.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
 		0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardStack.swift; sourceTree = "<group>"; };
-		0B5440DB175FA5BE00231C26 /* mainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mainView.h; sourceTree = "<group>"; };
-		0B5440DC175FA5BE00231C26 /* mainView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = mainView.m; sourceTree = "<group>"; };
 		0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000006 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000015 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		0B82554C175B7C310064579C /* Suze Solitaire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Suze Solitaire.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B825550175B7C310064579C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		0B825552175B7C310064579C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		0B825554175B7C310064579C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		0B825558175B7C310064579C /* Suze Solitaire-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Suze Solitaire-Info.plist"; sourceTree = "<group>"; };
 		0B82555A175B7C310064579C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		0B82555C175B7C310064579C /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		0B82555E175B7C310064579C /* Suze Solitaire-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Suze Solitaire-Prefix.pch"; sourceTree = "<group>"; };
-		0B82555F175B7C310064579C /* ssAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssAppDelegate.h; sourceTree = "<group>"; };
-		0B825560175B7C310064579C /* ssAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ssAppDelegate.m; sourceTree = "<group>"; };
-		0B825562175B7C310064579C /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
-		0B825564175B7C310064579C /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
-		0B825566175B7C310064579C /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
-		0B82556B175B7C310064579C /* ssViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssViewController.h; sourceTree = "<group>"; };
-		0B82556C175B7C310064579C /* ssViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ssViewController.m; sourceTree = "<group>"; };
 		0B825573175B7C310064579C /* Suze SolitaireTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Suze SolitaireTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B82557C175B7C310064579C /* Suze SolitaireTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Suze SolitaireTests-Info.plist"; sourceTree = "<group>"; };
 		0B82557E175B7C310064579C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		0B825580175B7C310064579C /* Suze_SolitaireTests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Suze_SolitaireTests.h; sourceTree = "<group>"; };
-		0B825581175B7C310064579C /* Suze_SolitaireTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Suze_SolitaireTests.m; sourceTree = "<group>"; };
+		0B825581175B7C310064579C /* Suze_SolitaireTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Suze_SolitaireTests.swift; sourceTree = "<group>"; };
 		0B82558B175B7D2C0064579C /* cardback.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = cardback.png; sourceTree = "<group>"; };
-		0B8255F7175BD52C0064579C /* card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card.h; sourceTree = "<group>"; };
-		0B8255F8175BD52C0064579C /* card.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card.m; sourceTree = "<group>"; };
-		0B8255FD175CB9F40064579C /* card_stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = card_stack.h; sourceTree = "<group>"; };
-		0B8255FE175CB9F40064579C /* card_stack.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = card_stack.m; sourceTree = "<group>"; };
-		0B938E511C67E58A008C7B87 /* Suze Solitaire-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Suze Solitaire-Bridging-Header.h"; sourceTree = "<group>"; };
-		0BB464A6183D690D00EE4F5D /* retina_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = retina_icon.png; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000001 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		0BD5A6D92A4CE45000E5C053 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -316,6 +313,7 @@
 		0B825541175B7C310064579C = {
 			isa = PBXGroup;
 			children = (
+				0BAA5E1A2E9C000000000001 /* Signing.xcconfig */,
 				0B825568175B7C310064579C /* MainStoryboard.storyboard */,
 				0B825556175B7C310064579C /* Suze Solitaire */,
 				0B82557A175B7C310064579C /* Suze SolitaireTests */,
@@ -347,27 +345,21 @@
 			isa = PBXGroup;
 			children = (
 				0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */,
+				0BAA5E1A2E9C000000000015 /* AppIcon.icon */,
+				0BAA5E1A2E9C000000000006 /* PrivacyInfo.xcprivacy */,
 				0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */,
+				0BAA5E1A2E9C00000000000A /* ViewController+NewGameUndo.swift */,
+				0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */,
+				0BAA5E1A2E9C000000000016 /* ViewController+UnlimitedUndo.swift */,
+				0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */,
+				0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */,
+				0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */,
+				0BAA5E1A2E9C000000000008 /* ViewController+Accessibility.swift */,
+				0BAA5E1A2E9C000000000004 /* ViewController+Menu.swift */,
+				0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */,
 				0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */,
 				0B53A8D91C6CE93D008C7B87 /* Card.swift */,
 				0B53A8DB1C6CF8A7008C7B87 /* CardStack.swift */,
-				0B2DAFF71C7F5D69008C7B87 /* Util.swift */,
-				0B08A5B2176E5DD200E431D9 /* NSMutableArray+Shuffling.h */,
-				0B08A5B3176E5DD200E431D9 /* NSMutableArray+Shuffling.m */,
-				0B82555F175B7C310064579C /* ssAppDelegate.h */,
-				0B825560175B7C310064579C /* ssAppDelegate.m */,
-				0B82556B175B7C310064579C /* ssViewController.h */,
-				0B82556C175B7C310064579C /* ssViewController.m */,
-				0B8255F7175BD52C0064579C /* card.h */,
-				0B8255F8175BD52C0064579C /* card.m */,
-				0B0F5C7818E210E200CA3F9A /* ssTest.h */,
-				0B0F5C7918E210E200CA3F9A /* ssTest.m */,
-				0B8255FD175CB9F40064579C /* card_stack.h */,
-				0B8255FE175CB9F40064579C /* card_stack.m */,
-				0B82555C175B7C310064579C /* main.m */,
-				0B5440DB175FA5BE00231C26 /* mainView.h */,
-				0B5440DC175FA5BE00231C26 /* mainView.m */,
-				0B938E511C67E58A008C7B87 /* Suze Solitaire-Bridging-Header.h */,
 				0B825557175B7C310064579C /* Supporting Files */,
 			);
 			path = "Suze Solitaire";
@@ -480,14 +472,9 @@
 				0B4CA1FA18BE6CCB00CF8E6B /* diamond11.png */,
 				0B4CA1FB18BE6CCB00CF8E6B /* diamond12.png */,
 				0B4CA1FC18BE6CCB00CF8E6B /* diamond13.png */,
-				0BB464A6183D690D00EE4F5D /* retina_icon.png */,
 				0B82558B175B7D2C0064579C /* cardback.png */,
 				0B825558175B7C310064579C /* Suze Solitaire-Info.plist */,
 				0B825559175B7C310064579C /* InfoPlist.strings */,
-				0B82555E175B7C310064579C /* Suze Solitaire-Prefix.pch */,
-				0B825562175B7C310064579C /* Default.png */,
-				0B825564175B7C310064579C /* Default@2x.png */,
-				0B825566175B7C310064579C /* Default-568h@2x.png */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -495,8 +482,8 @@
 		0B82557A175B7C310064579C /* Suze SolitaireTests */ = {
 			isa = PBXGroup;
 			children = (
-				0B825580175B7C310064579C /* Suze_SolitaireTests.h */,
-				0B825581175B7C310064579C /* Suze_SolitaireTests.m */,
+				0B825581175B7C310064579C /* Suze_SolitaireTests.swift */,
+				0BAA5E1A2E9C000000000018 /* Products.storekit */,
 				0B82557B175B7C310064579C /* Supporting Files */,
 			);
 			path = "Suze SolitaireTests";
@@ -538,7 +525,6 @@
 				0B82556E175B7C310064579C /* Sources */,
 				0B82556F175B7C310064579C /* Frameworks */,
 				0B825570175B7C310064579C /* Resources */,
-				0B825571175B7C310064579C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -595,16 +581,12 @@
 				0B82555B175B7C310064579C /* InfoPlist.strings in Resources */,
 				0B478C291C6BA647008C7B87 /* heart8-iphone.png in Resources */,
 				0B478BF81C6B7D25008C7B87 /* spade1.png in Resources */,
-				0BB464A7183D690D00EE4F5D /* retina_icon.png in Resources */,
 				0B4CA22618BE6CDB00CF8E6B /* heart3.png in Resources */,
-				0B825563175B7C310064579C /* Default.png in Resources */,
 				0B4CA20018BE6CCB00CF8E6B /* club4.png in Resources */,
 				0B4CA24218BE6CEA00CF8E6B /* spade6.png in Resources */,
 				0B4CA22A18BE6CDB00CF8E6B /* heart7.png in Resources */,
 				0B4CA21118BE6CCB00CF8E6B /* diamond8.png in Resources */,
-				0B825565175B7C310064579C /* Default@2x.png in Resources */,
 				0B4CA23E18BE6CEA00CF8E6B /* spade2.png in Resources */,
-				0B825567175B7C310064579C /* Default-568h@2x.png in Resources */,
 				0B478C5E1C6BAE79008C7B87 /* club9-iphone.png in Resources */,
 				0B4CA20F18BE6CCB00CF8E6B /* diamond6.png in Resources */,
 				0B478C3D1C6BAA77008C7B87 /* diamond2-iphone.png in Resources */,
@@ -686,6 +668,8 @@
 				0B478C411C6BAA77008C7B87 /* diamond6-iphone.png in Resources */,
 				0B478C5D1C6BAE79008C7B87 /* club8-iphone.png in Resources */,
 				0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */,
+				0BAA5E1A2E9C000000000014 /* AppIcon.icon in Resources */,
+				0BAA5E1A2E9C000000000007 /* PrivacyInfo.xcprivacy in Resources */,
 				0B478C431C6BAA77008C7B87 /* diamond8-iphone.png in Resources */,
 				0B4CA20A18BE6CCB00CF8E6B /* diamond1.png in Resources */,
 				0B478C0C1C6B9199008C7B87 /* spade5-iphone.png in Resources */,
@@ -712,26 +696,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B82557F175B7C310064579C /* InfoPlist.strings in Resources */,
+				0BAA5E1A2E9C000000000019 /* Products.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		0B825571175B7C310064579C /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0B825548175B7C310064579C /* Sources */ = {
@@ -739,7 +708,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */,
-				0B2DAFF81C7F5D69008C7B87 /* Util.swift in Sources */,
+				0BAA5E1A2E9C00000000000B /* ViewController+NewGameUndo.swift in Sources */,
+				0BAA5E1A2E9C00000000000D /* ViewController+NoMoves.swift in Sources */,
+				0BAA5E1A2E9C000000000017 /* ViewController+UnlimitedUndo.swift in Sources */,
+				0BAA5E1A2E9C00000000000F /* ViewController+Hints.swift in Sources */,
+				0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */,
+				0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */,
+				0BAA5E1A2E9C000000000009 /* ViewController+Accessibility.swift in Sources */,
+				0BAA5E1A2E9C000000000005 /* ViewController+Menu.swift in Sources */,
+				0BAA5E1A2E9C000000000003 /* HowToPlayViewController.swift in Sources */,
 				0B53A8DC1C6CF8A7008C7B87 /* CardStack.swift in Sources */,
 				0B5BD93B1CB6BB79008C7B87 /* AppDelegate.swift in Sources */,
 				0B53A8DA1C6CE93D008C7B87 /* Card.swift in Sources */,
@@ -750,7 +727,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B825582175B7C310064579C /* Suze_SolitaireTests.m in Sources */,
+				0B825582175B7C310064579C /* Suze_SolitaireTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -838,7 +815,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -882,7 +859,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -894,29 +871,23 @@
 		};
 		0B825586175B7C310064579C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0BAA5E1A2E9C000000000001 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Brand Assets";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = V28C6CTDW9;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze Solitaire/Suze Solitaire-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.--PRODUCT-NAME-rfc1034identifier-";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "kdr-alternate.Suze-Solitaire";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "Suze Solitaire/Suze Solitaire-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
@@ -924,28 +895,22 @@
 		};
 		0B825587175B7C310064579C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0BAA5E1A2E9C000000000001 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Brand Assets";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = V28C6CTDW9;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
 				INFOPLIST_FILE = "Suze Solitaire/Suze Solitaire-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "kdr-alternate.--PRODUCT-NAME-rfc1034identifier-";
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "kdr-alternate.Suze-Solitaire";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "Suze Solitaire/Suze Solitaire-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
@@ -955,16 +920,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
-				FRAMEWORK_SEARCH_PATHS = (
-					"\\\"$(SDKROOT)/Developer/Library/Frameworks\\\"",
-					"\\\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\\\"",
-					"$(inherited)",
-				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "kdr-productions.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};
 			name = Debug;
@@ -973,16 +933,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Suze Solitaire.app/Suze Solitaire";
-				FRAMEWORK_SEARCH_PATHS = (
-					"\\\"$(SDKROOT)/Developer/Library/Frameworks\\\"",
-					"\\\"$(DEVELOPER_LIBRARY_DIR)/Frameworks\\\"",
-					"$(inherited)",
-				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "Suze Solitaire/Suze Solitaire-Prefix.pch";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Suze SolitaireTests/Suze SolitaireTests-Info.plist";
 				PRODUCT_BUNDLE_IDENTIFIER = "kdr-productions.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 6.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 			};
 			name = Release;

@@ -52,18 +52,55 @@ enum cardColor {
     case Black
 }
 
-class Card: NSObject, NSCoding {
-    func encode(with coder: NSCoder) {
-        
+@MainActor
+class Card: NSObject {
+    // Height / width of the card images
+    static let aspectRatio: CGFloat = 726.0 / 500.0
+    // Corner radius as a fraction of card width; matches the corners cut into the card images
+    static let cornerRadiusFraction: CGFloat = 0.06
+    static let shadowOpacity: Float = 0.35
+    
+    static let outlineColor = UIColor.black.withAlphaComponent(0.8)
+
+    // A plain face, shown on covered cards in the blind and deal so their fanned edges don't give away rank or suit
+    static let blankFaceImage = Card.blankFace(.white)
+
+    static func blankFace(_ color: UIColor) -> UIImage {
+        let size   = CGSize(width: 500, height: 500 * Card.aspectRatio)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale  = 1
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            color.setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * Card.cornerRadiusFraction).fill()
+        }
+    }
+    
+    // A card back chosen by the player, or nil for the default
+    static var customBackImageURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("CardBack.png")
+    static var customBackImage = UIImage(contentsOfFile: Card.customBackImageURL.path)
+    
+    // Crops a photo to card proportions with the same rounded corners as the card images
+    static func cardBackImage(from photo: UIImage) -> UIImage {
+        let size   = CGSize(width: 500, height: 500 * Card.aspectRatio)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale  = 1
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * Card.cornerRadiusFraction).addClip()
+            let scale = max(size.width / photo.size.width, size.height / photo.size.height)
+            let drawn = CGSize(width: photo.size.width * scale, height: photo.size.height * scale)
+            photo.draw(in: CGRect(x: (size.width - drawn.width) / 2, y: (size.height - drawn.height) / 2, width: drawn.width, height: drawn.height))
+        }
     }
     
     // MARK: Properties
-    let keysForEncoding = ["rank", "faceUp", "faceImageFilename", "backImageFilename", "zLocation", "savedPos", "cardParent"]
     var color  = cardColor.Black
     var rank   = Int()
     var suit   = cardSuit.Clubs
     var faceUp = false
     var faceImageFilename = String()
+    var largeFaceImageFilename = String()
     var backImageFilename = String()
     var zLocation  = Int()
     var savedPos   = CGPoint()
@@ -71,20 +108,30 @@ class Card: NSObject, NSCoding {
     var cardParent: Card? = nil
     var view       = UIImageView()
     var backImage  = UIImage()
-    var faceImage  = UIImage()
+    // Cards have two sets of art: big corner indexes for small cards, and the full design for the big cards of a roomy
+    // table (see ViewController.roomyTable).  The table can change size at any time, as when iPhone Duo folds.
+    static var largeArt = false
+    let smallFaceImage: UIImage
+    lazy var largeFaceImage = UIImage(imageLiteralResourceName: self.largeFaceImageFilename)
+    var faceImage: UIImage {
+        Card.largeArt ? self.largeFaceImage : self.smallFaceImage
+    }
     //var identifier =
     
-    init(suit: cardSuit, rank: Int, faceImageFilename: String, backImageFilename: String, tag: Int) {
+    init(suit: cardSuit, rank: Int, faceImageFilename: String, largeFaceImageFilename: String, backImageFilename: String, tag: Int) {
         self.suit              = suit
         self.rank              = rank
         self.faceImageFilename = faceImageFilename
+        self.largeFaceImageFilename = largeFaceImageFilename
         self.backImageFilename = backImageFilename
         //self.zLocation         = zLocation
         
-        self.view      = UIImageView(image: UIImage(imageLiteralResourceName: faceImageFilename))
+        self.smallFaceImage = UIImage(imageLiteralResourceName: faceImageFilename)
+        self.view      = UIImageView()
+        super.init()
+        self.view.image = self.faceImage
         self.view.tag  = tag
-        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
-        self.backImage = UIImage(imageLiteralResourceName: backImageFilename)
+        self.backImage = Card.customBackImage ?? UIImage(imageLiteralResourceName: backImageFilename)
       
         self.color = suit.color()
 //        
@@ -96,51 +143,20 @@ class Card: NSObject, NSCoding {
         
         self.view.isUserInteractionEnabled = true
         
+        // The outline and shadow are drawn here rather than in the images so they stay crisp at any card size
+        self.view.layer.borderWidth   = 0.5
+        self.view.layer.borderColor   = Card.outlineColor.cgColor
+        self.view.layer.shadowColor   = UIColor.black.cgColor
+        self.view.layer.shadowOpacity = Card.shadowOpacity
+        self.view.layer.shadowRadius  = 1.5
+        self.view.layer.shadowOffset  = .zero
+        
         self.cardParent = nil
         // create a unique identifier for this object, used in state restoration
         //self.restorationIdentifier
         
         
     }
-    // MARK: State restoration
-    func encodeWithCoder(aCoder: NSCoder) {
-        for key in self.keysForEncoding {
-            aCoder.encode(self.value(forKey: key), forKey: key)
-        }
-        aCoder.encode(self.suit.simpleDescription(), forKey:"suit")
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init()
-        for key in self.keysForEncoding {
-            self.setValue(aDecoder.decodeObject(forKey: key), forKey: key)
-        }
-        self.view = UIImageView(image: UIImage(imageLiteralResourceName: self.faceImageFilename))
-        self.view.isUserInteractionEnabled = true
-        self.view.decodeRestorableState(with: aDecoder)
-        
-        self.faceImage = UIImage(imageLiteralResourceName: faceImageFilename)
-        self.backImage = UIImage(imageLiteralResourceName: backImageFilename)
-
-        self.suit  = self.descriptionToEnum(description: aDecoder.decodeObject(forKey: "suit") as! String)
-        self.color = self.suit.color()
-    }
-    
-    func descriptionToEnum(description: String) -> cardSuit {
-        switch description {
-            case "spade":
-                return .Spades
-            case "heart":
-                return .Hearts
-            case "diamond":
-                return .Diamonds
-            case "club":
-                return .Clubs
-            default:
-                exit(1)
-        }
-    }
-    
     // MARK: Drawing
     func drawSelfAndParent() {
         if self.faceUp {
@@ -151,6 +167,16 @@ class Card: NSObject, NSCoding {
     
     func resize(point: CGPoint, width:Int, height:Int) {
         self.view.frame = CGRect(origin: point, size: CGSize(width: width, height: height))
+        self.view.layer.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
+        self.setShadowPath(trimmingTop: 0)
+    }
+
+    // Casts the shadow from the card's outline, less `trim` points off the top
+    func setShadowPath(trimmingTop trim: CGFloat) {
+        var rect = self.view.bounds
+        rect.origin.y    += trim
+        rect.size.height -= trim
+        self.view.layer.shadowPath = UIBezierPath(roundedRect: rect, cornerRadius: self.view.layer.cornerRadius).cgPath
     }
     
     func cancelMove() {
