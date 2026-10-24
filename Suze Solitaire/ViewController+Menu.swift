@@ -122,7 +122,10 @@ extension ViewController: PHPickerViewControllerDelegate {
 
     func resetStats() {
         // Undoing a New Game would bring the old counts back
-        self.dismissNewGameUndo(animated: true)
+        if self.gameBeforeNewGame != nil {
+            self.gameBeforeNewGame = nil
+            self.undoBarButtonItem.isEnabled = false
+        }
         self.wins   = 0
         self.losses = 0
         self.saveGame()

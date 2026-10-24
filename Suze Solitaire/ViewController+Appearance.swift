@@ -30,7 +30,7 @@ extension ViewController {
     func applyAppearance() {
         CardStack.isDark = self.traitCollection.userInterfaceStyle == .dark
         for case let stack? in [self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks {
-            stack.outline.borderColor = CardStack.outlineColor.cgColor
+            stack.updateOutlineColor()
         }
     }
 }

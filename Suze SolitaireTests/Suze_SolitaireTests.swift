@@ -122,7 +122,7 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.redrawTable()
         for stack in allStacks(vc) {
             let outline = stack!.outline
-            XCTAssertEqual(outline.borderWidth, 1)
+            XCTAssertNotNil(stack!.outlineStroke.path, "chalked around the spot")
             XCTAssertTrue(outline.superlayer === stack!.view.layer)
             XCTAssertEqual(stack!.view.layer.sublayers?.first, outline, "under the cards")
             XCTAssertEqual(outline.frame.size, vc.cardStacks[0]!.cards[0].view.frame.size)
@@ -227,11 +227,11 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.applyAppearance()
         XCTAssertTrue(top.view.image === top.faceImage)
         XCTAssertTrue(under.view.image === Card.blankFaceImage)
-        XCTAssertEqual(UIColor(cgColor: vc.cardStacks[0]!.outline.borderColor!), UIColor.white.withAlphaComponent(0.45))
+        XCTAssertTrue(vc.cardStacks[0]!.outline.backgroundColor === CardStack.darkChalk)
 
         vc.overrideUserInterfaceStyle = .light
         vc.applyAppearance()
-        XCTAssertEqual(UIColor(cgColor: vc.cardStacks[0]!.outline.borderColor!), .white)
+        XCTAssertTrue(vc.cardStacks[0]!.outline.backgroundColor === CardStack.lightChalk)
     }
 
     func testUpperStacksClearLowerStacks() {
@@ -398,13 +398,14 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.losses = 7
         vc.score  = 120
         vc.startNewGameWithSender(sender: self)
-        XCTAssertNotNil(vc.newGameUndoBanner)
+        XCTAssertNotNil(vc.gameBeforeNewGame)
         vc.resetStats()
         XCTAssertEqual(vc.wins, 0)
         XCTAssertEqual(vc.losses, 0)
         XCTAssertEqual(vc.score, 75, "money is kept")
         // The New Game undo can't bring the old counts back
         XCTAssertNil(vc.gameBeforeNewGame)
+        XCTAssertFalse(vc.undoBarButtonItem.isEnabled)
         // and the reset survives a relaunch
         let saved = try XCTUnwrap(vc.loadSavedGame())
         XCTAssertEqual([saved.wins, saved.losses], [0, 0])
@@ -458,13 +459,14 @@ final class Suze_SolitaireTests: XCTestCase {
         let board = allStacks(vc).map(tags)
 
         vc.startNewGameWithSender(sender: vc)
-        XCTAssertNotNil(vc.newGameUndoBanner)
+        XCTAssertTrue(vc.undoBarButtonItem.isEnabled, "the Undo button brings the old game back")
         XCTAssertEqual(vc.score, 55)
         XCTAssertEqual(vc.losses, 3)
         XCTAssertTrue(vc.deal!.cards.isEmpty)
 
-        vc.undoNewGame()
-        XCTAssertNil(vc.newGameUndoBanner)
+        vc.undoMove(vc.undoBarButtonItem)
+        XCTAssertNil(vc.gameBeforeNewGame)
+        XCTAssertFalse(vc.undoBarButtonItem.isEnabled)
         XCTAssertEqual(allStacks(vc).map(tags), board)
         XCTAssertEqual(vc.score, 100)
         XCTAssertEqual(vc.losses, 2)
@@ -477,7 +479,6 @@ final class Suze_SolitaireTests: XCTestCase {
     func testNoUndoAfterAWin() {
         vc.justWon = true
         vc.startNewGameWithSender(sender: vc)
-        XCTAssertNil(vc.newGameUndoBanner)
         XCTAssertNil(vc.gameBeforeNewGame)
     }
 
@@ -491,20 +492,18 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(vc.losses, losses + 1)
     }
 
-    func testNewGameUndoBannerGoesAway() {
-        ViewController.newGameUndoDuration = 0.1
-        defer { ViewController.newGameUndoDuration = 5 }
+    func testAMoveOrDealAfterNewGameIsWhatUndoUndoes() {
         vc.startNewGameWithSender(sender: vc)
-        let banner = vc.newGameUndoBanner
-        XCTAssertNotNil(banner)
-        let gone = expectation(description: "banner removed")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            XCTAssertNil(self.vc.newGameUndoBanner)
-            XCTAssertNil(self.vc.gameBeforeNewGame)
-            XCTAssertNil(banner?.superview)
-            gone.fulfill()
-        }
-        wait(for: [gone], timeout: 2)
+        let newBoard = allStacks(vc).map(tags)
+        vc.tapDeck()
+        XCTAssertNil(vc.gameBeforeNewGame, "the deal is what Undo takes back now")
+        vc.undoMove(vc.undoBarButtonItem)
+        XCTAssertEqual(allStacks(vc).map(tags), newBoard)
+
+        vc.startNewGameWithSender(sender: vc)
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        vc.performMove(card: vc.deal!.cards.last!, from: vc.deal!, to: vc.cardStacks[0]!)
+        XCTAssertNil(vc.gameBeforeNewGame)
     }
 
     // MARK: VoiceOver

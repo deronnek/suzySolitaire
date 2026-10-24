@@ -46,14 +46,42 @@ class CardStack: NSObject {
     var baseSliceHeight = 30
     var stackZ = Int()
     var view   = UIView()
-    // The card-sized outline of the stack's spot, painted under its cards so it shows whenever they're moved off it
+    // The card-sized outline of the stack's spot, chalked on the felt like the score: under its cards, so it shows
+    // whenever they're moved off it.  It's a speckled chalk texture showing through a wobbly rounded-rectangle stroke
+    // with a dusty fringe.
     let outline = CALayer()
+    let outlineStroke = CAShapeLayer()
+    let outlineDust   = CAShapeLayer()
     // How far apart cards in the blind (fub) and deal are fanned
     static let fannedSliceHeight = 5
     // Softer on the dimmer dark-mode felt.  ViewController.applyAppearance sets isDark.
     static var isDark = false
-    static var outlineColor: UIColor {
-        CardStack.isDark ? UIColor.white.withAlphaComponent(0.45) : .white
+    static var outlineColor: CGColor {
+        CardStack.isDark ? CardStack.darkChalk : CardStack.lightChalk
+    }
+    static let lightChalk = CardStack.chalk(alpha: 1).cgColor
+    static let darkChalk  = CardStack.chalk(alpha: 0.6).cgColor
+
+    // White chalk dust: specks of varying strength with the odd gap, the same every launch
+    static func chalk(alpha: CGFloat) -> UIColor {
+        var generator = SeededGenerator(seed: 52)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale  = 2
+        format.opaque = false
+        let size  = 64
+        let image = UIGraphicsImageRenderer(size: CGSize(width: size, height: size), format: format).image { context in
+            for y in 0..<(size * 2) {
+                for x in 0..<(size * 2) {
+                    let roll = Double.random(in: 0..<1, using: &generator)
+                    if roll < 0.12 {
+                        continue
+                    }
+                    UIColor.white.withAlphaComponent(alpha * CGFloat(0.5 + 0.5 * roll)).setFill()
+                    context.fill(CGRect(x: CGFloat(x) / 2, y: CGFloat(y) / 2, width: 0.5, height: 0.5))
+                }
+            }
+        }
+        return UIColor(patternImage: image)
     }
     
     init(type: cardStackType) {
@@ -79,9 +107,63 @@ class CardStack: NSObject {
                 break // default value is fine for these
         }
         self.stackType = type
-        self.outline.borderWidth = 1
-        self.outline.borderColor = CardStack.outlineColor.cgColor
+        self.outlineStroke.fillColor   = nil
+        self.outlineStroke.strokeColor = UIColor.black.cgColor
+        self.outlineStroke.lineWidth   = 1.5
+        self.outlineStroke.lineJoin    = .round
+        // Specks of chalk dust either side of the line
+        self.outlineDust.fillColor   = nil
+        self.outlineDust.strokeColor = UIColor.black.cgColor
+        self.outlineDust.lineWidth   = 3.2
+        self.outlineDust.lineCap     = .round
+        self.outlineDust.lineDashPattern = [0.4, 1.3, 0.2, 0.8, 0.6, 2.2, 0.3, 1, 0.5, 1.7]
+        self.outlineDust.opacity     = 0.55
+        let mask = CALayer()
+        mask.addSublayer(self.outlineStroke)
+        mask.addSublayer(self.outlineDust)
+        self.outline.mask = mask
+        self.outline.backgroundColor = CardStack.outlineColor
         self.view.layer.insertSublayer(self.outline, at: 0)
+    }
+    
+    // A rounded rectangle traced by hand: points every couple of points around it, each nudged a little in or out
+    static func roughRoundedRect(_ rect: CGRect, cornerRadius radius: CGFloat) -> CGPath {
+        var generator = SeededGenerator(seed: UInt64(rect.width * 31 + rect.height))
+        var points = [CGPoint]()
+        // Corner centers and the angles their quarter circles start at, clockwise from the top left
+        let corners = [(CGPoint(x: rect.minX + radius, y: rect.minY + radius), CGFloat.pi),
+                       (CGPoint(x: rect.maxX - radius, y: rect.minY + radius), CGFloat.pi * 1.5),
+                       (CGPoint(x: rect.maxX - radius, y: rect.maxY - radius), 0),
+                       (CGPoint(x: rect.minX + radius, y: rect.maxY - radius), CGFloat.pi / 2)]
+        for (i, (center, start)) in corners.enumerated() {
+            for step in 0...4 {
+                let angle = start + CGFloat.pi / 2 * CGFloat(step) / 4
+                let wobble = radius + CGFloat.random(in: -0.4...0.4, using: &generator)
+                points.append(CGPoint(x: center.x + cos(angle) * wobble, y: center.y + sin(angle) * wobble))
+            }
+            // The straight side to the next corner
+            let end   = points.last!
+            let next  = corners[(i + 1) % 4]
+            let nextStart = CGPoint(x: next.0.x + cos(next.1) * radius, y: next.0.y + sin(next.1) * radius)
+            let length = hypot(nextStart.x - end.x, nextStart.y - end.y)
+            let steps  = max(1, Int(length / 2.5))
+            let normal = CGPoint(x: (nextStart.y - end.y) / length, y: -(nextStart.x - end.x) / length)
+            for step in 1..<steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                let nudge = CGFloat.random(in: -0.45...0.45, using: &generator)
+                points.append(CGPoint(x: end.x + (nextStart.x - end.x) * t + normal.x * nudge,
+                                      y: end.y + (nextStart.y - end.y) * t + normal.y * nudge))
+            }
+        }
+        let path = CGMutablePath()
+        path.addLines(between: points)
+        path.closeSubpath()
+        return path
+    }
+
+    // ViewController.applyAppearance calls this when dark mode changes
+    func updateOutlineColor() {
+        self.outline.backgroundColor = CardStack.outlineColor
     }
     
     // maxHeight, if given, is how tall the stack may get; fanned stacks overlap more tightly to stay within it.  compact
@@ -91,8 +173,15 @@ class CardStack: NSObject {
         // Size the outline to a card and round it to match, without the implicit animation
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        self.outline.frame        = CGRect(x: 0, y: 0, width: width, height: cardHeight)
-        self.outline.cornerRadius = CGFloat(width) * Card.cornerRadiusFraction
+        let bounds = CGRect(x: 0, y: 0, width: width, height: cardHeight)
+        let radius = CGFloat(width) * Card.cornerRadiusFraction
+        let path = CardStack.roughRoundedRect(bounds.insetBy(dx: 1.8, dy: 1.8), cornerRadius: radius)
+        self.outline.frame = bounds
+        for layer in [self.outline.mask, self.outlineStroke, self.outlineDust] {
+            layer?.frame = bounds
+        }
+        self.outlineStroke.path = path
+        self.outlineDust.path   = path
         CATransaction.commit()
         // Make stacking tighter in the iPhone-style layout
         if self.stackType == .suitstack || self.stackType == .cardstack {

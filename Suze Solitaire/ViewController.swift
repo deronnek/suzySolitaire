@@ -105,11 +105,8 @@ class ViewController: UIViewController {
     // The finger moving activeCard; other fingers are ignored until it lifts
     var activeTouch:                  UITouch? = nil
     var activeCardSourceStack:      CardStack? = nil
-    // While the banner after New Game is showing, the game it would bring back (see ViewController+NewGameUndo.swift)
+    // Until the first move or deal after New Game, the game Undo would bring back (see ViewController+NewGameUndo.swift)
     var gameBeforeNewGame: SavedGame? = nil
-    var newGameUndoBanner: UIView? = nil
-    var newGameUndoTimer: DispatchWorkItem? = nil
-    static var newGameUndoDuration: TimeInterval = 5
     // The banner saying there's nothing to play (see ViewController+NoMoves.swift)
     var noMovesBanner: UIView? = nil
     // When cards were last dealt, by a new game or the deck, and the timer that shows the no-moves banner once it's been a
@@ -173,6 +170,8 @@ class ViewController: UIViewController {
         let menuItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: self.buildMenu())
         menuItem.accessibilityLabel = "More"
         self.menuBarButtonItem = menuItem
+        // So the landscape "..." button can find it and line up under it
+        self.undoBarButtonItem.accessibilityIdentifier = "undo"
         self.setUpChalk()
         // New Game is a plus, like the New Game button in the "No moves left" banner
         if let newGame = self.navigationItem.leftBarButtonItem {
@@ -404,11 +403,9 @@ class ViewController: UIViewController {
         self.dealtDate = Date()
         print("Found \(self.suitStacks.count) suitstacks")
         
+        self.gameBeforeNewGame = nil
         if let previousGame = previousGame {
             self.offerNewGameUndo(restoring: previousGame)
-        }
-        else {
-            self.dismissNewGameUndo(animated: false)
         }
         self.updateNoMovesBanner()
     }
@@ -417,6 +414,10 @@ class ViewController: UIViewController {
     @IBAction func undoMove(_ sender: UIBarButtonItem) {
         // You only get one undo
         self.undoBarButtonItem.isEnabled = false
+        if self.gameBeforeNewGame != nil {
+            self.undoNewGame()
+            return
+        }
         let frames = self.cardFrames()
         
         if self.deckTaps > 0 {
@@ -448,6 +449,7 @@ class ViewController: UIViewController {
         self.moveCardBetweenStacks(cardToMove: card, sourceStack: source, destinationStack: destination)
         self.lastMove = (Array(destination.cards[countBefore...]), source, destination)
         self.deckTaps = 0
+        self.gameBeforeNewGame = nil
         self.undoBarButtonItem.isEnabled = true
         self.layOutAndSlide(from: frames)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -1039,6 +1041,7 @@ class ViewController: UIViewController {
             }
         }
         self.undoBarButtonItem.isEnabled = true
+        self.gameBeforeNewGame = nil
         self.lastMove   = nil
         self.activeCard = nil
         self.dealtDate  = Date()

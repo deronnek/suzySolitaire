@@ -36,9 +36,12 @@ extension ViewController {
         }
         self.sideColumns?.left.isHidden  = !side
         self.sideColumns?.right.isHidden = !side
+        if side {
+            self.alignMenuWithUndo()
+        }
         self.chalkLine.isHidden = side
         self.updateChalk()
-        for banner in [self.newGameUndoBanner, self.noMovesBanner].compactMap({ $0 }) {
+        if let banner = self.noMovesBanner {
             self.placeBanner(banner)
         }
         self.keepControlsInFront()
@@ -84,8 +87,12 @@ extension ViewController {
             trailing,
             right.topAnchor.constraint(equalTo: safe.topAnchor, constant: 12),
             right.widthAnchor.constraint(equalToConstant: ViewController.sideColumnWidth),
-            menu.widthAnchor.constraint(greaterThanOrEqualTo: menu.heightAnchor),
-        ])
+        ] + [menu.widthAnchor, menu.heightAnchor].map { anchor in
+            // alignMenuWithUndo matches these to Undo
+            let size = anchor.constraint(equalToConstant: 44)
+            size.identifier = "menuSize"
+            return size
+        })
         self.sideColumns = (left, right, chalk, menu)
     }
 
@@ -106,6 +113,33 @@ extension ViewController {
         config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(textStyle: .body, scale: .medium)
         config.contentInsets = NSDirectionalEdgeInsets(top: 11, leading: 14, bottom: 11, trailing: 14)
         return UIButton(configuration: config)
+    }
+
+    // Puts the "..." button right under Undo at the same size.  Where the navigation bar puts its buttons beside the
+    // Dynamic Island or notch varies by device, so this measures Undo rather than working it out from the safe area.
+    func alignMenuWithUndo() {
+        guard let columns = self.sideColumns, let bar = self.navigationController?.navigationBar else {
+            return
+        }
+        bar.layoutIfNeeded()
+        func find(_ view: UIView) -> UIView? {
+            if view.accessibilityIdentifier == "undo" && view.bounds.width > 0 {
+                return view
+            }
+            return view.subviews.lazy.compactMap(find).first
+        }
+        guard let undo = find(bar) else {
+            return
+        }
+        // Undo's glass circle reaches 4 points past the button itself
+        let frame = self.view.convert(undo.bounds, from: undo)
+        let size  = max(44, frame.height + 8)
+        for constraint in self.view.constraints where constraint.identifier == "sideColumnInset" && constraint.firstItem === columns.right {
+            constraint.constant = frame.midX + size / 2 - self.view.bounds.width
+        }
+        for constraint in columns.menu.constraints where constraint.identifier == "menuSize" {
+            constraint.constant = size
+        }
     }
 
     func setUpChalk() {
@@ -209,7 +243,7 @@ extension ViewController {
 
     // Banners and the side columns sit above the cards, which get brought to the front as they move
     func keepControlsInFront() {
-        let controls: [UIView?] = [self.sideColumns?.left, self.sideColumns?.right, self.newGameUndoBanner, self.noMovesBanner]
+        let controls: [UIView?] = [self.sideColumns?.left, self.sideColumns?.right, self.noMovesBanner]
         for case let control? in controls {
             self.view.bringSubviewToFront(control)
         }

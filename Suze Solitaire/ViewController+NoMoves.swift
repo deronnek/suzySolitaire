@@ -154,8 +154,7 @@ extension ViewController {
             self.removeBanner(banner, animated: true)
             self.noMovesBanner = nil
         }
-        // Wait for the New Game undo banner, which sits in the same spot, to go away
-        guard let message = message, self.newGameUndoBanner == nil else {
+        guard let message = message else {
             self.updateAccessibility()
             return
         }

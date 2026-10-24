@@ -5,38 +5,22 @@
 
 import UIKit
 
-// New Game deals straight away, then a banner briefly offers to bring back the game it replaced, in case the tap was
-// a mistake.  Tapping Undo restores that game exactly, including the score and loss it cost.
+// New Game deals straight away, and until the first move or deal in the new game, the Undo button brings back the
+// game it replaced, in case the tap was a mistake.  That restores the game exactly, including the score and loss it
+// cost.
 extension ViewController {
 
     func offerNewGameUndo(restoring previousGame: SavedGame) {
-        self.dismissNewGameUndo(animated: false)
         self.gameBeforeNewGame = previousGame
-
-        let banner = self.addBanner(message: "New game dealt", buttonTitle: "Undo", symbol: "arrow.uturn.backward",
-                                    hint: "Brings back the game you were playing") { [unowned self] in
-            self.undoNewGame()
-        }
-        self.newGameUndoBanner = banner
-        self.updateAccessibility()
-        self.announce("New game dealt. Undo is available for a few seconds.")
-
-        // Leave VoiceOver users longer to reach the button
-        let duration = ViewController.newGameUndoDuration * (UIAccessibility.isVoiceOverRunning ? 2 : 1)
-        let timer = DispatchWorkItem { [weak self] in
-            self?.dismissNewGameUndo(animated: true)
-            // The new deal might have nothing to play, which waited on this banner
-            self?.updateNoMovesBanner()
-        }
-        self.newGameUndoTimer = timer
-        DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: timer)
+        self.undoBarButtonItem.isEnabled = true
+        self.announce("New game dealt. Undo brings back the game you were playing.")
     }
 
     func undoNewGame() {
         guard let previousGame = self.gameBeforeNewGame, let board = previousGame.board else {
             return
         }
-        self.dismissNewGameUndo(animated: true)
+        self.gameBeforeNewGame = nil
 
         self.clearTable()
         self.score     = previousGame.score
@@ -126,18 +110,6 @@ extension ViewController {
         }, completion: { _ in
             banner.removeFromSuperview()
         })
-    }
-
-    func dismissNewGameUndo(animated: Bool) {
-        self.newGameUndoTimer?.cancel()
-        self.newGameUndoTimer  = nil
-        self.gameBeforeNewGame = nil
-        guard let banner = self.newGameUndoBanner else {
-            return
-        }
-        self.newGameUndoBanner = nil
-        self.removeBanner(banner, animated: animated)
-        self.updateAccessibility()
     }
 }
 
