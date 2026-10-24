@@ -12,7 +12,7 @@ extension ViewController {
 
     func offerNewGameUndo(restoring previousGame: SavedGame) {
         self.gameBeforeNewGame = previousGame
-        self.undoBarButtonItem.isEnabled = true
+        self.canUndo = true
         self.announce("New game dealt. Undo brings back the game you were playing.")
     }
 
@@ -34,7 +34,7 @@ extension ViewController {
         self.lastMove   = nil
         self.deckTaps   = 0
         self.activeCard = nil
-        self.undoBarButtonItem.isEnabled = false
+        self.canUndo = false
         self.redrawTable()
         self.updateNoMovesBanner()
         self.announce("Previous game restored")

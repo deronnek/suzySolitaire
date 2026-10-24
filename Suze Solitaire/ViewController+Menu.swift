@@ -6,7 +6,7 @@
 import PhotosUI
 import UIKit
 
-// The "..." menu in the bottom toolbar: a hint, auto moves, the no-moves banner, the drop highlight, the card back, resetting wins and losses, and the
+// The "..." menu in the bottom corner: a hint, auto moves, the no-moves banner, the drop highlight, the card back, resetting wins and losses, and the
 // About box
 extension ViewController: PHPickerViewControllerDelegate {
 
@@ -61,8 +61,7 @@ extension ViewController: PHPickerViewControllerDelegate {
     }
 
     func updateMenu() {
-        self.menuBarButtonItem?.menu = self.buildMenu()
-        self.sideColumns?.menu.menu  = self.menuBarButtonItem?.menu
+        self.menuButton.menu = self.buildMenu()
     }
 
     // MARK: Card back
@@ -124,7 +123,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         // Undoing a New Game would bring the old counts back
         if self.gameBeforeNewGame != nil {
             self.gameBeforeNewGame = nil
-            self.undoBarButtonItem.isEnabled = false
+            self.canUndo = false
         }
         self.wins   = 0
         self.losses = 0

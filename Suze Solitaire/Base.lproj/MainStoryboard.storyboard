@@ -94,7 +94,7 @@
             <objects>
                 <navigationController storyboardIdentifier="NavigationController" automaticallyAdjustsScrollViewInsets="NO" useStoryboardIdentifierAsRestorationIdentifier="YES" id="XS6-J1-sOB" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="cM4-eb-6yI">
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="cM4-eb-6yI" customClass="TableNavigationBar" customModule="Suze_Solitaire" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="24" width="820" height="50"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>

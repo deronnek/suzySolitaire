@@ -14,7 +14,7 @@
 		0BAA5E1A2E9C00000000000D /* ViewController+NoMoves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */; };
 		0BAA5E1A2E9C00000000000F /* ViewController+Hints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */; };
 		0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */; };
-		0BAA5E1A2E9C000000000013 /* ViewController+SideColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000012 /* ViewController+SideColumns.swift */; };
+		0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */; };
 		0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */; };
 		0B478BF81C6B7D25008C7B87 /* spade1.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BF71C6B7D25008C7B87 /* spade1.png */; };
 		0B478BFC1C6B81D0008C7B87 /* spade1-iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */; };
@@ -156,7 +156,7 @@
 		0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+NoMoves.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Hints.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Appearance.swift"; sourceTree = "<group>"; };
-		0BAA5E1A2E9C000000000012 /* ViewController+SideColumns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+SideColumns.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Controls.swift"; sourceTree = "<group>"; };
 		0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		0B478BF71C6B7D25008C7B87 /* spade1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = spade1.png; sourceTree = "<group>"; };
 		0B478BFB1C6B81D0008C7B87 /* spade1-iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "spade1-iphone.png"; sourceTree = "<group>"; };
@@ -348,7 +348,7 @@
 				0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */,
 				0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */,
 				0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */,
-				0BAA5E1A2E9C000000000012 /* ViewController+SideColumns.swift */,
+				0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */,
 				0BAA5E1A2E9C000000000008 /* ViewController+Accessibility.swift */,
 				0BAA5E1A2E9C000000000004 /* ViewController+Menu.swift */,
 				0BAA5E1A2E9C000000000002 /* HowToPlayViewController.swift */,
@@ -705,7 +705,7 @@
 				0BAA5E1A2E9C00000000000D /* ViewController+NoMoves.swift in Sources */,
 				0BAA5E1A2E9C00000000000F /* ViewController+Hints.swift in Sources */,
 				0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */,
-				0BAA5E1A2E9C000000000013 /* ViewController+SideColumns.swift in Sources */,
+				0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */,
 				0BAA5E1A2E9C000000000009 /* ViewController+Accessibility.swift in Sources */,
 				0BAA5E1A2E9C000000000005 /* ViewController+Menu.swift in Sources */,
 				0BAA5E1A2E9C000000000003 /* HowToPlayViewController.swift in Sources */,

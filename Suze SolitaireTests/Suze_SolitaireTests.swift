@@ -136,13 +136,13 @@ final class Suze_SolitaireTests: XCTestCase {
         for (width, height) in [(320.0, 900.0), (375.0, 1000.0), (507.0, 800.0)] {
             vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
             vc.redrawTable()
-            XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, CGFloat(Int(width / 7.4)), "\(width)x\(height)")
+            // Between New Game's left edge and Undo's right, 16 points in
+            XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, CGFloat(Int((width - 32) / 7)), "\(width)x\(height)")
         }
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 1180)
-            vc.redrawTable()
-            XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, 82)
-        }
+        // The bigger table, 24 points in
+        vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 1180)
+        vc.redrawTable()
+        XCTAssertEqual(vc.cardStacks[0]!.cards[0].view.frame.width, CGFloat(Int((820 - 48) / 8.2)))
     }
 
     func testLandscapeTableFitsOnScreen() {
@@ -170,7 +170,6 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 760)
         vc.view.layoutIfNeeded()
         XCTAssertTrue(vc.roomyTable)
-        XCTAssertFalse(vc.usesSideColumns)
         XCTAssertTrue(Card.largeArt)
         XCTAssertTrue(top.view.image === top.largeFaceImage)
         XCTAssertTrue(under.view.image === Card.blankFaceImage, "covered cards stay blank")
@@ -189,39 +188,76 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(top.view.frame.width, compactWidth, accuracy: 0.5)
     }
 
-    func testLandscapeMovesTheToolbarBesideTheTable() throws {
+    func testButtonsKeepToTheCorners() throws {
         vc.score  = -725
         vc.wins   = 3
         vc.losses = 17
-        vc.view.frame = CGRect(x: 0, y: 0, width: 874, height: 402)
-        vc.redrawTable()
-        let columns = try XCTUnwrap(vc.sideColumns)
-        XCTAssertTrue(vc.toolbar.isHidden)
-        XCTAssertFalse(columns.left.isHidden)
-        XCTAssertEqual(columns.chalk.map { $0.text }, ["$-725", "Wins: 3", "Losses: 17"])
-        XCTAssertTrue(vc.chalkLine.isHidden)
-        XCTAssertNotNil(columns.menu.menu, "the ... button has the menu")
-        for stack in allStacks(vc) {
-            XCTAssertGreaterThan(stack!.view.frame.minX, columns.left.frame.maxX, "\(stack!.stackType) is under the stats")
-            XCTAssertLessThan(stack!.view.frame.maxX, columns.right.frame.minX, "\(stack!.stackType) is under the menu")
-        }
+        for (width, height) in [(402.0, 874.0), (874.0, 402.0), (1032.0, 1376.0), (1376.0, 1032.0), (667.0, 375.0)] {
+            vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
+            vc.redrawTable()
+            let newGame = vc.newGameButton.frame, undo = vc.undoButton.frame, menu = vc.menuButton.frame
+            let size = vc.roomyTable ? 56.0 : 44.0
+            let at = "\(width)x\(height)"
+            for button in [newGame, undo, menu] {
+                XCTAssertEqual(button.size, CGSize(width: size, height: size), at)
+            }
+            XCTAssertLessThan(newGame.midX, width / 4, at)
+            XCTAssertEqual(newGame.minY, undo.minY, at)
+            XCTAssertGreaterThan(undo.midX, width * 3 / 4, at)
+            XCTAssertEqual(menu.midX, undo.midX, at)
+            XCTAssertGreaterThan(menu.minY, height * 3 / 4, at)
+            XCTAssertEqual(vc.newGameButton.accessibilityLabel, "New Game")
+            XCTAssertEqual(vc.undoButton.accessibilityLabel, "Undo")
+            XCTAssertNotNil(vc.menuButton.menu, "the ... button has the menu")
+            XCTAssertTrue(vc.toolbar.isHidden)
+            XCTAssertNil(vc.navigationItem.leftBarButtonItem, "the table has its own New Game")
 
-        // A banner goes in the right column, and back above the toolbar in portrait
+            // The score along the bottom, level with the "..." button and short of it
+            vc.view.layoutIfNeeded()
+            let chalk = vc.chalkLine.frame
+            XCTAssertEqual(chalk.midY, menu.midY, accuracy: 0.5, at)
+            XCTAssertLessThan(chalk.maxX, menu.minX, at)
+            XCTAssertEqual(vc.chalkLine.text, "$-725   Wins: 3   Losses: 17")
+
+            for stack in allStacks(vc) {
+                let frame = stack!.view.frame
+                for button in [newGame, undo, menu, chalk] {
+                    XCTAssertFalse(frame.intersects(button), "\(stack!.stackType) is under a button or the score at \(at)")
+                }
+            }
+        }
+    }
+
+    func testTheNavigationBarLetsTouchesThroughToTheTable() throws {
+        let nav = try XCTUnwrap(vc.navigationController?.navigationBar as? TableNavigationBar)
+        nav.frame = CGRect(x: 0, y: 0, width: 874, height: 54)
+        let backdrop = UIView(frame: nav.bounds)
+        let button   = UIButton(frame: CGRect(x: 20, y: 5, width: 44, height: 44))
+        nav.addSubview(backdrop)
+        nav.addSubview(button)
+        XCTAssertNil(nav.hitTest(CGPoint(x: 437, y: 27), with: nil), "between the buttons is the table's")
+        XCTAssertTrue(nav.hitTest(CGPoint(x: 40, y: 27), with: nil) === button)
+    }
+
+    func testBannersSitAboveOrBesideTheScore() throws {
         setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts)])
         vc.updateNoMovesBanner()
         let banner = try XCTUnwrap(vc.noMovesBanner)
+
+        // In landscape on the bottom row, beside the "..." button
+        vc.view.frame = CGRect(x: 0, y: 0, width: 874, height: 402)
+        vc.redrawTable()
         vc.view.layoutIfNeeded()
-        XCTAssertEqual(banner.frame.maxX, columns.right.frame.maxX, accuracy: 0.5)
-        XCTAssertGreaterThan(banner.frame.minY, columns.menu.frame.maxY)
+        XCTAssertEqual(banner.frame.midY, vc.menuButton.frame.midY, accuracy: 0.5)
+        XCTAssertEqual(banner.frame.maxX, vc.menuButton.frame.minX - ViewController.bannerSpacing, accuracy: 0.5)
+        XCTAssertGreaterThan(banner.frame.minX, vc.chalkLine.frame.maxX)
+
+        // In portrait just above them
         vc.view.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
         vc.redrawTable()
         vc.view.layoutIfNeeded()
-        XCTAssertFalse(vc.toolbar.isHidden)
-        XCTAssertTrue(columns.left.isHidden)
-        XCTAssertFalse(vc.chalkLine.isHidden)
-        XCTAssertEqual(banner.frame.maxY, vc.toolbar.frame.minY - ViewController.bannerSpacing, accuracy: 0.5)
-        XCTAssertGreaterThan(banner.frame.width, ViewController.sideColumnWidth, "back on one line, not still column-width")
-        XCTAssertLessThan(banner.frame.height, 60)
+        XCTAssertEqual(banner.frame.maxY, vc.menuButton.frame.minY - ViewController.bannerSpacing, accuracy: 0.5)
+        XCTAssertLessThan(banner.frame.height, 60, "on one line")
         XCTAssertEqual(vc.view.subviews.last, banner, "banners stay above the cards")
     }
 
@@ -236,20 +272,17 @@ final class Suze_SolitaireTests: XCTestCase {
         let white = try XCTUnwrap(vc.chalkLine.attributedText?.attribute(.foregroundColor, at: 8, effectiveRange: nil) as? UIColor)
         XCTAssertNotEqual(red, white, "a score below zero is in red chalk")
         XCTAssertTrue(vc.view.subviews.first === vc.chalkLine, "painted on the table, under the cards")
-        // Only the "..." button shows in the toolbar
-        XCTAssertEqual(vc.toolbar.items?.filter { !$0.isHidden && $0.image != nil }.count, 1)
         XCTAssertEqual([vc.bucksBarButtonItem, vc.winsBarButtonItem, vc.lossesBarButtonItem].map { $0!.isHidden }, [true, true, true])
-        // New Game is a plus, still named for VoiceOver
-        let newGame = try XCTUnwrap(vc.navigationItem.leftBarButtonItem)
+        // New Game is a plus, still named for VoiceOver, on the table and in iPhone Duo's strip
+        let newGame = try XCTUnwrap(vc.newGameBarButtonItem)
         XCTAssertNil(newGame.title)
         XCTAssertEqual(newGame.accessibilityLabel, "New Game")
     }
 
     func testHowToPlayIsInTheMenu() throws {
-        let menu = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+        let menu = try XCTUnwrap(vc.menuButton.menu)
         let inline = try XCTUnwrap(menu.children.first as? UIMenu)
         XCTAssertEqual(inline.children.map { $0.title }, ["Hint", "How to Play"])
-        XCTAssertEqual(vc.navigationItem.rightBarButtonItems?.count, 1, "just Undo on the right")
     }
 
     func testDarkModeDimsTheOutlinesButNotTheCards() throws {
@@ -292,8 +325,8 @@ final class Suze_SolitaireTests: XCTestCase {
         for (width, height) in [(390.0, 844.0), (844.0, 390.0)] {
             vc.view.frame = CGRect(x: 0, y: 0, width: width, height: height)
             vc.redrawTable()
-            // Above the banners over the toolbar, or above the bottom of the screen in landscape, where there's no toolbar
-            let bottom = width > height ? height : vc.toolbar.frame.minY - ViewController.bannerSpacing - ViewController.bannerHeight
+            // Above the banners over the score in portrait, or above the score in landscape, where banners go beside it
+            let bottom = width > height ? vc.menuButton.frame.minY : vc.menuButton.frame.minY - ViewController.bannerSpacing - ViewController.bannerHeight
             XCTAssertLessThanOrEqual(stack.view.frame.maxY, bottom, "\(width)x\(height)")
             XCTAssertLessThan(stack.cardSliceHeight, stack.baseSliceHeight)
             // Every card should still show a sliver
@@ -350,7 +383,7 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testButtonActionsExist() {
         // A storyboard action whose selector doesn't match an @IBAction crashes when the button is tapped
-        let items = (vc.navigationItem.leftBarButtonItems ?? []) + (vc.navigationItem.rightBarButtonItems ?? []) + (vc.toolbar.items ?? [])
+        let items = [vc.newGameBarButtonItem!, vc.undoBarButtonItem!] + (vc.toolbar.items ?? [])
         for item in items {
             guard let action = item.action else { continue }
             let target = (item.target as? NSObject) ?? vc!
@@ -360,7 +393,7 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testMenuShowsAutoMovesState() throws {
         func autoState() throws -> UIMenuElement.State {
-            let menu = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+            let menu = try XCTUnwrap(vc.menuButton.menu)
             return try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title == "Auto Moves" }).state
         }
         XCTAssertEqual(try autoState(), .off)
@@ -423,7 +456,7 @@ final class Suze_SolitaireTests: XCTestCase {
     }
 
     func testResetStatsClearsWinsAndLosses() throws {
-        let menu  = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+        let menu  = try XCTUnwrap(vc.menuButton.menu)
         let reset = try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title.hasPrefix("Reset Wins") })
         XCTAssertTrue(reset.attributes.contains(.destructive))
 
@@ -563,8 +596,8 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(vc.cardStacks[2]!.view.accessibilityLabel, "Lower stack 3")
         XCTAssertEqual(vc.cardStacks[2]!.view.accessibilityValue, vc.cardStacks[2]!.cards[0].accessibilityName)
         XCTAssertEqual(vc.suitStacks[0]!.view.accessibilityLabel, "Upper stack 1")
-        // Only the stacks and the toolbar are exposed; the individual card images aren't
-        XCTAssertEqual(vc.view.accessibilityElements?.count, 12)
+        // Only New Game, Undo, the stacks, the score and the "..." button are exposed; the individual card images aren't
+        XCTAssertEqual(vc.view.accessibilityElements?.count, 15)
     }
 
     func testActivatingDeckDeals() {
@@ -693,12 +726,12 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.finishTurn()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
 
-        let menu   = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+        let menu   = try XCTUnwrap(vc.menuButton.menu)
         let toggle = try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" })
         XCTAssertEqual(toggle.state, .on)
         vc.showsNoMoves = false
         XCTAssertNil(vc.noMovesBanner)
-        XCTAssertEqual(try XCTUnwrap(vc.menuBarButtonItem?.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" }).state, .off)
+        XCTAssertEqual(try XCTUnwrap(vc.menuButton.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Show When Stuck" }).state, .off)
     }
 
     func testHintsAreOffOnAFreshInstall() {
@@ -775,7 +808,7 @@ final class Suze_SolitaireTests: XCTestCase {
         hover(over: vc.cardStacks[0]!)
         XCTAssertNil(vc.dropHighlight, "off unless turned on in the menu")
 
-        let toggle = try XCTUnwrap(vc.menuBarButtonItem?.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Highlight Drop Spot" })
+        let toggle = try XCTUnwrap(vc.menuButton.menu?.children.compactMap { $0 as? UIAction }.first { $0.title == "Highlight Drop Spot" })
         XCTAssertEqual(toggle.state, .off)
         vc.highlightsDrops = true
         hover(over: vc.cardStacks[0]!)
@@ -896,7 +929,7 @@ final class Suze_SolitaireTests: XCTestCase {
     func testTappingTheTableDeals() {
         vc.redrawTable()
         let deckCount = vc.deck!.cards.count
-        let spot = CGPoint(x: 5, y: vc.toolbar.frame.minY - 20)
+        let spot = CGPoint(x: 5, y: vc.menuButton.frame.minY - 20)
         vc.beginTouch(at: spot, on: vc.view)
         vc.endTouch(at: CGPoint(x: spot.x + 3, y: spot.y + 2))
         XCTAssertEqual(vc.deck!.cards.count, deckCount - 3)

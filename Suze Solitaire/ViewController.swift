@@ -38,13 +38,16 @@ class ViewController: UIViewController {
     @IBOutlet weak var bucksBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var winsBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var lossesBarButtonItem: UIBarButtonItem!
-    @IBOutlet weak var undoBarButtonItem: UIBarButtonItem!
+    // Held strongly, since they leave the navigation bar except in iPhone Duo's strip (see ViewController+Controls.swift)
+    @IBOutlet var undoBarButtonItem: UIBarButtonItem!
+    var newGameBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var toolbar: UIToolbar!
-    var menuBarButtonItem: UIBarButtonItem? = nil
-    // The score, wins and losses chalked on the felt beside the "..." button (see ViewController+SideColumns.swift)
+    // The table's own New Game, Undo and "..." buttons in its corners
+    lazy var newGameButton = self.makeCornerButton(symbol: "plus", label: "New Game") { [unowned self] in self.startNewGameWithSender(sender: self) }
+    lazy var undoButton    = self.makeCornerButton(symbol: "arrow.uturn.backward", label: "Undo") { [unowned self] in self.undoMove(self) }
+    lazy var menuButton    = self.makeMenuButton()
+    // The score, wins and losses chalked on the felt beside the "..." button
     let chalkLine = UILabel()
-    // The chalked numbers and the "..." button beside the table in iPhone landscape
-    var sideColumns: (left: UIStackView, right: UIStackView, chalk: [UILabel], menu: UIButton)? = nil
     // The size the table was last laid out for (see viewDidLayoutSubviews)
     var laidOutSize = CGSize.zero
     // Banners sit this far above the toolbar, and the table stops short of them
@@ -169,18 +172,12 @@ class ViewController: UIViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
         
-        let menuItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: self.buildMenu())
-        menuItem.accessibilityLabel = "More"
-        self.menuBarButtonItem = menuItem
-        // So the landscape "..." button can find it and line up under it
-        self.undoBarButtonItem.accessibilityIdentifier = "undo"
         self.setUpChalk()
         // New Game is a plus, like the New Game button in the "No moves left" banner
-        if let newGame = self.navigationItem.leftBarButtonItem {
-            newGame.title = nil
-            newGame.image = UIImage(systemName: "plus")
-            newGame.accessibilityLabel = "New Game"
-        }
+        self.newGameBarButtonItem = self.navigationItem.leftBarButtonItem
+        self.newGameBarButtonItem.title = nil
+        self.newGameBarButtonItem.image = UIImage(systemName: "plus")
+        self.newGameBarButtonItem.accessibilityLabel = "New Game"
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -295,7 +292,7 @@ class ViewController: UIViewController {
             return false
         }
         
-        self.undoBarButtonItem.isEnabled = false
+        self.canUndo = false
         self.cards.removeAll()
         self.createCards()
         var cardsByTag = [Int: Card]()
@@ -426,9 +423,9 @@ class ViewController: UIViewController {
     }
     
     // The storyboard connects the undo button to undoMove:, so the parameter must be unlabeled
-    @IBAction func undoMove(_ sender: UIBarButtonItem) {
+    @IBAction func undoMove(_ sender: Any) {
         // You only get one undo
-        self.undoBarButtonItem.isEnabled = false
+        self.canUndo = false
         if self.gameBeforeNewGame != nil {
             self.undoNewGame()
             return
@@ -465,7 +462,7 @@ class ViewController: UIViewController {
         self.lastMove = (Array(destination.cards[countBefore...]), source, destination)
         self.deckTaps = 0
         self.gameBeforeNewGame = nil
-        self.undoBarButtonItem.isEnabled = true
+        self.canUndo = true
         self.layOutAndSlide(from: frames)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
@@ -560,7 +557,7 @@ class ViewController: UIViewController {
     
     func initTable() {
         print("Init table called")
-        self.undoBarButtonItem.isEnabled = false
+        self.canUndo = false
         
         self.view.restorationIdentifier = "mainView"
         
@@ -646,7 +643,7 @@ class ViewController: UIViewController {
     
     func initTableTrivial() {
         print("Init table TRIVIAL called")
-        self.undoBarButtonItem.isEnabled = false
+        self.canUndo = false
         
         self.view.restorationIdentifier = "mainView"
         
@@ -734,17 +731,19 @@ class ViewController: UIViewController {
             // No table yet
             return
         }
-        self.updateControlPlacement()
+        let controls = self.updateControlPlacement()
         self.view.layoutIfNeeded()
         let bounds = self.view.bounds
         let safe   = self.view.safeAreaInsets
-        let toolbarBottom = CGRectGetHeight((self.navigationController?.navigationBar.bounds)!)+(self.navigationController?.navigationBar.frame.origin.y)!
-        let sideColumns = self.usesSideColumns
-        // Fanned stacks may reach down to just above the banners over the bottom toolbar, or to the bottom of the screen
-        // when the controls are beside the table
-        let tableBottom = sideColumns
-            ? bounds.height - safe.bottom - 8
-            : self.toolbar.frame.minY - ViewController.bannerSpacing - ViewController.bannerHeight - 8
+        // Below New Game and Undo, or the top of the safe area beside iPhone Duo's strip
+        let barBottom = controls.undo.map { $0.maxY + 10 } ?? safe.top
+        let landscape = self.isLandscape
+        let strip     = self.barsInStrip
+        // Fanned stacks may reach down to the row of the "..." button and the score, or in portrait to just above the
+        // banners over it
+        let tableBottom = landscape
+            ? controls.menu.minY - 8
+            : controls.menu.minY - ViewController.bannerSpacing - ViewController.bannerHeight - 8
         // The roomy layout and its big cards, whatever the device: a full iPad, or iPhone Duo unfolded.  Narrow windows
         // (Split View, Slide Over, Stage Manager, a folded Duo) use the compact layout.
         let isPad = self.roomyTable
@@ -755,65 +754,51 @@ class ViewController: UIViewController {
         var stackXs = [CGFloat]()
         var toprowSpacer, secondSpacer: CGFloat
         
-        if sideColumns {
-            // iPhone landscape: size the cards so two rows fit in the height, with the blind, deck and deal side by side on
-            // the left, then a wider gap and the four stacks, all between the side columns.  The top row takes 1.6 card heights (a margin, the upper
-            // stacks' cards with the one under them peeking out below, and a gap), leaving the lower stacks 1.4 to fan in.
-            cardHeight = (tableBottom - toolbarBottom) / 3
+        if landscape {
+            // Two long rows between New Game and Undo, starting level with them: the blind, deck and deal side by side,
+            // then a wider gap and the four stacks.  The top row takes 1.5 card heights (its cards, the one under an upper
+            // stack's top card peeking out below, and a gap), leaving the lower stacks 1.3 to fan in.  On iPhone Duo the
+            // buttons are in the strip, so the rows use the whole table.
+            let top   = strip ? safe.top + 16 : controls.undo?.minY ?? barBottom
+            let left  = strip ? safe.left + 16 : (controls.newGame?.maxX ?? safe.left) + 16
+            let right = strip ? bounds.width - safe.right - 16 : (controls.undo?.minX ?? bounds.width - safe.right) - 16
+            cardHeight = (tableBottom - top) / 2.8
             cardWidth  = cardHeight / Card.aspectRatio
             var gap    = cardWidth / 5
-            let rowWidth       = { 7*cardWidth + 5*gap + cardWidth*0.6 }
-            // Between the side columns, which line up with the navigation bar's buttons
-            let right          = { (columns: (left: UIStackView, right: UIStackView, chalk: [UILabel], menu: UIButton)) in
-                self.barsInStrip ? bounds.width - safe.right - 12 : columns.right.frame.minX - 12
-            }
-            let columns        = self.sideColumns.map { ($0.left.frame.maxX + 12, right($0)) } ?? (safe.left, bounds.width - safe.right)
-            let availableWidth = columns.1 - columns.0
-            if rowWidth() > availableWidth {
-                let scale = availableWidth / rowWidth()
+            let rowWidth = { 7*cardWidth + 5*gap + cardWidth*0.6 }
+            if rowWidth() > right - left {
+                let scale = (right - left) / rowWidth()
                 cardWidth *= scale; cardHeight *= scale; gap *= scale
             }
-            let left = columns.0 + (availableWidth - rowWidth()) / 2
-            toprowSpacer = toolbarBottom + cardHeight*0.1
+            let rowLeft = left + (right - left - rowWidth()) / 2
+            toprowSpacer = top
             // Upper stacks show the card under their top one this far below it (see CardStack.resize)
-            let peek     = CGFloat(Int(cardHeight/2.5))
+            let peek     = isPad ? 30 : CGFloat(Int(cardHeight/2.5))
             secondSpacer = toprowSpacer + cardHeight + peek + cardHeight*0.1
-            fubPoint  = CGPoint(x: left, y: toprowSpacer)
-            deckPoint = CGPoint(x: left + cardWidth + gap, y: toprowSpacer)
-            dealPoint = CGPoint(x: left + 2*(cardWidth + gap), y: toprowSpacer)
-            let stacksLeft = left + 3*cardWidth + 2*gap + cardWidth*0.6
+            fubPoint  = CGPoint(x: rowLeft, y: toprowSpacer)
+            deckPoint = CGPoint(x: rowLeft + cardWidth + gap, y: toprowSpacer)
+            dealPoint = CGPoint(x: rowLeft + 2*(cardWidth + gap), y: toprowSpacer)
+            let stacksLeft = rowLeft + 3*cardWidth + 2*gap + cardWidth*0.6
             stackXs = (0..<4).map { stacksLeft + CGFloat($0)*(cardWidth + gap) }
         }
         else {
-            // On iPhone the rows span 7.2 card widths (the fub/deck/deal column, then the gap and four stacks), plus a cardWidth/5
-            // margin on the right.  The iPad sizes its cards below, but its row spacing is still based on screenWidth/7.
-            // The safe area's width: iPhone Duo keeps its status bar and navigation buttons in a strip down the side
-            let screenWidth = CGRectGetWidth(bounds) - safe.left - safe.right
-            cardWidth  = CGFloat(screenWidth / (isPad ? 7 : 7.4));
-            cardHeight = cardWidth * Card.aspectRatio;
+            // From New Game's left edge to Undo's right: the blind over the deck and deal on the left, and the four stacks
+            // on the right.  On iPhone 7 card widths in all, with the stacks close together; on the roomier table 8.2, a
+            // third of a card apart.  iPhone Duo keeps its navigation buttons in a strip down the side, outside the safe area.
+            let left  = controls.newGame?.minX ?? safe.left + 16
+            let right = controls.undo?.maxX ?? bounds.width - safe.right - 16
+            cardWidth  = (right - left) / (isPad ? 8.2 : 7)
+            cardHeight = cardWidth * Card.aspectRatio
+            let spacer = isPad ? cardWidth * 0.3 : cardWidth / 15
             
-            toprowSpacer = toolbarBottom+cardHeight*0.1;  // Space from the top of the screen to the first row of cards.
-            var leftRightGapMultiplier = CGFloat(2.8);
-            
-            var widthSpacer  = cardWidth/15;
-            var dealSpacer   = 2*(cardWidth/5);
-            
-            if(isPad) {
-                cardWidth    = screenWidth/10;
-                widthSpacer  = cardWidth/2.0;
-                dealSpacer   = 2*(cardWidth/5);
-                leftRightGapMultiplier = 4;
-                cardHeight   = cardWidth*Card.aspectRatio;
-                
-            }
-            
+            toprowSpacer = barBottom + cardHeight*0.1  // Space from the top of the screen to the first row of cards.
             // The second row starts just below the blind with all 13 of its cards fanned out
             secondSpacer = toprowSpacer + cardHeight + CGFloat(12*CardStack.fannedSliceHeight) + cardHeight*0.15
             
-            fubPoint  = CGPoint(x: safe.left + cardWidth/5, y: toprowSpacer)
-            deckPoint = CGPoint(x: safe.left + cardWidth/5, y: secondSpacer)
-            dealPoint = CGPoint(x: safe.left + cardWidth+dealSpacer, y: secondSpacer)
-            stackXs   = (0..<4).map { safe.left + cardWidth*leftRightGapMultiplier + CGFloat($0)*(cardWidth + widthSpacer) }
+            fubPoint  = CGPoint(x: left, y: toprowSpacer)
+            deckPoint = CGPoint(x: left, y: secondSpacer)
+            dealPoint = CGPoint(x: left + cardWidth*1.4, y: secondSpacer)
+            stackXs   = (0..<4).map { right - 4*cardWidth - 3*spacer + CGFloat($0)*(cardWidth + spacer) }
         }
         
         // Get integer versions as that's what resize takes (maybe it shouldn't?)
@@ -1072,7 +1057,7 @@ class ViewController: UIViewController {
                 self.deckTaps += 1
             }
         }
-        self.undoBarButtonItem.isEnabled = true
+        self.canUndo = true
         self.gameBeforeNewGame = nil
         self.lastMove   = nil
         self.activeCard = nil
@@ -1094,7 +1079,7 @@ class ViewController: UIViewController {
         // Make all possible moves to suitstacks
         if self.autoMoves {
             while self.findCardForSuitstack() {
-                undoBarButtonItem.isEnabled = false
+                self.canUndo = false
             }
         }
         
@@ -1192,7 +1177,7 @@ class ViewController: UIViewController {
             self.activeCard = nil
             self.score += 250
             self.wins += 1
-            self.undoBarButtonItem.isEnabled = false
+            self.canUndo = false
             
             // Visual "reward" for winning
             

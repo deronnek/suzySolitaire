@@ -9,8 +9,10 @@
 #
 # Each is a fresh install showing the same deal (-ScreenshotSeed), in landscape when asked (-ScreenshotOrientation).
 # iPhone Duo's inner screen only shows while it's unfolded, which only Device Hub's controls can do: unfold it there
-# and run this again to get those two.  An iPad turns only from the Simulator app's Device menu (⌘← and ⌘→); the
-# script says when a screenshot came out the wrong way round, and skips it.  Uses the newest Xcode with the iPhone Duo simulator unless DEVELOPER_DIR is set.
+# and run this again to get those two.  An iPad that runs apps in windows ignores the app's request to turn, so the
+# iPad landscape shot uses a copy of the app marked full screen (UIRequiresFullScreen), which iPadOS does turn; the
+# script says when a screenshot came out the wrong way round anyway, and skips it.  Uses the newest Xcode with the
+# iPhone Duo simulator unless DEVELOPER_DIR is set.
 # Override the simulators by name or UDID with IPHONE_SIM, IPAD_SIM and DUO_SIM.
 set -euo pipefail
 
@@ -34,15 +36,21 @@ echo "Building with $DEVELOPER_DIR..."
 xcodebuild -project "Suze Solitaire.xcodeproj" -scheme "Suze Solitaire" -configuration Release \
     -destination "generic/platform=iOS Simulator" -derivedDataPath "$DERIVED" build -quiet
 APP="$DERIVED/Build/Products/Release-iphonesimulator/Suze Solitaire.app"
+FULL_SCREEN_APP="$DERIVED/FullScreen/Suze Solitaire.app"
+mkdir -p "$(dirname "$FULL_SCREEN_APP")"
+cp -R "$APP" "$FULL_SCREEN_APP"
+plutil -replace UIRequiresFullScreen -bool YES "$FULL_SCREEN_APP/Info.plist"
+codesign --force --sign - "$FULL_SCREEN_APP" 2>/dev/null
 mkdir -p "$OUT"
 
 # shoot <simulator> <portrait|landscape> <file> [display]
 shoot() {
-    local sim=$(udid "$1") file="$OUT/$3.png"
+    local sim=$(udid "$1") file="$OUT/$3.png" app="$APP"
+    [[ $3 == ipad-landscape ]] && app="$FULL_SCREEN_APP"
     xcrun simctl boot "$sim" 2>/dev/null || true
     xcrun simctl bootstatus "$sim" >/dev/null
     xcrun simctl uninstall "$sim" "$BUNDLE_ID" 2>/dev/null || true
-    xcrun simctl install "$sim" "$APP"
+    xcrun simctl install "$sim" "$app"
     xcrun simctl launch "$sim" "$BUNDLE_ID" -ScreenshotSeed "$SEED" -ScreenshotOrientation "$2" >/dev/null
     sleep 10
     xcrun simctl io "$sim" screenshot ${4:+--display=$4} "$file" >/dev/null 2>&1
@@ -53,6 +61,8 @@ shoot() {
         echo "$3: that screen is off"
         return 1
     fi
+    # The iPad's screenshot stays the way up the iPad is held, with the app turned on it
+    [[ $3 == ipad-landscape && $(magick "$file" -format '%[fx:h>w]' info:) == 1 ]] && magick "$file" -rotate -90 "$file"
     # The app can only ask to rotate; an iPad that runs apps in windows keeps its own orientation
     local tall=$(magick "$file" -format '%[fx:h>w]' info:)
     if [[ $2 == landscape && $tall == 1 || $2 == portrait && $tall == 0 ]]; then
