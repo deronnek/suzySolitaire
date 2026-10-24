@@ -49,7 +49,15 @@ extension ViewController: PHPickerViewControllerDelegate {
         let about = UIAction(title: "About", image: UIImage(systemName: "info.circle")) { _ in
             self.showAbout()
         }
-        return UIMenu(children: [UIMenu(options: .displayInline, children: [hint]), auto, noMoves, drops, cardBack, resetStats, about])
+        let howToPlay = UIAction(title: "How to Play", image: UIImage(systemName: "questionmark.circle")) { _ in
+            self.showHowToPlay()
+        }
+        return UIMenu(children: [UIMenu(options: .displayInline, children: [hint, howToPlay]), auto, noMoves, drops, cardBack, resetStats, about])
+    }
+
+    func showHowToPlay() {
+        let rules = self.storyboard!.instantiateViewController(withIdentifier: "howToPlay")
+        self.navigationController?.pushViewController(rules, animated: true)
     }
 
     func updateMenu() {

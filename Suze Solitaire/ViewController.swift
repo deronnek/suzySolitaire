@@ -41,8 +41,10 @@ class ViewController: UIViewController {
     @IBOutlet weak var undoBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var toolbar: UIToolbar!
     var menuBarButtonItem: UIBarButtonItem? = nil
-    // The toolbar's buttons, beside the table in iPhone landscape (see ViewController+SideColumns.swift)
-    var sideColumns: (left: UIStackView, right: UIStackView, stats: [UIButton], menu: UIButton)? = nil
+    // The score, wins and losses chalked on the felt beside the "..." button (see ViewController+SideColumns.swift)
+    let chalkLine = UILabel()
+    // The chalked numbers and the "..." button beside the table in iPhone landscape
+    var sideColumns: (left: UIStackView, right: UIStackView, chalk: [UILabel], menu: UIButton)? = nil
     // Banners sit this far above the toolbar, and the table stops short of them
     static let bannerSpacing: CGFloat = 12
     static let bannerHeight: CGFloat  = 44
@@ -68,7 +70,7 @@ class ViewController: UIViewController {
             else {
                 bucksBarButtonItem.tintColor = .label
             }
-            self.updateSideColumns()
+            self.updateChalk()
         }
     }
     
@@ -79,7 +81,7 @@ class ViewController: UIViewController {
         }
         set(newWins) {
             winsBarButtonItem.title = String(format: "Wins: %d", newWins)
-            self.updateSideColumns()
+            self.updateChalk()
         }
     }
     
@@ -90,7 +92,7 @@ class ViewController: UIViewController {
         }
         set(newLosses) {
             lossesBarButtonItem.title = String(format:"Losses: %d", newLosses)
-            self.updateSideColumns()
+            self.updateChalk()
         }
     }
     
@@ -170,8 +172,14 @@ class ViewController: UIViewController {
         
         let menuItem = UIBarButtonItem(image: UIImage(systemName: "ellipsis"), menu: self.buildMenu())
         menuItem.accessibilityLabel = "More"
-        self.toolbar.items = (self.toolbar.items ?? []) + [menuItem]
         self.menuBarButtonItem = menuItem
+        self.setUpChalk()
+        // New Game is a plus, like the New Game button in the "No moves left" banner
+        if let newGame = self.navigationItem.leftBarButtonItem {
+            newGame.title = nil
+            newGame.image = UIImage(systemName: "plus")
+            newGame.accessibilityLabel = "New Game"
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {

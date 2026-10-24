@@ -49,11 +49,6 @@
                             </connections>
                         </barButtonItem>
                         <rightBarButtonItems>
-                            <barButtonItem title="How to Play" id="I1G-dW-Shb">
-                                <connections>
-                                    <segue destination="ZTM-93-MXZ" kind="push" id="Oqw-mV-gjc"/>
-                                </connections>
-                            </barButtonItem>
                             <barButtonItem systemItem="undo" id="jeC-UM-pIk">
                                 <connections>
                                     <action selector="undoMove:" destination="2" id="W5b-ys-awL"/>

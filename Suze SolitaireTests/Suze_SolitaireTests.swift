@@ -165,8 +165,8 @@ final class Suze_SolitaireTests: XCTestCase {
         let columns = try XCTUnwrap(vc.sideColumns)
         XCTAssertTrue(vc.toolbar.isHidden)
         XCTAssertFalse(columns.left.isHidden)
-        XCTAssertEqual(columns.stats.map { $0.configuration?.title }, ["$-725", "Wins: 3", "Losses: 17"])
-        XCTAssertEqual(columns.stats[0].configuration?.baseForegroundColor, .systemRed)
+        XCTAssertEqual(columns.chalk.map { $0.text }, ["$-725", "Wins: 3", "Losses: 17"])
+        XCTAssertTrue(vc.chalkLine.isHidden)
         XCTAssertNotNil(columns.menu.menu, "the ... button has the menu")
         for stack in allStacks(vc) {
             XCTAssertGreaterThan(stack!.view.frame.minX, columns.left.frame.maxX, "\(stack!.stackType) is under the stats")
@@ -185,10 +185,38 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.view.layoutIfNeeded()
         XCTAssertFalse(vc.toolbar.isHidden)
         XCTAssertTrue(columns.left.isHidden)
+        XCTAssertFalse(vc.chalkLine.isHidden)
         XCTAssertEqual(banner.frame.maxY, vc.toolbar.frame.minY - ViewController.bannerSpacing, accuracy: 0.5)
         XCTAssertGreaterThan(banner.frame.width, ViewController.sideColumnWidth, "back on one line, not still column-width")
         XCTAssertLessThan(banner.frame.height, 60)
         XCTAssertEqual(vc.view.subviews.last, banner, "banners stay above the cards")
+    }
+
+    func testScoreIsChalkedOnTheFelt() throws {
+        vc.score  = -45
+        vc.wins   = 2
+        vc.losses = 1
+        XCTAssertEqual(vc.chalkLine.text, "$-45   Wins: 2   Losses: 1")
+        XCTAssertEqual(vc.chalkLine.accessibilityLabel, "$-45, Wins: 2, Losses: 1")
+        XCTAssertEqual(vc.chalkLine.font.fontName, "Chalkduster")
+        let red = try XCTUnwrap(vc.chalkLine.attributedText?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor)
+        let white = try XCTUnwrap(vc.chalkLine.attributedText?.attribute(.foregroundColor, at: 8, effectiveRange: nil) as? UIColor)
+        XCTAssertNotEqual(red, white, "a score below zero is in red chalk")
+        XCTAssertTrue(vc.view.subviews.first === vc.chalkLine, "painted on the table, under the cards")
+        // Only the "..." button shows in the toolbar
+        XCTAssertEqual(vc.toolbar.items?.filter { !$0.isHidden && $0.image != nil }.count, 1)
+        XCTAssertEqual([vc.bucksBarButtonItem, vc.winsBarButtonItem, vc.lossesBarButtonItem].map { $0!.isHidden }, [true, true, true])
+        // New Game is a plus, still named for VoiceOver
+        let newGame = try XCTUnwrap(vc.navigationItem.leftBarButtonItem)
+        XCTAssertNil(newGame.title)
+        XCTAssertEqual(newGame.accessibilityLabel, "New Game")
+    }
+
+    func testHowToPlayIsInTheMenu() throws {
+        let menu = try XCTUnwrap(vc.menuBarButtonItem?.menu)
+        let inline = try XCTUnwrap(menu.children.first as? UIMenu)
+        XCTAssertEqual(inline.children.map { $0.title }, ["Hint", "How to Play"])
+        XCTAssertEqual(vc.navigationItem.rightBarButtonItems?.count, 1, "just Undo on the right")
     }
 
     func testDarkModeDimsTheOutlinesButNotTheCards() throws {

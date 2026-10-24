@@ -5,9 +5,10 @@
 
 import UIKit
 
-// iPhone landscape is too short for a toolbar under the table, so its buttons move to columns beside it: the score,
-// wins and losses under New Game on the left, and the "..." menu and the banners under How to Play on the right.
-// redrawTable keeps the cards between the columns.
+// The score, wins and losses are chalked on the felt rather than shown as buttons, since they only show the numbers:
+// along the bottom next to the "..." button, or in iPhone landscape, which is too short for a toolbar under the table,
+// in a column under New Game on the left, with the "..." menu and the banners under Undo on the right.  redrawTable
+// keeps the cards between the columns.
 extension ViewController {
 
     static let sideColumnWidth: CGFloat = 116
@@ -35,7 +36,8 @@ extension ViewController {
         }
         self.sideColumns?.left.isHidden  = !side
         self.sideColumns?.right.isHidden = !side
-        self.updateSideColumns()
+        self.chalkLine.isHidden = side
+        self.updateChalk()
         for banner in [self.newGameUndoBanner, self.noMovesBanner].compactMap({ $0 }) {
             self.placeBanner(banner)
         }
@@ -43,16 +45,18 @@ extension ViewController {
     }
 
     func buildSideColumns() {
-        let stats = [self.bucksBarButtonItem, self.winsBarButtonItem, self.lossesBarButtonItem].map { _ in
-            let button = self.sideButton()
-            // Like the toolbar's, these only show the numbers
-            button.isUserInteractionEnabled = false
-            button.accessibilityTraits = .staticText
-            return button
+        let chalk = (0..<3).map { _ in
+            let label = UILabel()
+            // Shrinks rather than cut off a long record
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = 0.6
+            return label
         }
-        let left = UIStackView(arrangedSubviews: stats)
+        let left = UIStackView(arrangedSubviews: chalk)
         left.axis    = .vertical
         left.spacing = ViewController.sideColumnSpacing
+        left.isLayoutMarginsRelativeArrangement = true
+        left.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 0)
 
         let menu = self.sideButton()
         menu.configuration?.image = UIImage(systemName: "ellipsis")
@@ -64,7 +68,7 @@ extension ViewController {
         right.alignment = .trailing
 
         let safe = self.view.safeAreaLayoutGuide
-        // updateControlPlacement lines these up with New Game and How to Play
+        // updateControlPlacement lines these up with New Game and Undo
         let leading  = left.leadingAnchor.constraint(equalTo: self.view.leadingAnchor)
         let trailing = right.trailingAnchor.constraint(equalTo: self.view.trailingAnchor)
         leading.identifier  = "sideColumnInset"
@@ -82,7 +86,7 @@ extension ViewController {
             right.widthAnchor.constraint(equalToConstant: ViewController.sideColumnWidth),
             menu.widthAnchor.constraint(greaterThanOrEqualTo: menu.heightAnchor),
         ])
-        self.sideColumns = (left, right, stats, menu)
+        self.sideColumns = (left, right, chalk, menu)
     }
 
     func sideButton() -> UIButton {
@@ -104,15 +108,52 @@ extension ViewController {
         return UIButton(configuration: config)
     }
 
-    // Copies the toolbar's numbers and their colors to the side columns
-    func updateSideColumns() {
-        guard let columns = self.sideColumns else {
+    func setUpChalk() {
+        let bucks = self.bucksBarButtonItem!, wins = self.winsBarButtonItem!, losses = self.lossesBarButtonItem!
+        // The toolbar's number items keep the numbers but aren't shown, leaving the "..." button at the right
+        for item in [bucks, wins, losses] {
+            item.isHidden = true
+        }
+        self.toolbar.items = [bucks, wins, losses, .flexibleSpace()] + [self.menuBarButtonItem].compactMap { $0 }
+        let line = self.chalkLine
+        line.adjustsFontSizeToFitWidth = true
+        line.minimumScaleFactor = 0.6
+        line.translatesAutoresizingMaskIntoConstraints = false
+        // Painted on the table, so under the cards
+        self.view.insertSubview(line, at: 0)
+        NSLayoutConstraint.activate([
+            line.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
+            line.trailingAnchor.constraint(lessThanOrEqualTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -88),
+            line.centerYAnchor.constraint(equalTo: self.toolbar.centerYAnchor),
+        ])
+        self.updateChalk()
+    }
+
+    // Chalks the toolbar's numbers on the felt: the score in red chalk when it's below zero
+    func updateChalk() {
+        guard let bucks = self.bucksBarButtonItem, let wins = self.winsBarButtonItem, let losses = self.lossesBarButtonItem else {
             return
         }
-        for (item, button) in zip([self.bucksBarButtonItem, self.winsBarButtonItem, self.lossesBarButtonItem], columns.stats) {
-            button.configuration?.title = item?.title
-            button.configuration?.baseForegroundColor = item?.tintColor ?? .label
-            button.accessibilityLabel = item?.title
+        let negative = (bucks.title ?? "").hasPrefix("$-")
+        let shadow = NSShadow()
+        shadow.shadowColor      = UIColor.white.withAlphaComponent(0.35)
+        shadow.shadowBlurRadius = 1.5
+        func chalk(_ string: String?, red: Bool = false, size: CGFloat) -> NSAttributedString {
+            let color = red ? UIColor(red: 1, green: 0.62, blue: 0.6, alpha: 0.92) : UIColor.white.withAlphaComponent(0.88)
+            return NSAttributedString(string: string ?? "", attributes: [
+                .font: UIFont(name: "Chalkduster", size: size) ?? .systemFont(ofSize: size), .foregroundColor: color, .shadow: shadow])
+        }
+        let titles = [bucks.title, wins.title, losses.title]
+        // Bigger on the wider iPad table
+        let size: CGFloat = self.traitCollection.horizontalSizeClass == .regular ? 24 : 17
+        let line = NSMutableAttributedString(attributedString: chalk(titles[0], red: negative, size: size))
+        for title in titles.dropFirst() {
+            line.append(chalk("   " + (title ?? ""), size: size))
+        }
+        self.chalkLine.attributedText     = line
+        self.chalkLine.accessibilityLabel = titles.compactMap { $0 }.joined(separator: ", ")
+        for (i, label) in (self.sideColumns?.chalk ?? []).enumerated() {
+            label.attributedText = chalk(titles[i], red: i == 0 && negative, size: 18)
         }
     }
 
