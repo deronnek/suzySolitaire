@@ -125,6 +125,7 @@
 		0B5BD93B1CB6BB79008C7B87 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */; };
 		0BAA5E1A2E9C000000000007 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000006 /* PrivacyInfo.xcprivacy */; };
 		0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */; };
+		0BAA5E1A2E9C000000000014 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000015 /* AppIcon.icon */; };
 		0B825551175B7C310064579C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825550175B7C310064579C /* UIKit.framework */; };
 		0B825553175B7C310064579C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825552175B7C310064579C /* Foundation.framework */; };
 		0B825555175B7C310064579C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0B825554175B7C310064579C /* CoreGraphics.framework */; };
@@ -266,6 +267,7 @@
 		0B5BD93A1CB6BB79008C7B87 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0BAA5E1A2E9C000000000006 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0BAA5E1A2E9C000000000015 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		0B82554C175B7C310064579C /* Suze Solitaire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Suze Solitaire.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B825550175B7C310064579C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		0B825552175B7C310064579C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -339,6 +341,7 @@
 			isa = PBXGroup;
 			children = (
 				0B6DB2681C21B7AE008C7B87 /* Assets.xcassets */,
+				0BAA5E1A2E9C000000000015 /* AppIcon.icon */,
 				0BAA5E1A2E9C000000000006 /* PrivacyInfo.xcprivacy */,
 				0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */,
 				0BAA5E1A2E9C00000000000A /* ViewController+NewGameUndo.swift */,
@@ -659,6 +662,7 @@
 				0B478C411C6BAA77008C7B87 /* diamond6-iphone.png in Resources */,
 				0B478C5D1C6BAE79008C7B87 /* club8-iphone.png in Resources */,
 				0B6DB2691C21B7AE008C7B87 /* Assets.xcassets in Resources */,
+				0BAA5E1A2E9C000000000014 /* AppIcon.icon in Resources */,
 				0BAA5E1A2E9C000000000007 /* PrivacyInfo.xcprivacy in Resources */,
 				0B478C431C6BAA77008C7B87 /* diamond8-iphone.png in Resources */,
 				0B4CA20A18BE6CCB00CF8E6B /* diamond1.png in Resources */,
