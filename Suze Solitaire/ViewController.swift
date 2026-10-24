@@ -764,8 +764,10 @@ class ViewController: UIViewController {
             let right = strip ? bounds.width - safe.right - 16 : (controls.undo?.minX ?? bounds.width - safe.right) - 16
             cardHeight = (tableBottom - top) / 2.8
             cardWidth  = cardHeight / Card.aspectRatio
-            var gap    = cardWidth / 5
-            let rowWidth = { 7*cardWidth + 5*gap + cardWidth*0.6 }
+            // The roomy table's cards are limited by its width, so they sit closer together to be bigger
+            var gap    = cardWidth / (isPad ? 8 : 5)
+            let stacksGap = isPad ? 0.4 : 0.6
+            let rowWidth = { 7*cardWidth + 5*gap + cardWidth*stacksGap }
             if rowWidth() > right - left {
                 let scale = (right - left) / rowWidth()
                 cardWidth *= scale; cardHeight *= scale; gap *= scale
@@ -778,18 +780,18 @@ class ViewController: UIViewController {
             fubPoint  = CGPoint(x: rowLeft, y: toprowSpacer)
             deckPoint = CGPoint(x: rowLeft + cardWidth + gap, y: toprowSpacer)
             dealPoint = CGPoint(x: rowLeft + 2*(cardWidth + gap), y: toprowSpacer)
-            let stacksLeft = rowLeft + 3*cardWidth + 2*gap + cardWidth*0.6
+            let stacksLeft = rowLeft + 3*cardWidth + 2*gap + cardWidth*stacksGap
             stackXs = (0..<4).map { stacksLeft + CGFloat($0)*(cardWidth + gap) }
         }
         else {
             // From New Game's left edge to Undo's right: the blind over the deck and deal on the left, and the four stacks
-            // on the right.  On iPhone 7 card widths in all, with the stacks close together; on the roomier table 8.2, a
-            // third of a card apart.  iPhone Duo keeps its navigation buttons in a strip down the side, outside the safe area.
+            // on the right.  On iPhone 7 card widths in all, with the stacks close together; on the roomier table 7.6, a
+            // fifth of a card apart.  iPhone Duo keeps its navigation buttons in a strip down the side, outside the safe area.
             let left  = controls.newGame?.minX ?? safe.left + 16
             let right = controls.undo?.maxX ?? bounds.width - safe.right - 16
-            cardWidth  = (right - left) / (isPad ? 8.2 : 7)
+            cardWidth  = (right - left) / (isPad ? 7.6 : 7)
             cardHeight = cardWidth * Card.aspectRatio
-            let spacer = isPad ? cardWidth * 0.3 : cardWidth / 15
+            let spacer = isPad ? cardWidth * 0.2 : cardWidth / 15
             
             toprowSpacer = barBottom + cardHeight*0.1  // Space from the top of the screen to the first row of cards.
             // The second row starts just below the blind with all 13 of its cards fanned out
