@@ -170,7 +170,7 @@ extension ViewController {
             }
         }
         else {
-            banner = self.addBanner(message: message, buttonTitle: "New Game", symbol: "plus.circle",
+            banner = self.addBanner(message: message, buttonTitle: "New Game", symbol: "arrow.triangle.2.circlepath",
                                     hint: "Deals a new game") { [unowned self] in
                 self.startNewGameWithSender(sender: self)
             }

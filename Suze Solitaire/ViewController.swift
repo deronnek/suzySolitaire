@@ -43,7 +43,7 @@ class ViewController: UIViewController {
     var newGameBarButtonItem: UIBarButtonItem!
     @IBOutlet weak var toolbar: UIToolbar!
     // The table's own New Game, Undo and "..." buttons in its corners
-    lazy var newGameButton = self.makeCornerButton(symbol: "plus", label: "New Game") { [unowned self] in self.startNewGameWithSender(sender: self) }
+    lazy var newGameButton = self.makeCornerButton(symbol: "arrow.triangle.2.circlepath", label: "New Game") { [unowned self] in self.startNewGameWithSender(sender: self) }
     lazy var undoButton    = self.makeCornerButton(symbol: "arrow.uturn.backward", label: "Undo") { [unowned self] in self.undoMove(self) }
     lazy var menuButton    = self.makeMenuButton()
     // The score, wins and losses chalked on the felt beside the "..." button
@@ -176,7 +176,7 @@ class ViewController: UIViewController {
         // New Game is a plus, like the New Game button in the "No moves left" banner
         self.newGameBarButtonItem = self.navigationItem.leftBarButtonItem
         self.newGameBarButtonItem.title = nil
-        self.newGameBarButtonItem.image = UIImage(systemName: "plus")
+        self.newGameBarButtonItem.image = UIImage(systemName: "arrow.triangle.2.circlepath")
         self.newGameBarButtonItem.accessibilityLabel = "New Game"
     }
     
