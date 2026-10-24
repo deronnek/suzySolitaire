@@ -94,12 +94,14 @@ extension ViewController {
             chalkRight = bounds.width - safe.right - 16
         }
         else {
-            // Where the navigation bar would put its buttons: just under the status bar, or 24 points from the top without
-            // one, and 24 points into the margin beside the Dynamic Island or notch.  The bigger table gets more room.
+            // Under the status bar, or 24 points from the top without one, and 24 points into the margin beside the
+            // Dynamic Island or notch.  In portrait they sit a little further down, clear of the status bar's back link
+            // (such as "◀ TestFlight"), and the bigger table gets more room.
             let size  = self.cornerButtonSize
             let roomy = self.roomyTable
             let statusBar = self.view.window?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
-            let top   = max(statusBar, 24) + (roomy ? 12 : 0)
+            let gap: CGFloat = self.isLandscape ? (roomy ? 12 : 0) : (roomy ? 20 : 16)
+            let top   = max(statusBar, 24) + gap
             let margin = roomy ? 24 : 16 as CGFloat
             let left  = max(margin, safe.left - 24)
             let right = bounds.width - max(margin, safe.right - 24)
