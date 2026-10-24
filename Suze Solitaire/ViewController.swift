@@ -760,7 +760,10 @@ class ViewController: UIViewController {
             var gap    = cardWidth / 5
             let rowWidth       = { 7*cardWidth + 5*gap + cardWidth*0.6 }
             // Between the side columns, which line up with the navigation bar's buttons
-            let columns        = self.sideColumns.map { ($0.left.frame.maxX + 12, $0.right.frame.minX - 12) } ?? (safe.left, bounds.width - safe.right)
+            let right          = { (columns: (left: UIStackView, right: UIStackView, chalk: [UILabel], menu: UIButton)) in
+                self.barsInStrip ? bounds.width - safe.right - 12 : columns.right.frame.minX - 12
+            }
+            let columns        = self.sideColumns.map { ($0.left.frame.maxX + 12, right($0)) } ?? (safe.left, bounds.width - safe.right)
             let availableWidth = columns.1 - columns.0
             if rowWidth() > availableWidth {
                 let scale = availableWidth / rowWidth()
@@ -780,7 +783,8 @@ class ViewController: UIViewController {
         else {
             // On iPhone the rows span 7.2 card widths (the fub/deck/deal column, then the gap and four stacks), plus a cardWidth/5
             // margin on the right.  The iPad sizes its cards below, but its row spacing is still based on screenWidth/7.
-            let screenWidth = CGRectGetWidth(bounds);
+            // The safe area's width: iPhone Duo keeps its status bar and navigation buttons in a strip down the side
+            let screenWidth = CGRectGetWidth(bounds) - safe.left - safe.right
             cardWidth  = CGFloat(screenWidth / (isPad ? 7 : 7.4));
             cardHeight = cardWidth * Card.aspectRatio;
             
@@ -802,10 +806,10 @@ class ViewController: UIViewController {
             // The second row starts just below the blind with all 13 of its cards fanned out
             secondSpacer = toprowSpacer + cardHeight + CGFloat(12*CardStack.fannedSliceHeight) + cardHeight*0.15
             
-            fubPoint  = CGPoint(x: cardWidth/5, y: toprowSpacer)
-            deckPoint = CGPoint(x: cardWidth/5, y: secondSpacer)
-            dealPoint = CGPoint(x: cardWidth+dealSpacer, y: secondSpacer)
-            stackXs   = (0..<4).map { cardWidth*leftRightGapMultiplier + CGFloat($0)*(cardWidth + widthSpacer) }
+            fubPoint  = CGPoint(x: safe.left + cardWidth/5, y: toprowSpacer)
+            deckPoint = CGPoint(x: safe.left + cardWidth/5, y: secondSpacer)
+            dealPoint = CGPoint(x: safe.left + cardWidth+dealSpacer, y: secondSpacer)
+            stackXs   = (0..<4).map { safe.left + cardWidth*leftRightGapMultiplier + CGFloat($0)*(cardWidth + widthSpacer) }
         }
         
         // Get integer versions as that's what resize takes (maybe it shouldn't?)

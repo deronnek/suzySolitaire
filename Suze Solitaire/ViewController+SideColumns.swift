@@ -26,6 +26,12 @@ extension ViewController {
         return !self.roomyTable && bounds.width > bounds.height
     }
 
+    // Whether the system shows the navigation buttons in a strip down the side of the screen instead of a bar across the
+    // top, as iPhone Duo does
+    var barsInStrip: Bool {
+        (self.navigationController?.navigationBar.frame.height ?? 44) < 1
+    }
+
     // Switches every card between its small- and large-table art, keeping covered and face-down cards as they are
     func useLargeCardArt(_ large: Bool) {
         guard large != Card.largeArt else {
@@ -48,14 +54,24 @@ extension ViewController {
         self.toolbar.isHidden = side
         // The navigation bar's buttons sit 24 points into the safe area's margin beside the Dynamic Island or notch
         let safe  = self.view.safeAreaInsets
-        let inset = max(16, max(safe.left, safe.right) - 24)
+        let strip = self.barsInStrip
+        // Beside the system's strip of buttons, if there is one, is clear of it altogether
+        let inset = strip ? max(16, safe.left + 8) : max(16, max(safe.left, safe.right) - 24)
         for constraint in self.view.constraints where constraint.identifier == "sideColumnInset" {
             constraint.constant = constraint.firstAttribute == .leading ? inset : -inset
         }
         self.sideColumns?.left.isHidden  = !side
-        self.sideColumns?.right.isHidden = !side
-        if side {
-            self.alignMenuWithUndo()
+        self.sideColumns?.right.isHidden = !side || strip
+        if side, let columns = self.sideColumns {
+            // With New Game and Undo in the system's strip, the "..." button joins the score on the left, so the table
+            // gets the right column's space
+            let column = strip ? columns.left : columns.right
+            if columns.menu.superview !== column {
+                column.addArrangedSubview(columns.menu)
+            }
+            if !strip {
+                self.alignMenuWithUndo()
+            }
         }
         self.chalkLine.isHidden = side
         self.updateChalk()
@@ -75,7 +91,12 @@ extension ViewController {
         }
         let left = UIStackView(arrangedSubviews: chalk)
         left.axis    = .vertical
+        left.alignment = .leading
         left.spacing = ViewController.sideColumnSpacing
+        left.setCustomSpacing(16, after: chalk[2])
+        for label in chalk {
+            label.widthAnchor.constraint(lessThanOrEqualTo: left.layoutMarginsGuide.widthAnchor).isActive = true
+        }
         left.isLayoutMarginsRelativeArrangement = true
         left.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 0, trailing: 0)
 
@@ -240,7 +261,14 @@ extension ViewController {
             }
         }
         let constraints: [NSLayoutConstraint]
-        if stacked, let columns = self.sideColumns {
+        if stacked, let columns = self.sideColumns, self.barsInStrip {
+            constraints = [
+                banner.leadingAnchor.constraint(equalTo: columns.left.leadingAnchor),
+                banner.topAnchor.constraint(equalTo: columns.menu.bottomAnchor, constant: 12),
+                banner.widthAnchor.constraint(equalToConstant: ViewController.sideColumnWidth),
+            ]
+        }
+        else if stacked, let columns = self.sideColumns {
             constraints = [
                 banner.trailingAnchor.constraint(equalTo: columns.right.trailingAnchor),
                 banner.topAnchor.constraint(equalTo: columns.menu.bottomAnchor, constant: 12),
