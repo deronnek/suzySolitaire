@@ -6,7 +6,7 @@
 #
 #   scripts/play-iap.py
 #
-# PRICE is the US price (default 5.00); Google Play converts it to every other region's currency.  Play takes in-app
+# PRICE is the US price (default 5.00), as on the App Store; Google Play converts it to every other region's currency.  Play takes in-app
 # products only once a build that uses Play Billing has been uploaded (scripts/play-upload.sh).
 #
 # Uses the service account key in scripts/play.local.env (see play.py).
@@ -31,7 +31,9 @@ def money(currency, amount):
 
 def main():
     converted = play.call("POST", "/pricing:convertRegionPrices", {"price": money("USD", PRICE)})
-    regions = [{"regionCode": code, "price": region["price"], "availability": "AVAILABLE"}
+    # Play rounds its conversions to its own price points (5.00 becomes 4.99), so the US gets PRICE exactly
+    regions = [{"regionCode": code, "price": money("USD", PRICE) if code == "US" else region["price"],
+                "availability": "AVAILABLE"}
                for code, region in sorted(converted["convertedRegionPrices"].items())]
     product = {
         "packageName": play.PACKAGE,
@@ -47,7 +49,7 @@ def main():
     play.call("PATCH", f"/onetimeproducts/{PRODUCT_ID}", product, query={
         "allowMissing": "true", "updateMask": "listings,purchaseOptions",
         "regionsVersion.version": converted["regionVersion"]["version"]})
-    play.call("POST", f"/onetimeproducts/{PRODUCT_ID}/purchaseOptions:batchUpdateStates", {"requests": [
+    play.call("POST", f"/oneTimeProducts/{PRODUCT_ID}/purchaseOptions:batchUpdateStates", {"requests": [
         {"activatePurchaseOptionRequest": {"packageName": play.PACKAGE, "productId": PRODUCT_ID,
                                            "purchaseOptionId": OPTION_ID}}]})
     us = next(r["price"] for r in regions if r["regionCode"] == "US")
