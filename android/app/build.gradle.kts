@@ -1,7 +1,13 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// The Play upload key and its passwords stay on this machine, outside the repo (see scripts/play-upload.sh)
+val signingFile = file(System.getenv("SUZE_SIGNING") ?: "${System.getProperty("user.home")}/.android/suze-solitaire-signing.properties")
+val signing = Properties().apply { if (signingFile.exists()) signingFile.inputStream().use(::load) }
 
 android {
     namespace = "net.dseelig.suzesolitaire"
@@ -12,14 +18,26 @@ android {
         // Android 14, released October 2023
         minSdk = 34
         targetSdk = 36
-        // scripts/android-release.sh passes a build number made from the date and time
+        // scripts/play-upload.sh passes a build number made from the date and time
         versionCode = (project.findProperty("versionCode") as String?)?.toInt() ?: 1
         versionName = "1.01"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (signing.isNotEmpty()) {
+            create("upload") {
+                storeFile = file(signing.getProperty("storeFile"))
+                storePassword = signing.getProperty("storePassword")
+                keyAlias = signing.getProperty("keyAlias")
+                keyPassword = signing.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("upload")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

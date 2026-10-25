@@ -106,6 +106,17 @@ cd android
 `scripts/android-screenshots.sh` screenshots every layout (phone and tablet in both orientations, and a foldable) on
 the emulators.
 
+Releases go to Google Play's internal testing track, Android's equivalent of TestFlight:
+
+| Script | What it does |
+| --- | --- |
+| `scripts/play-upload.sh` | Builds a signed App Bundle and uploads it to internal testing, with release notes from `WHATS_NEW`. |
+| `scripts/play-iap.py` | Creates or updates the $5 Unlimited Undo product, priced in every region. |
+
+They sign in with a Play Console service account key named in the git-ignored `scripts/play.local.env`
+(`PLAY_KEY_PATH=...`). Builds are signed with an upload key kept outside the repo, in
+`~/.android/suze-solitaire-signing.properties`; Google Play re-signs them with the app's own key.
+
 ## Credits
 
 Written by Kevin DeRonne, and updated in 2026 by David Seelig. The default card back is a photo Kevin took; the card
