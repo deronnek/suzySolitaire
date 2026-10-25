@@ -78,7 +78,8 @@ The App Store Connect scripts share their API helpers in `scripts/asc.py`.
 ## Android
 
 `android/` holds the Android version: the same game, rules, card art, card back, colors and features, written in Kotlin
-with Jetpack Compose and Material 3. It runs on Android 14 and later, on phones, tablets and foldables.
+with Jetpack Compose and Material 3. It runs on Android 14 and later, on phones, tablets and foldables. The [privacy
+policy](AppStore/PRIVACY.md) covers both versions.
 
 | Phone | Tablet | Foldable (unfolded) |
 | :---: | :---: | :---: |
