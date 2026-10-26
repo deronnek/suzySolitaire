@@ -1,0 +1,27 @@
+Suze Solitaire is a classic Canfield-style solitaire, also known as Demon patience, built for quick games on Android phones, tablets and foldables.
+
+Thirteen cards start face up in the blind beside the deck. One card is dealt to the upper stacks, and its rank starts all four of them. Build the upper stacks up by suit, wrapping from King to Ace, and build the four lower stacks down in alternating colors. Deal from the deck three cards at a time, as often as you like. Vegas-style scoring: each game costs $45, each card you put up earns $5, and a win earns $250.
+
+PLAY YOUR WAY
+• Drag cards and runs, or double-tap a card to send it to an upper stack
+• Tap anywhere on the table to deal
+• Undo your last move, or undo New Game if you tapped it by mistake
+• Unlimited Undo, an optional one-time purchase, takes back as many moves as you like, even auto moves
+• Auto Moves puts cards up for you as soon as they can go
+• Ask for a Hint when you're stuck
+
+OPTIONAL HELP, OFF UNTIL YOU WANT IT
+• Highlight Drop Spot outlines where a card will land as you drag it
+• Show When Stuck tells you when only the deck has something to play, or when the game can't be won
+
+MADE FOR YOUR DEVICE
+• Portrait and landscape on phones, tablets and foldables
+• Dark theme with a dimmer table
+• Pick any photo as your card back
+• Gentle haptics as you pick up and drag cards
+• Full TalkBack support, with actions to select and move cards
+• Text that follows your device's font size
+• Your game, score, wins and losses are saved automatically
+• Plays fully offline
+
+No ads, no accounts, and no data collected.

@@ -113,6 +113,7 @@ Releases go to Google Play's internal testing track, Android's equivalent of Tes
 | --- | --- |
 | `scripts/play-upload.sh` | Builds a signed App Bundle and uploads it to internal testing, with release notes from `WHATS_NEW`. |
 | `scripts/play-iap.py` | Creates or updates the $5 Unlimited Undo product, priced in every region. |
+| `scripts/play-metadata.py` | Updates the store listing from `android/store`: descriptions, icon, feature graphic and screenshots. |
 
 They sign in with a Play Console service account key named in the git-ignored `scripts/play.local.env`
 (`PLAY_KEY_PATH=...`). Builds are signed with an upload key kept outside the repo, in
