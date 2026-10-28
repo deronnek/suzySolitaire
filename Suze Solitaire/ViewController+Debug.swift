@@ -152,7 +152,26 @@ extension ViewController {
 
     // A long press on the score shows this phone's code, to be signed by scripts/debug-unlock.sh, and takes the unlock
     @objc func scorePressed(_ press: UILongPressGestureRecognizer) {
-        guard press.state == .began, DebugAccess.canUnlock, self.presentedViewController == nil else {
+        guard press.state == .began, self.presentedViewController == nil else {
+            return
+        }
+        guard DebugAccess.canUnlock else {
+            // The check at launch can fail, say offline or before the App Store has its record of the install, which left
+            // the press doing nothing; this asks again
+            Task {
+                await DebugAccess.checkInstall()
+                if DebugAccess.canUnlock {
+                    self.updateMenu()
+                    self.showDebugUnlock()
+                }
+            }
+            return
+        }
+        self.showDebugUnlock()
+    }
+
+    func showDebugUnlock() {
+        guard self.presentedViewController == nil else {
             return
         }
         let code = DebugAccess.deviceCode

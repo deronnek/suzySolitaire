@@ -6,6 +6,7 @@
 import CryptoKit
 import StoreKitTest
 import XCTest
+import UIKit.UIGestureRecognizerSubclass
 @testable import Suze_Solitaire
 
 @MainActor
@@ -690,7 +691,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Automatic goes back to the game's own choice
         UserDefaults.standard.removeObject(forKey: DebugAccess.cardFacesKey)
         vc.updateCardFaces()
-        XCTAssertEqual(Card.faces, .smallArial)
+        XCTAssertEqual(Card.faces, CardFaces.standard(large: vc.roomyTable))
     }
 
     func testEachSetOfFacesHasItsOwnCorners() throws {
@@ -1550,5 +1551,24 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(try titles(), ["Unlimited Undo", "Restore Purchase"])
         vc.hasUnlimitedUndo = true
         XCTAssertEqual(try titles(), ["Unlimited Undo"])
+    }
+
+    // On iPad too, where it once seemed not to take
+    func testALongPressOnTheScoreShowsTheDebugMenusAlert() throws {
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = vc.navigationController
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+        let chalk = vc.chalkLine
+        XCTAssertTrue(window.hitTest(chalk.convert(CGPoint(x: chalk.bounds.midX, y: chalk.bounds.midY), to: window), with: nil) === chalk,
+                      "nothing covers the score")
+        let press = try XCTUnwrap(chalk.gestureRecognizers?.first as? UILongPressGestureRecognizer)
+        XCTAssertTrue(press.isEnabled)
+        press.state = .began
+        vc.scorePressed(press)
+        let alert = try XCTUnwrap(vc.presentedViewController as? UIAlertController)
+        XCTAssertEqual(alert.title, "Debug Menu")
+        alert.dismiss(animated: false)
+        window.isHidden = true
     }
 }
