@@ -56,12 +56,17 @@ You need Xcode 27 (27.1 for the iPhone Duo simulator). The app runs on iOS 17 an
 2. To sign with your own team, create a git-ignored `Signing.local.xcconfig` next to `Signing.xcconfig` that sets
    `DEVELOPMENT_TEAM` and `PRODUCT_BUNDLE_IDENTIFIER`. `Signing.xcconfig` holds the defaults and the version number.
 
-Run the tests (77 of them, covering the rules, layout in every orientation, saving, undo and the in-app purchase) with:
+Run the tests (91 of them, covering the rules, layout in every orientation, saving, undo, the in-app purchase and the
+card faces) with:
 
 ```sh
-xcodebuild test -project "Suze Solitaire.xcodeproj" -scheme "Suze Solitaire" \
-    -destination "platform=iOS Simulator,name=iPhone 18 Pro"
+scripts/test.sh                                   # on an iPhone 18 Pro simulator, about 20 seconds
+scripts/test.sh "iPad Pro 13-inch (M5)" -only-testing:"Suze SolitaireTests/Suze_SolitaireTests/testWindowSizeChoosesLayout"
 ```
+
+It fails any test that runs over a minute instead of hanging, and skips the diagnostics xcodebuild otherwise collects
+from the simulator after a run, which can take it ten minutes. The purchase test uses a StoreKit test session, so it
+needs no Apple Account; the app doesn't check the real App Store while it hosts the tests.
 
 ## Scripts
 
@@ -71,6 +76,7 @@ xcodebuild test -project "Suze Solitaire.xcodeproj" -scheme "Suze Solitaire" \
 | `scripts/screenshots.sh` | Regenerates the App Store screenshots: 6.9" iPhone, 13" iPad in landscape, and iPhone Duo folded. |
 | `scripts/layout-screenshots.sh` | Screenshots every layout (iPhone and iPad in both orientations, iPhone Duo folded and unfolded) for checking. |
 | `scripts/appstore-metadata.py` | Uploads the listing in `AppStore/Metadata`, the screenshots and the newest build to the App Store version being prepared. It never submits anything. |
+| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into `Assets.xcassets/Cards` as vector images: big-rank cards for phone-sized tables and the full design for roomy ones, each in Arial and Abril Fatface. |
 | `scripts/appstore-iap.py` | Sets up the Unlimited Undo in-app purchase in App Store Connect: name, description, price, territories and review screenshot. |
 
 The App Store Connect scripts share their API helpers in `scripts/asc.py`.
@@ -122,6 +128,7 @@ They sign in with a Play Console service account key named in the git-ignored `s
 ## Credits
 
 Written by Kevin DeRonne, and updated in 2026 by David Seelig. The default card back is a photo Kevin took; the card
-faces come from an open-source card set.
+faces come from [svg-playing-cards](https://github.com/seeligd/svg-playing-cards), based on Byron Knoll's
+public-domain [Vector Playing Cards](https://code.google.com/archive/p/vector-playing-cards/).
 
 Copyright 2026 Kevin DeRonne and David Seelig.

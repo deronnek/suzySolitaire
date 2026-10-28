@@ -89,7 +89,9 @@ extension ViewController {
         // In reading order: New Game and Undo across the top (unless they're in iPhone Duo's strip), the table, then the score
         // and the "..." button along the bottom
         let top: [UIView] = [self.newGameButton, self.undoButton].filter { $0.superview != nil && !$0.isHidden }
-        self.view.accessibilityElements = top + stacks.map { $0.view } + [self.chalkLine, self.menuButton] + [self.noMovesBanner].compactMap { $0 }
+        // After a win, "You Won!" and its New Game button take the table's place
+        let table = self.victoryView?.accessibleViews ?? stacks.map { $0.view }
+        self.view.accessibilityElements = top + table + [self.chalkLine, self.menuButton] + [self.noMovesBanner].compactMap { $0 }
     }
 
     func accessibilityHint(for stack: CardStack) -> String? {

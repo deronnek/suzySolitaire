@@ -34,16 +34,27 @@ extension ViewController {
         (self.navigationController?.navigationBar.frame.height ?? 44) < 1
     }
 
-    // Switches every card between its small- and large-table art, keeping covered and face-down cards as they are
-    func useLargeCardArt(_ large: Bool) {
-        guard large != Card.largeArt else {
+    // Switches every card to the faces for this table, keeping covered and face-down cards as they are: big corner ranks
+    // on a phone-sized table and the full design on a roomy one, unless the Debug menu picked others
+    func updateCardFaces() {
+        let faces = DebugAccess.cardFaces ?? CardFaces.standard(large: self.roomyTable)
+        guard faces != Card.faces else {
             return
         }
         let cards = self.viewTagToCard.values.compactMap { $0 }
         let showingFaces = cards.filter { $0.view.image === $0.faceImage }
-        Card.largeArt = large
+        let showingBlank = cards.filter { $0.view.image === Card.blankFaceImage }
+        let showingBack  = cards.filter { $0.view.image === Card.backImage }
+        Card.faces = faces
         for card in showingFaces {
             card.view.image = card.faceImage
+        }
+        // Blank faces and backs come with the faces' corners
+        for card in showingBlank {
+            card.view.image = Card.blankFaceImage
+        }
+        for card in showingBack {
+            card.view.image = Card.backImage
         }
     }
 
@@ -202,7 +213,9 @@ extension ViewController {
         guard let bucks = self.bucksBarButtonItem, let wins = self.winsBarButtonItem, let losses = self.lossesBarButtonItem else {
             return
         }
-        let negative = (bucks.title ?? "").hasPrefix("$-")
+        // The score as it counts toward the real one (see ScoreCounter); VoiceOver reads the real one
+        let shown = self.scoreCounter.shown.map { String(format: "$%d", $0) } ?? bucks.title
+        let negative = (shown ?? "").hasPrefix("$-")
         let shadow = NSShadow()
         shadow.shadowColor      = UIColor.white.withAlphaComponent(0.35)
         shadow.shadowBlurRadius = 1.5
@@ -217,7 +230,7 @@ extension ViewController {
         // the bottom row
         let base: CGFloat = self.roomyTable ? 24 : 17
         let size = min(UIFontMetrics(forTextStyle: .body).scaledValue(for: base, compatibleWith: self.traitCollection), base * 2)
-        let line = NSMutableAttributedString(attributedString: chalk(titles[0], red: negative, size: size))
+        let line = NSMutableAttributedString(attributedString: chalk(shown, red: negative, size: size))
         for title in titles.dropFirst() {
             line.append(chalk("   " + (title ?? ""), size: size))
         }
@@ -273,6 +286,67 @@ extension ViewController {
         for case let control? in controls where control.superview === self.view {
             self.view.bringSubviewToFront(control)
         }
+    }
+}
+
+// Counts the score on the felt up or down to a new one a dollar at a time, quickly for a move's $5 and more slowly for a
+// win's $250, with a light tick as it goes
+@MainActor
+final class ScoreCounter {
+    private(set) var shown: Int?
+    private var from = 0, target = 0
+    private var start: CFTimeInterval = 0, duration: CFTimeInterval = 0, lastTick: CFTimeInterval = 0
+    private var link: CADisplayLink?
+    private let haptic = UIImpactFeedbackGenerator(style: .light)
+    private let changed: () -> Void
+
+    static let tickInterval: CFTimeInterval = 0.06
+
+    init(changed: @escaping () -> Void) {
+        self.changed = changed
+    }
+
+    func count(to value: Int, animated: Bool) {
+        guard animated, let current = self.shown, current != value else {
+            self.stop()
+            self.shown = value
+            self.changed()
+            return
+        }
+        self.from     = current
+        self.target   = value
+        self.start    = CACurrentMediaTime()
+        self.duration = min(0.25 + Double(abs(value - current)) * 0.004, 1.3)
+        if self.link == nil {
+            // The link holds the counter until the count is done
+            let link = CADisplayLink(target: self, selector: #selector(self.step))
+            link.add(to: .main, forMode: .common)
+            self.link = link
+            self.haptic.prepare()
+        }
+    }
+
+    @objc private func step(_ link: CADisplayLink) {
+        let t = min(1, (link.targetTimestamp - self.start) / self.duration)
+        // Fast at first, then easing into the new score
+        let eased = 1 - pow(1 - t, 3)
+        let value = self.from + Int((Double(self.target - self.from) * eased).rounded())
+        if value != self.shown {
+            self.shown = value
+            self.changed()
+            if link.timestamp - self.lastTick >= ScoreCounter.tickInterval {
+                self.lastTick = link.timestamp
+                self.haptic.impactOccurred(intensity: 0.35)
+            }
+        }
+        if t >= 1 {
+            self.stop()
+        }
+    }
+
+    private func stop() {
+        self.link?.invalidate()
+        self.link = nil
     }
 }
 

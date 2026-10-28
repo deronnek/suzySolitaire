@@ -48,6 +48,7 @@ class ViewController: UIViewController {
     lazy var menuButton    = self.makeMenuButton()
     // The score, wins and losses written on the felt beside the "..." button
     let chalkLine = UILabel()
+    lazy var scoreCounter = ScoreCounter { [unowned self] in self.updateChalk() }
     // The size the table was last laid out for (see viewDidLayoutSubviews)
     var laidOutSize = CGSize.zero
     // Banners sit this far above the toolbar, and the table stops short of them
@@ -69,6 +70,8 @@ class ViewController: UIViewController {
         }
         set(newScore) {
             bucksBarButtonItem.title = String(format: "$%d", newScore)
+            // Once the table is showing, the score on the felt counts its way to the new one
+            self.scoreCounter.count(to: newScore, animated: self.view.window != nil && !self.doInitTable)
             if newScore < 0 {
                 bucksBarButtonItem.tintColor = .systemRed
             }
@@ -146,6 +149,11 @@ class ViewController: UIViewController {
     
     var deckTaps   = 0
     var justWon    = false
+    // The celebration of a win, over the table until New Game (see ViewController+Victory.swift)
+    var victoryView: VictoryView? = nil
+    // The pill showing what an edge swipe will do, and whether letting go now would do it (see ViewController+Swipes.swift)
+    var swipePill: SwipePill? = nil
+    var swipeArmed = false
     // The rank of the first card in the suitStacks
     var suitStackStarter = -1
     
@@ -185,6 +193,8 @@ class ViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
         
         self.setUpChalk()
+        self.setUpDebugAccess()
+        self.setUpEdgeSwipes()
         // New Game is a plus, like the New Game button in the "No moves left" banner
         self.newGameBarButtonItem = self.navigationItem.leftBarButtonItem
         self.newGameBarButtonItem.title = nil
@@ -201,6 +211,18 @@ class ViewController: UIViewController {
         if UserDefaults.standard.string(forKey: "ScreenshotOrientation") == "landscape" {
             self.view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
         }
+        #if DEBUG
+        // scripts/win-video.sh passes -FinishTurnAfter <seconds> to play out the saved game's auto moves untouched
+        let finishAfter = UserDefaults.standard.double(forKey: "FinishTurnAfter")
+        if finishAfter > 0 && self.doInitTable {
+            DispatchQueue.main.asyncAfter(deadline: .now() + finishAfter) {
+                self.finishTurn()
+            }
+        }
+        if UserDefaults.standard.bool(forKey: "DemoEdgeSwipes") && self.doInitTable {
+            self.demoEdgeSwipes()
+        }
+        #endif
         if self.doInitTable {
             if let saved = self.loadSavedGame() {
                 print("Restoring saved game")
@@ -408,12 +430,7 @@ class ViewController: UIViewController {
         self.clearTable()
         
         if self.justWon {
-            // Have to get rid of the cards differently if we just won, as they are now just subviews of our view
-            for v in self.view.subviews {
-                if v.isKind(of:UIImageView.self) {
-                    v.removeFromSuperview();
-                }
-            }
+            self.endCelebration()
             self.justWon = false
         }
         else {
@@ -768,7 +785,7 @@ class ViewController: UIViewController {
         // The roomy layout and its big cards, whatever the device: a full iPad, or iPhone Duo unfolded.  Narrow windows
         // (Split View, Slide Over, Stage Manager, a folded Duo) use the compact layout.
         let isPad = self.roomyTable
-        self.useLargeCardArt(isPad)
+        self.updateCardFaces()
         
         var cardWidth, cardHeight: CGFloat
         var fubPoint, deckPoint, dealPoint: CGPoint
@@ -842,17 +859,11 @@ class ViewController: UIViewController {
     }
     
     func createCards() {
-        let backImgFile = "cardback.png";
         var tagCounter  = 0;
-        var faceImgFile = String()
-        
         
         for suit in [cardSuit.Clubs, .Diamonds, .Hearts, .Spades] {
             for i in 1...13 {
-                faceImgFile = String.init(format: suit.simpleDescription() + "%d-iphone.png", i)
-                let largeFaceImgFile = String.init(format: suit.simpleDescription() + "%d.png", i)
-                let aCard = Card(suit: suit, rank: i, faceImageFilename: faceImgFile, largeFaceImageFilename: largeFaceImgFile,
-                                 backImageFilename: backImgFile, tag: tagCounter)
+                let aCard = Card(suit: suit, rank: i, tag: tagCounter)
                 self.cards.append(aCard)
                 tagCounter += 1;
             }
@@ -928,7 +939,7 @@ class ViewController: UIViewController {
         }
         let point: CGPoint? = touch.location(in: self.view)
         
-        if self.activeCard != nil && (self.justWon || self.activeCardSourceStack?.stackType != .deck) {
+        if self.activeCard != nil && self.activeCardSourceStack?.stackType != .deck {
             self.activeCard!.setPos(point: CGPoint(x: point!.x - CGFloat(self.xCap), y: point!.y - CGFloat(self.yCap)))
             // Show what the drag uncovers (only once the card moves, so taps don't flash it)
             self.activeCardSourceStack?.updateFaces(lifting: self.activeCard)
@@ -1206,36 +1217,7 @@ class ViewController: UIViewController {
             self.undoHistory.removeAll()
             self.canUndo = false
             
-            // Visual "reward" for winning
-            
-            let offset = CGFloat(75)
-            var stacknum = CGFloat(0)
-            for cs in self.suitStacks {
-                var cardnum  = CGFloat(0)
-                for card in cs!.cards {
-                    card.view.removeFromSuperview()  // not necessary I believe; a view can only have one superview
-                    self.view.addSubview(card.view)
-                    card.cardParent = nil
-                    let x = (cardnum*card.view.frame.size.width*0.735)+10;
-                    let y = offset+(stacknum as CGFloat*(card.view.frame.size.height))
-                    var rect = card.view.frame;
-                    rect.origin = CGPoint(x:x, y:y)
-                    
-                    card.view.frame = rect
-                    card.cardParent = nil
-                    
-                    let screenWidth  = CGRectGetWidth(self.view.bounds)
-                    let screenHeight = CGRectGetHeight(self.view.bounds)
-                    
-                    if x>screenWidth || y>screenHeight {
-                        NSLog("KDR OUT OF BOUNDS!!!!!!!!!!!!!")
-                    }
-                    
-                    cardnum += 1
-                }
-                stacknum += 1
-            }
-            
+            self.celebrateWin()
         }
         self.justWon = true
     }
@@ -1401,7 +1383,17 @@ class ViewController: UIViewController {
 
 extension ViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if gestureRecognizer is UIScreenEdgePanGestureRecognizer {
+            return true
+        }
         return self.doubleTapCouldPutUp(touch.view)
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if let swipe = gestureRecognizer as? UIScreenEdgePanGestureRecognizer {
+            return self.edgeSwipeCanBegin(from: swipe.edges, at: swipe.location(in: self.view))
+        }
+        return true
     }
 }
 

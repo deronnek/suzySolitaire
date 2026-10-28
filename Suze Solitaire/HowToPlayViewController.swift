@@ -21,6 +21,7 @@ class HowToPlayViewController: UIViewController {
         "Winning the game gains you $250.",
         "Auto moves any available card to an upper stack.",
         "Auto moves *cannot* be undone, unless you have Unlimited Undo.",
+        "Swipe in from the left edge below the cards to the middle to undo, or from the right edge for a hint.",
     ]
 
     let textView = UITextView()

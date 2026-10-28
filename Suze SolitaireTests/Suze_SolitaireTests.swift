@@ -3,6 +3,7 @@
 //  Suze SolitaireTests
 //
 
+import CryptoKit
 import StoreKitTest
 import XCTest
 @testable import Suze_Solitaire
@@ -44,7 +45,8 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
         CardStack.isDark     = false
-        Card.largeArt        = false
+        Card.faces           = .smallArial
+        UserDefaults.standard.removeObject(forKey: DebugAccess.cardFacesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = nil
@@ -164,15 +166,17 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.view.layoutIfNeeded()
         let top = try XCTUnwrap(vc.fub!.cards.last)
         let under = vc.fub!.cards[0]
-        XCTAssertFalse(Card.largeArt)
-        XCTAssertTrue(top.view.image === top.smallFaceImage)
+        XCTAssertEqual(Card.faces, .smallArial)
+        let smallFace = try XCTUnwrap(top.view.image)
+        XCTAssertTrue(smallFace === top.faceImage)
         let compactWidth = top.view.frame.width
 
         vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 760)
         vc.view.layoutIfNeeded()
         XCTAssertTrue(vc.roomyTable)
-        XCTAssertTrue(Card.largeArt)
-        XCTAssertTrue(top.view.image === top.largeFaceImage)
+        XCTAssertEqual(Card.faces, .largeArial)
+        XCTAssertTrue(top.view.image === top.faceImage)
+        XCTAssertFalse(top.view.image === smallFace)
         XCTAssertTrue(under.view.image === Card.blankFaceImage, "covered cards stay blank")
         XCTAssertTrue(vc.deck!.cards.last!.view.image === vc.deck!.cards.last!.backImage, "face-down cards stay face down")
         XCTAssertGreaterThan(top.view.frame.width, compactWidth)
@@ -184,8 +188,8 @@ final class Suze_SolitaireTests: XCTestCase {
         // and back when it folds
         vc.view.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
         vc.view.layoutIfNeeded()
-        XCTAssertFalse(Card.largeArt)
-        XCTAssertTrue(top.view.image === top.smallFaceImage)
+        XCTAssertEqual(Card.faces, .smallArial)
+        XCTAssertTrue(top.view.image === smallFace)
         XCTAssertEqual(top.view.frame.width, compactWidth, accuracy: 0.5)
     }
 
@@ -508,23 +512,31 @@ final class Suze_SolitaireTests: XCTestCase {
         let back = Card.cardBackImage(from: photo)
         XCTAssertEqual(back.size.width, 500)
         XCTAssertEqual(back.size.height, (500 * Card.aspectRatio).rounded(), accuracy: 1)
-        let pixels = try XCTUnwrap(back.cgImage?.dataProvider?.data as Data?)
-        let row    = try XCTUnwrap(back.cgImage?.bytesPerRow)
-        func alpha(_ x: Int, _ y: Int) -> UInt8 { pixels[y * row + x * 4 + 3] }
-        XCTAssertEqual(alpha(0, 0), 0, "corners should be cut off")
-        XCTAssertEqual(alpha(250, 360), 255)
+        func alpha(_ image: UIImage, _ x: Int, _ y: Int) throws -> UInt8 {
+            let pixels = try XCTUnwrap(image.cgImage?.dataProvider?.data as Data?)
+            let row    = try XCTUnwrap(image.cgImage?.bytesPerRow)
+            return pixels[y * row + x * 4 + 3]
+        }
+        XCTAssertEqual(try alpha(back, 0, 0), 255, "the photo is kept whole")
+        // and shown with the faces' corners cut off
+        Card.customBackImage = back
+        XCTAssertEqual(try alpha(Card.backImage, 0, 0), 0, "corners should be cut off")
+        XCTAssertEqual(try alpha(Card.backImage, 250, 360), 255)
     }
 
     func testCustomCardBackAppliesToDeckAndPersists() {
+        let standard = Card.backImage
         let back = Card.cardBackImage(from: UIImage(systemName: "star")!)
         vc.setCardBack(back)
-        XCTAssertTrue(vc.deck!.cards.allSatisfy { $0.view.image === back })
+        let shown = Card.backImage
+        XCTAssertFalse(shown === standard)
+        XCTAssertTrue(vc.deck!.cards.allSatisfy { $0.view.image === shown })
         XCTAssertTrue(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
         // Face-up cards keep their faces
-        XCTAssertFalse(vc.fub!.cards.contains { $0.view.image === back })
+        XCTAssertFalse(vc.fub!.cards.contains { $0.view.image === shown })
 
         vc.setCardBack(nil)
-        XCTAssertFalse(vc.deck!.cards.contains { $0.view.image === back })
+        XCTAssertFalse(vc.deck!.cards.contains { $0.view.image === shown })
         XCTAssertFalse(FileManager.default.fileExists(atPath: Card.customBackImageURL.path))
     }
 
@@ -561,6 +573,163 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.justWon = true
         vc.startNewGameWithSender(sender: vc)
         XCTAssertNil(vc.gameBeforeNewGame)
+    }
+
+    // Every card up on its suit stack, from the starter rank round to the one below it
+    func restoreWonTable(_ vc: ViewController) {
+        let suitStacks = (0..<4).map { suit in (6..<19).map { suit * 13 + $0 % 13 } }
+        let board = ViewController.SavedGame.Board(fub: [], deck: [], deal: [], suitStacks: suitStacks, cardStacks: [[], [], [], []])
+        XCTAssertTrue(vc.restoreBoard(board, suitStackStarter: 7))
+    }
+
+    func testWinningCelebratesUntilNewGame() throws {
+        restoreWonTable(vc)
+        vc.finishTurn()
+        XCTAssertTrue(vc.justWon)
+        XCTAssertEqual(vc.score, 205)
+        XCTAssertEqual(vc.wins, 1)
+        let victory = try XCTUnwrap(vc.victoryView)
+        XCTAssertTrue(victory.superview === vc.view)
+        // All 52 cards take part, in four rows of a suit each from Ace to King
+        XCTAssertEqual(victory.cardViews.count, 52)
+        XCTAssertTrue(allStacks(vc).allSatisfy { $0!.view.isHidden }, "the table's stacks are out of sight")
+        XCTAssertGreaterThan(vc.view.subviews.firstIndex(of: vc.menuButton)!, vc.view.subviews.firstIndex(of: victory)!,
+                             "the buttons stay usable over it")
+
+        vc.startNewGameWithSender(sender: vc)
+        XCTAssertNil(vc.victoryView)
+        XCTAssertNil(victory.superview)
+        XCTAssertFalse(vc.view.subviews.contains { $0 is VictoryView })
+        XCTAssertEqual(vc.losses, 0, "a won game isn't a loss")
+        XCTAssertTrue(allStacks(vc).allSatisfy { !$0!.view.isHidden })
+    }
+
+    func testSkippingTheCelebrationShowsNewGame() throws {
+        restoreWonTable(vc)
+        vc.finishTurn()
+        let victory = try XCTUnwrap(vc.victoryView)
+        XCTAssertFalse(victory.endingIsShowing)
+        victory.skip()
+        let shown = expectation(description: "New Game shows")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            XCTAssertTrue(victory.endingIsShowing)
+            shown.fulfill()
+        }
+        wait(for: [shown], timeout: 3)
+    }
+
+    func testScoreCountsToItsNewValueOnceShowing() throws {
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = vc.navigationController
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+        XCTAssertNotNil(vc.view.window)
+        vc.doInitTable = false
+        vc.score = 0
+        vc.scoreCounter.count(to: 0, animated: false)
+        vc.score = 250
+        XCTAssertEqual(vc.score, 250, "the score itself changes at once")
+        XCTAssertEqual(vc.chalkLine.accessibilityLabel, "$250, Wins: 0, Losses: 0", "and VoiceOver reads it")
+        XCTAssertTrue(vc.chalkLine.text!.hasPrefix("$0 "), "while the felt counts up to it")
+        let counted = expectation(description: "counted")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            XCTAssertTrue(self.vc.chalkLine.text!.hasPrefix("$250 "))
+            counted.fulfill()
+        }
+        wait(for: [counted], timeout: 3)
+        window.isHidden = true
+    }
+
+    func testDebugUnlockFitsOnlyItsPhone() {
+        let realKey = DebugAccess.publicKey
+        defer { DebugAccess.publicKey = realKey }
+        let key = P256.Signing.PrivateKey()
+        DebugAccess.publicKey = key.publicKey
+        let code = DebugAccess.deviceCode
+        XCTAssertTrue(code.allSatisfy { "0123456789ABCDEFGHJKMNPQRSTVWXYZ".contains($0) })
+        XCTAssertEqual(code.count, 8)
+        // As scripts/debug-unlock.sh prints it: URL-safe base 64 without padding
+        let signature = try! key.signature(for: DebugAccess.message(for: code)).derRepresentation.base64EncodedString()
+        let unlock = signature.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        XCTAssertTrue(DebugAccess.isValid(unlock, for: code))
+        XCTAssertTrue(DebugAccess.isValid(" \(unlock)\n", for: code), "pasted with stray space")
+        XCTAssertFalse(DebugAccess.isValid(unlock, for: "ABCD1234"), "another phone")
+        XCTAssertFalse(DebugAccess.isValid("not an unlock", for: code))
+        // The real key's own unlock, from scripts/debug-unlock.sh ABCD-1234
+        DebugAccess.publicKey = realKey
+        XCTAssertTrue(DebugAccess.isValid("MEQCIFaSCtB2u1mIEYzSOSQ-t87dpgtZa-FoM33DYDB1wB1rAiAXA0SlPH9qv_h1D7RXwc6dvrgH80eidlBvz07LT5lkzw", for: "ABCD1234"))
+    }
+
+    func testDebugMenuIsInBuildsFromXcode() throws {
+        let menu = try XCTUnwrap(vc.menuButton.menu)
+        let debug = try XCTUnwrap(menu.children.last as? UIMenu)
+        XCTAssertEqual(debug.title, "Debug")
+        XCTAssertEqual(debug.children.map { $0.title }, ["Almost Won", "Win Now", "Card Faces"])
+    }
+
+    func testEveryCardHasEveryFace() {
+        let cards = vc.viewTagToCard.values.compactMap { $0 }.sorted { $0.view.tag < $1.view.tag }
+        XCTAssertEqual(cards.count, 52)
+        for faces in CardFaces.allCases {
+            for card in cards {
+                XCTAssertNotNil(UIImage(named: "\(faces.rawValue)/\(card.assetName)"), "\(faces) \(card.assetName)")
+            }
+        }
+        XCTAssertEqual(cards.map { $0.assetName }.prefix(2), ["ace_of_clubs", "2_of_clubs"])
+        XCTAssertEqual(cards.last?.assetName, "king_of_spades")
+    }
+
+    func testTheDebugMenuSwitchesCardFaces() throws {
+        let top = try XCTUnwrap(vc.fub!.cards.last)
+        XCTAssertEqual(Card.faces, .smallArial)
+        UserDefaults.standard.set(CardFaces.largeAbril.rawValue, forKey: DebugAccess.cardFacesKey)
+        vc.updateCardFaces()
+        XCTAssertEqual(Card.faces, .largeAbril, "a pick from the Debug menu wins over the table's size")
+        XCTAssertTrue(top.view.image === top.faceImage)
+        XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage, "covered cards stay blank")
+        // Automatic goes back to the game's own choice
+        UserDefaults.standard.removeObject(forKey: DebugAccess.cardFacesKey)
+        vc.updateCardFaces()
+        XCTAssertEqual(Card.faces, .smallArial)
+    }
+
+    func testEachSetOfFacesHasItsOwnCorners() throws {
+        let top = try XCTUnwrap(vc.fub!.cards.last)
+        let back = try XCTUnwrap(vc.deck!.cards.last)
+        let smallBack = try XCTUnwrap(back.view.image)
+        XCTAssertEqual(top.view.layer.cornerRadius, top.view.bounds.width * 10 / 167.0869141, accuracy: 0.01)
+
+        // The large cards' corners are tighter, and the outline, backs and blank faces follow them
+        UserDefaults.standard.set(CardFaces.largeArial.rawValue, forKey: DebugAccess.cardFacesKey)
+        vc.redrawTable()
+        XCTAssertEqual(top.view.layer.cornerRadius, top.view.bounds.width * 7.11 / 167.0869141, accuracy: 0.01)
+        XCTAssertTrue(back.view.image === Card.backImage)
+        XCTAssertFalse(back.view.image === smallBack)
+        XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage)
+    }
+
+    func testAlmostWonIsOneMoveFromWinning() {
+        let losses = vc.losses
+        vc.dealAlmostWon()
+        XCTAssertEqual(vc.losses, losses, "not a loss")
+        XCTAssertNotNil(vc.gameBeforeNewGame, "Undo brings back the game it replaced")
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 36)
+        vc.autoMoves = true
+        vc.finishTurn()
+        XCTAssertTrue(vc.justWon)
+    }
+
+    func testWinNowWins() throws {
+        let wins = vc.wins
+        vc.winNow()
+        XCTAssertTrue(vc.justWon)
+        XCTAssertEqual(vc.wins, wins + 1)
+        XCTAssertTrue(vc.suitStacks.allSatisfy { $0!.cards.count == 13 })
+        XCTAssertEqual(try XCTUnwrap(vc.victoryView).cardViews.count, 52)
+        // And from the celebration, Almost Won deals again
+        vc.dealAlmostWon()
+        XCTAssertFalse(vc.justWon)
+        XCTAssertNil(vc.victoryView)
     }
 
     func testUndoGoesBackOnlyOneNewGame() {
@@ -1163,6 +1332,81 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(moved[0].cardParent === moved[1])
         XCTAssertNil(moved[1].cardParent)
         XCTAssertNil(before.last!.cardParent)
+    }
+
+    func testSwipingFromTheLeftEdgeToTheMiddleUndoes() throws {
+        let board = allStacks(vc).map(tags)
+        vc.tapDeck()
+        XCTAssertTrue(vc.canUndo)
+        let width = vc.view.bounds.width, y = vc.view.bounds.midY
+        vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
+        let pill = try XCTUnwrap(vc.swipePill)
+        XCTAssertEqual(pill.title, "Undo")
+        XCTAssertFalse(vc.swipeArmed)
+        // The pill stays one size above the cards, and fills as the finger comes in
+        let size = pill.bounds.size
+        XCTAssertLessThan(pill.frame.maxY, vc.cardStacks.compactMap { $0?.view.frame.minY }.min()!)
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 4, y: y))
+        XCTAssertEqual(pill.progress, 0.5, accuracy: 0.1)
+        XCTAssertEqual(pill.bounds.size, size)
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
+        XCTAssertTrue(vc.swipeArmed)
+        XCTAssertEqual(pill.progress, 1)
+        vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 2, y: y))
+        XCTAssertNil(vc.swipePill)
+        XCTAssertEqual(allStacks(vc).map(tags), board)
+    }
+
+    func testAnEdgeSwipeThatStopsShortDoesNothing() {
+        let board = allStacks(vc).map(tags)
+        vc.tapDeck()
+        let dealt = allStacks(vc).map(tags)
+        let width = vc.view.bounds.width, y = vc.view.bounds.midY
+        vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
+        // Back toward the edge before letting go
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 4, y: y))
+        XCTAssertFalse(vc.swipeArmed)
+        vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 4, y: y))
+        XCTAssertEqual(allStacks(vc).map(tags), dealt)
+        XCTAssertNotEqual(allStacks(vc).map(tags), board)
+        // And with nothing to undo, reaching the middle doesn't count
+        vc.canUndo = false
+        vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
+        XCTAssertEqual(vc.swipePill?.title, "Nothing to Undo")
+        XCTAssertFalse(vc.swipeArmed)
+        vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 2, y: y))
+        XCTAssertEqual(allStacks(vc).map(tags), dealt)
+    }
+
+    func testSwipingFromTheRightEdgeToTheMiddleShowsAHint() throws {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        let card = try XCTUnwrap(vc.findMove()).card
+        let width = vc.view.bounds.width, y = vc.view.bounds.midY
+        vc.edgeSwipe(from: .right, state: .began, at: CGPoint(x: width - 10, y: y))
+        XCTAssertEqual(vc.swipePill?.title, "Hint")
+        vc.edgeSwipe(from: .right, state: .changed, at: CGPoint(x: width / 2, y: y))
+        vc.edgeSwipe(from: .right, state: .ended, at: CGPoint(x: width / 2, y: y))
+        XCTAssertNotNil(card.view.layer.animation(forKey: "hint"))
+    }
+
+    func testUndoSwipesStartOnlyBelowTheCards() {
+        let bottom = vc.cardsBottom()
+        let below = CGPoint(x: 4, y: bottom + 20), among = CGPoint(x: 4, y: bottom - 20)
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: among))
+        // Hints come from anywhere along the right edge
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .right, at: CGPoint(x: vc.view.bounds.width - 4, y: among.y)))
+    }
+
+    func testEdgeSwipesWaitOutTheCelebration() {
+        let below = CGPoint(x: 4, y: vc.cardsBottom() + 20)
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
+        restoreWonTable(vc)
+        vc.finishTurn()
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: below))
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .right, at: below))
     }
 
     func testRulesTextIsNumberedWithoutAsterisks() {
