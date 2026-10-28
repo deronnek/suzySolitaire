@@ -5,7 +5,8 @@
 
 import UIKit
 
-// Shortcuts for the buttons: swiping in from the left edge of the screen to the middle undoes, as the Undo button does,
+// Shortcuts for the buttons: swiping in from the left edge of the screen, below the cards, to the middle undoes, as the
+// Undo button does,
 // and swiping in from the right edge to the middle shows a hint, as Hint in the "..." menu does.  A pill across the top
 // of the table fills from the side the swipe came from as the finger comes in, and lights up, with a tick, once letting
 // go would do it; going back toward the edge before letting go calls it off.
@@ -27,9 +28,19 @@ extension ViewController {
         self.edgeSwipe(from: swipe.edges, state: swipe.state, at: swipe.location(in: self.view))
     }
 
-    // Whether an edge swipe can start: not while the cards celebrate a win, or over an alert or the menu
-    func edgeSwipeCanBegin() -> Bool {
-        !self.justWon && self.presentedViewController == nil
+    // Whether an edge swipe can start: not while the cards celebrate a win, or over an alert or the menu.  Undo starts
+    // only below the cards, so a swipe near them can't take back a move by mistake.
+    func edgeSwipeCanBegin(from edge: UIRectEdge, at point: CGPoint) -> Bool {
+        guard !self.justWon && self.presentedViewController == nil else {
+            return false
+        }
+        return !edge.contains(.left) || point.y > self.cardsBottom()
+    }
+
+    // The bottom of the lowest card or empty stack's outline on the table
+    func cardsBottom() -> CGFloat {
+        let stacks = ([self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks).compactMap { $0?.view }
+        return stacks.map { $0.frame.maxY }.max() ?? 0
     }
 
     // Follows a swipe in from an edge, and undoes or hints if it ends at the middle
@@ -207,7 +218,7 @@ extension ViewController {
             self.tapDeck()
             self.finishTurn()
         }
-        let steps: [(edge: UIRectEdge, start: CGFloat, y: CGFloat)] = [(.left, 1.2, bounds.height * 0.55), (.right, 4.0, bounds.height * 0.45)]
+        let steps: [(edge: UIRectEdge, start: CGFloat, y: CGFloat)] = [(.left, 1.2, bounds.height * 0.8), (.right, 4.0, bounds.height * 0.45)]
         for step in steps {
             let fromLeft = step.edge == .left
             let x = { (t: CGFloat) in fromLeft ? 4 + (bounds.midX + 6) * t : bounds.width - 4 - (bounds.midX + 6) * t }

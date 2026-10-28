@@ -1396,8 +1396,8 @@ extension ViewController: UIGestureRecognizerDelegate {
     }
 
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        if gestureRecognizer is UIScreenEdgePanGestureRecognizer {
-            return self.edgeSwipeCanBegin()
+        if let swipe = gestureRecognizer as? UIScreenEdgePanGestureRecognizer {
+            return self.edgeSwipeCanBegin(from: swipe.edges, at: swipe.location(in: self.view))
         }
         return true
     }

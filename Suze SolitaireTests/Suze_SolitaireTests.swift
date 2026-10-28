@@ -1339,11 +1339,22 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNotNil(card.view.layer.animation(forKey: "hint"))
     }
 
+    func testUndoSwipesStartOnlyBelowTheCards() {
+        let bottom = vc.cardsBottom()
+        let below = CGPoint(x: 4, y: bottom + 20), among = CGPoint(x: 4, y: bottom - 20)
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: among))
+        // Hints come from anywhere along the right edge
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .right, at: CGPoint(x: vc.view.bounds.width - 4, y: among.y)))
+    }
+
     func testEdgeSwipesWaitOutTheCelebration() {
-        XCTAssertTrue(vc.edgeSwipeCanBegin())
+        let below = CGPoint(x: 4, y: vc.cardsBottom() + 20)
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
         restoreWonTable(vc)
         vc.finishTurn()
-        XCTAssertFalse(vc.edgeSwipeCanBegin())
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: below))
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .right, at: below))
     }
 
     func testRulesTextIsNumberedWithoutAsterisks() {
