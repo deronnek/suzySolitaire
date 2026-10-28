@@ -100,7 +100,6 @@ extension ViewController: PHPickerViewControllerDelegate {
         Card.customBackImage = image
 
         for case let card? in self.viewTagToCard.values {
-            card.backImage = image ?? UIImage(imageLiteralResourceName: card.backImageFilename)
             if self.viewTagToStack[card.view.tag]??.stackType == .deck {
                 card.view.image = card.backImage
             }

@@ -122,7 +122,7 @@ extension ViewController {
             children.append(UIAction(title: "Lock Debug Menu", image: UIImage(systemName: "lock")) { _ in
                 UserDefaults.standard.removeObject(forKey: DebugAccess.unlockKey)
                 // Back to the game's own card faces
-                self.updateCardFaces()
+                self.redrawTable()
                 self.updateMenu()
             })
         }
@@ -134,7 +134,8 @@ extension ViewController {
         let picked = DebugAccess.cardFaces
         let choose = { [unowned self] (faces: CardFaces?) in
             UserDefaults.standard.set(faces?.rawValue, forKey: DebugAccess.cardFacesKey)
-            self.updateCardFaces()
+            // Laid out again, so the cards' outlines and shadows take the new faces' corners
+            self.redrawTable()
             self.updateMenu()
         }
         let automatic = UIAction(title: "Automatic", subtitle: "Small on a phone, large on a roomy table", state: picked == nil ? .on : .off) { _ in
@@ -177,7 +178,7 @@ extension ViewController {
             let unlock = alert.textFields?.first?.text ?? ""
             if DebugAccess.isValid(unlock, for: code) {
                 UserDefaults.standard.set(unlock, forKey: DebugAccess.unlockKey)
-                self.updateCardFaces()
+                self.redrawTable()
                 self.updateMenu()
                 self.announce("Debug menu unlocked")
             }

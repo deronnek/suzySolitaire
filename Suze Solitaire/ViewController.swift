@@ -859,12 +859,11 @@ class ViewController: UIViewController {
     }
     
     func createCards() {
-        let backImgFile = "cardback.png";
         var tagCounter  = 0;
         
         for suit in [cardSuit.Clubs, .Diamonds, .Hearts, .Spades] {
             for i in 1...13 {
-                let aCard = Card(suit: suit, rank: i, backImageFilename: backImgFile, tag: tagCounter)
+                let aCard = Card(suit: suit, rank: i, tag: tagCounter)
                 self.cards.append(aCard)
                 tagCounter += 1;
             }

@@ -43,9 +43,18 @@ extension ViewController {
         }
         let cards = self.viewTagToCard.values.compactMap { $0 }
         let showingFaces = cards.filter { $0.view.image === $0.faceImage }
+        let showingBlank = cards.filter { $0.view.image === Card.blankFaceImage }
+        let showingBack  = cards.filter { $0.view.image === Card.backImage }
         Card.faces = faces
         for card in showingFaces {
             card.view.image = card.faceImage
+        }
+        // Blank faces and backs come with the faces' corners
+        for card in showingBlank {
+            card.view.image = Card.blankFaceImage
+        }
+        for card in showingBack {
+            card.view.image = Card.backImage
         }
     }
 
