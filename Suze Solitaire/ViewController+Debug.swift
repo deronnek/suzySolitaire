@@ -74,9 +74,13 @@ enum DebugAccess {
         return self.publicKey.isValidSignature(signature, for: self.message(for: code))
     }
 
-    // TestFlight copies are signed for the sandbox, App Store copies for production
+    // TestFlight copies are signed for the sandbox, App Store copies for production.  Asking the App Store can fail, so a
+    // TestFlight copy is also known by its receipt's name, which needs no network.
     static func checkInstall() async {
-        guard let result = try? await AppTransaction.shared else {
+        if Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt" {
+            self.isTestFlight = true
+        }
+        guard !self.isTestFlight, let result = try? await AppTransaction.shared else {
             return
         }
         let environment = result.unsafePayloadValue.environment
