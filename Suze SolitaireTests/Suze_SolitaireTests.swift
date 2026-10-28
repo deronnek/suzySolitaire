@@ -3,6 +3,7 @@
 //  Suze SolitaireTests
 //
 
+import CryptoKit
 import StoreKitTest
 import XCTest
 @testable import Suze_Solitaire
@@ -626,6 +627,57 @@ final class Suze_SolitaireTests: XCTestCase {
         }
         wait(for: [counted], timeout: 3)
         window.isHidden = true
+    }
+
+    func testDebugUnlockFitsOnlyItsPhone() {
+        let realKey = DebugAccess.publicKey
+        defer { DebugAccess.publicKey = realKey }
+        let key = P256.Signing.PrivateKey()
+        DebugAccess.publicKey = key.publicKey
+        let code = DebugAccess.deviceCode
+        XCTAssertTrue(code.allSatisfy { "0123456789ABCDEFGHJKMNPQRSTVWXYZ".contains($0) })
+        XCTAssertEqual(code.count, 8)
+        // As scripts/debug-unlock.sh prints it: URL-safe base 64 without padding
+        let signature = try! key.signature(for: DebugAccess.message(for: code)).derRepresentation.base64EncodedString()
+        let unlock = signature.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        XCTAssertTrue(DebugAccess.isValid(unlock, for: code))
+        XCTAssertTrue(DebugAccess.isValid(" \(unlock)\n", for: code), "pasted with stray space")
+        XCTAssertFalse(DebugAccess.isValid(unlock, for: "ABCD1234"), "another phone")
+        XCTAssertFalse(DebugAccess.isValid("not an unlock", for: code))
+        // The real key's own unlock, from scripts/debug-unlock.sh ABCD-1234
+        DebugAccess.publicKey = realKey
+        XCTAssertTrue(DebugAccess.isValid("MEQCIFaSCtB2u1mIEYzSOSQ-t87dpgtZa-FoM33DYDB1wB1rAiAXA0SlPH9qv_h1D7RXwc6dvrgH80eidlBvz07LT5lkzw", for: "ABCD1234"))
+    }
+
+    func testDebugMenuIsInBuildsFromXcode() throws {
+        let menu = try XCTUnwrap(vc.menuButton.menu)
+        let debug = try XCTUnwrap(menu.children.last as? UIMenu)
+        XCTAssertEqual(debug.title, "Debug")
+        XCTAssertEqual(debug.children.map { $0.title }, ["Almost Won", "Win Now"])
+    }
+
+    func testAlmostWonIsOneMoveFromWinning() {
+        let losses = vc.losses
+        vc.dealAlmostWon()
+        XCTAssertEqual(vc.losses, losses, "not a loss")
+        XCTAssertNotNil(vc.gameBeforeNewGame, "Undo brings back the game it replaced")
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 36)
+        vc.autoMoves = true
+        vc.finishTurn()
+        XCTAssertTrue(vc.justWon)
+    }
+
+    func testWinNowWins() throws {
+        let wins = vc.wins
+        vc.winNow()
+        XCTAssertTrue(vc.justWon)
+        XCTAssertEqual(vc.wins, wins + 1)
+        XCTAssertTrue(vc.suitStacks.allSatisfy { $0!.cards.count == 13 })
+        XCTAssertEqual(try XCTUnwrap(vc.victoryView).cardViews.count, 52)
+        // And from the celebration, Almost Won deals again
+        vc.dealAlmostWon()
+        XCTAssertFalse(vc.justWon)
+        XCTAssertNil(vc.victoryView)
     }
 
     func testUndoGoesBackOnlyOneNewGame() {

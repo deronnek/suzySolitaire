@@ -190,6 +190,7 @@ class ViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
         
         self.setUpChalk()
+        self.setUpDebugAccess()
         // New Game is a plus, like the New Game button in the "No moves left" banner
         self.newGameBarButtonItem = self.navigationItem.leftBarButtonItem
         self.newGameBarButtonItem.title = nil
@@ -206,6 +207,7 @@ class ViewController: UIViewController {
         if UserDefaults.standard.string(forKey: "ScreenshotOrientation") == "landscape" {
             self.view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
         }
+        #if DEBUG
         // scripts/win-video.sh passes -FinishTurnAfter <seconds> to play out the saved game's auto moves untouched
         let finishAfter = UserDefaults.standard.double(forKey: "FinishTurnAfter")
         if finishAfter > 0 && self.doInitTable {
@@ -213,6 +215,7 @@ class ViewController: UIViewController {
                 self.finishTurn()
             }
         }
+        #endif
         if self.doInitTable {
             if let saved = self.loadSavedGame() {
                 print("Restoring saved game")
