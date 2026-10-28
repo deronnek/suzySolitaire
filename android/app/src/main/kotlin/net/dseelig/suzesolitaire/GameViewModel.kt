@@ -3,13 +3,14 @@ package net.dseelig.suzesolitaire
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.ImageDecoder
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.RectF
 import android.net.Uri
+import android.provider.Settings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,7 @@ import net.dseelig.suzesolitaire.game.Table
 import net.dseelig.suzesolitaire.store.PlayUpgradeStore
 import net.dseelig.suzesolitaire.store.PurchaseOutcome
 import net.dseelig.suzesolitaire.store.UpgradeStore
+import net.dseelig.suzesolitaire.ui.CardFaces
 import net.dseelig.suzesolitaire.ui.TableLayout
 import java.io.File
 import kotlin.random.Random
@@ -236,7 +238,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         announce("Wins and losses reset")
     }
 
-    // Crops a chosen photo to card proportions with rounded corners, as the iOS app does, and keeps it as the card back
+    // Crops a chosen photo to card proportions, as the iOS app does, and keeps it as the card back; its corners are
+    // rounded as it's drawn, to match the faces showing
     fun setCardBack(uri: Uri?) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -256,6 +259,61 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             cardBackVersion += 1
+        }
+    }
+
+    // MARK: Debug
+
+    // This phone's code for unlocking the Debug menu (see DebugAccess)
+    val deviceCode = DebugAccess.deviceCode(
+        Settings.Secure.getString(application.contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown")
+    // Builds run from Android Studio or Gradle, which always have the Debug menu
+    val isDebuggable = application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+    var debugUnlocked by mutableStateOf(isDebuggable || DebugAccess.isValid(prefs.getString(DebugAccess.UNLOCK_KEY, null) ?: "", deviceCode))
+        private set
+    // The card faces picked in the Debug menu, if any
+    private var pickedCardFaces by mutableStateOf(
+        prefs.getString(DebugAccess.CARD_FACES_KEY, null)?.let { name -> CardFaces.entries.firstOrNull { it.name == name } })
+
+    // The card faces picked in the Debug menu while it's unlocked, or null for the game's own
+    val debugCardFaces: CardFaces? get() = pickedCardFaces.takeIf { debugUnlocked }
+
+    // The faces to show on a table of this size
+    fun cardFaces(roomy: Boolean) = debugCardFaces ?: CardFaces.standard(roomy)
+
+    // Takes an unlock made by scripts/debug-unlock.sh for this phone's code; false if it doesn't fit
+    fun unlockDebug(unlock: String): Boolean {
+        if (!DebugAccess.isValid(unlock, deviceCode)) {
+            return false
+        }
+        prefs.edit().putString(DebugAccess.UNLOCK_KEY, unlock.trim()).apply()
+        debugUnlocked = true
+        announce("Debug menu unlocked")
+        return true
+    }
+
+    fun lockDebug() {
+        prefs.edit().remove(DebugAccess.UNLOCK_KEY).apply()
+        debugUnlocked = isDebuggable
+    }
+
+    fun setDebugCardFaces(faces: CardFaces?) {
+        pickedCardFaces = faces
+        prefs.edit().apply { if (faces == null) remove(DebugAccess.CARD_FACES_KEY) else putString(DebugAccess.CARD_FACES_KEY, faces.name) }.apply()
+    }
+
+    // Swaps the game for one a card from winning, without counting a loss; Undo brings back the game it replaced
+    fun dealAlmostWon() {
+        session.replaceTable(DebugAccess.ALMOST_WON)
+        dealtAt = System.currentTimeMillis()
+        publish()
+        announce("Almost won game dealt")
+    }
+
+    // Puts every card up and wins
+    fun winNow() {
+        if (session.winNow()) {
+            afterTurn()
         }
     }
 
@@ -352,8 +410,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val height = (width * TableLayout.ASPECT).toInt()
             val out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(out)
-            val radius = width * TableLayout.CORNER_FRACTION
-            canvas.clipPath(Path().apply { addRoundRect(RectF(0f, 0f, width.toFloat(), height.toFloat()), radius, radius, Path.Direction.CW) })
             val scale = maxOf(width.toFloat() / photo.width, height.toFloat() / photo.height)
             val drawnWidth = photo.width * scale
             val drawnHeight = photo.height * scale

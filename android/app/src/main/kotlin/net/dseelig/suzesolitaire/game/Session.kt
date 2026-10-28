@@ -94,6 +94,35 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
         justDealtNewGame = !previous.won
     }
 
+    // Swaps the game for one on the given table, without counting a loss, for the Debug menu.  As after New Game, Undo
+    // brings back the game it replaced.
+    fun replaceTable(table: Table) {
+        val previous = game
+        game = previous.copy(table = table, won = false)
+        if (!previous.won) {
+            history.addLast(previous)
+        }
+        lastTurnUndoable = !previous.won
+        justDealtNewGame = !previous.won
+    }
+
+    // Puts every card up on its suit's upper stack, from the starter rank round, and wins, for the Debug menu
+    fun winNow(): Boolean {
+        if (game.won) {
+            return false
+        }
+        recordTurn()
+        val started = table.upper.mapNotNull { it.firstOrNull()?.suit }
+        val suits = started + Suit.entries.filter { it !in started }
+        val upper = suits.map { suit ->
+            Card.all.filter { it.suit == suit }.sortedBy { (it.rank - table.starter + 13) % 13 }
+        }
+        game = game.copy(table = table.copy(blind = emptyList(), deck = emptyList(), deal = emptyList(), upper = upper,
+                                            lower = List(4) { emptyList() }))
+        finishTurn()
+        return true
+    }
+
     fun undo(): Boolean {
         if (!canUndo) {
             return false

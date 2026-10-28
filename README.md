@@ -76,7 +76,8 @@ needs no Apple Account; the app doesn't check the real App Store while it hosts 
 | `scripts/screenshots.sh` | Regenerates the App Store screenshots: 6.9" iPhone, 13" iPad in landscape, and iPhone Duo folded. |
 | `scripts/layout-screenshots.sh` | Screenshots every layout (iPhone and iPad in both orientations, iPhone Duo folded and unfolded) for checking. |
 | `scripts/appstore-metadata.py` | Uploads the listing in `AppStore/Metadata`, the screenshots and the newest build to the App Store version being prepared. It never submits anything. |
-| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into `Assets.xcassets/Cards` as vector images: big-rank cards for phone-sized tables and the full design for roomy ones, each in Arial and Abril Fatface. |
+| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into both apps as vector images (`Assets.xcassets/Cards` and `android/app/src/main/assets/cards`): big-rank cards for phone-sized tables and the full design for roomy ones, each in Arial and Abril Fatface. |
+| `scripts/debug-unlock.sh` | Signs a phone's code (long-press the score to see it) to unlock the Debug menu on that phone, iOS or Android, with a private key kept outside the repo. |
 | `scripts/appstore-iap.py` | Sets up the Unlimited Undo in-app purchase in App Store Connect: name, description, price, territories and review screenshot. |
 
 The App Store Connect scripts share their API helpers in `scripts/asc.py`.
@@ -98,6 +99,11 @@ policy](AppStore/PRIVACY.md) covers both versions.
 - **Icon:** an adaptive icon drawn from the same layers as `AppIcon.icon`, with a monochrome layer for themed icons.
 - **Font:** the score is in [Jost](https://github.com/indestructible-type/Jost), an open-source font after Futura
   (licensed under the SIL Open Font License, in `android/licenses`).
+- **Card faces** are the same SVGs as the iOS app's. `scripts/import-cards.py` flattens them with Android Studio's SVG
+  converter and stores them as compact path data in `res/raw`, which the app draws at the size each card is shown
+  (`VectorArt.kt`).
+- **Debug menu:** debuggable builds always have it; other builds only on a phone unlocked with `scripts/debug-unlock.sh`,
+  as on iOS. It has Almost Won, Win Now and the four sets of card faces.
 - **Dependencies:** only Jetpack Compose, Material 3, Activity, Lifecycle and Play Billing; no other libraries.
 
 To build it, run `scripts/android-emulators.sh` once (it installs a JDK, the Android SDK and the emulators with Homebrew),
@@ -105,7 +111,7 @@ then:
 
 ```sh
 cd android
-./gradlew testDebugUnitTest          # 43 tests: rules, undo, saving and the layout of every window size
+./gradlew testDebugUnitTest          # 48 tests: rules, undo, saving, the layout of every window size and the Debug menu
 ./gradlew connectedDebugAndroidTest  # 12 tests on a running emulator: dragging, tapping, TalkBack, the menu and buying
 ./gradlew assembleRelease
 ```

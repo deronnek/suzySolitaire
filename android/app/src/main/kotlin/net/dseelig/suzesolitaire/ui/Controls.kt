@@ -1,6 +1,10 @@
 package net.dseelig.suzesolitaire.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.pm.PackageManager
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
@@ -16,6 +20,8 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -27,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -47,6 +54,8 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -54,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.activity.compose.LocalActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import net.dseelig.suzesolitaire.DebugAccess
 import net.dseelig.suzesolitaire.GameViewModel
 import net.dseelig.suzesolitaire.R
 import net.dseelig.suzesolitaire.game.Pile
@@ -69,7 +79,11 @@ fun Controls(vm: GameViewModel, layout: TableLayout, onHowToPlay: () -> Unit, on
     val iconSize = if (layout.roomy) 28.dp else 24.dp
     CornerButton(layout.newGame, "New Game", R.drawable.ic_new_game, iconSize, order = 0f, onClick = vm::newGame)
     CornerButton(layout.undo, "Undo", R.drawable.ic_undo, iconSize, order = 1f, enabled = vm.canUndo, onClick = vm::undo)
-    Score(vm, layout)
+    var showUnlock by remember { mutableStateOf(false) }
+    Score(vm, layout, onLongPress = { showUnlock = true })
+    if (showUnlock) {
+        DebugUnlock(vm) { showUnlock = false }
+    }
     Box(Modifier
         .offset(layout.menu.left.dp, layout.menu.top.dp)
         .zIndex(20_000f)
@@ -99,9 +113,9 @@ private fun CornerButton(box: Box, label: String, icon: Int, iconSize: androidx.
 }
 
 // The score, wins and losses on the felt beside the menu button: following the font size set in Settings, up to twice as
-// big, and shrinking to fit when they'd run into the button
+// big, and shrinking to fit when they'd run into the button.  A long press on it unlocks the Debug menu (see DebugAccess).
 @Composable
-private fun Score(vm: GameViewModel, layout: TableLayout) {
+private fun Score(vm: GameViewModel, layout: TableLayout, onLongPress: () -> Unit) {
     val colors = LocalTableColors.current
     val game = vm.game
     val scale = LocalDensity.current.fontScale
@@ -115,6 +129,7 @@ private fun Score(vm: GameViewModel, layout: TableLayout) {
     Box(Modifier
         .offset(layout.score.left.dp, layout.score.top.dp)
         .size(layout.score.width.dp, layout.score.height.dp)
+        .pointerInput(Unit) { detectTapGestures(onLongPress = { onLongPress() }) }
         .semantics { traversalIndex = 3f }
         .clearAndSetSemantics { contentDescription = "$money, Wins: ${game.wins}, Losses: ${game.losses}" },
         contentAlignment = Alignment.CenterStart) {
@@ -163,6 +178,9 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
                 })
         }
         MenuItem("About", onDismiss) { showAbout = true }
+        if (vm.debugUnlocked) {
+            DebugItems(vm, onDismiss)
+        }
     }
     if (confirmReset) {
         AlertDialog(
@@ -183,6 +201,79 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
             confirmButton = { TextButton({ showAbout = false }) { Text("OK") } },
         )
     }
+}
+
+// The Debug section: a game one card from winning, winning on the spot, and which card faces to show
+@Composable
+private fun DebugItems(vm: GameViewModel, onDismiss: () -> Unit) {
+    HorizontalDivider()
+    SectionLabel("Debug")
+    MenuItem("Almost Won", onDismiss, vm::dealAlmostWon)
+    MenuItem("Win Now", onDismiss, vm::winNow)
+    SectionLabel("Card Faces")
+    val picked = vm.debugCardFaces
+    RadioItem("Automatic", picked == null) { vm.setDebugCardFaces(null) }
+    for (faces in CardFaces.entries) {
+        RadioItem(faces.title, picked == faces) { vm.setDebugCardFaces(faces) }
+    }
+    if (!vm.isDebuggable) {
+        HorizontalDivider()
+        MenuItem("Lock Debug Menu", onDismiss, vm::lockDebug)
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 12.dp, top = 8.dp, bottom = 4.dp))
+}
+
+@Composable
+private fun RadioItem(text: String, selected: Boolean, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(text) },
+        leadingIcon = { RadioButton(selected = selected, onClick = null) },
+        onClick = onClick,
+        modifier = Modifier.semantics { this.selected = selected },
+    )
+}
+
+// Shows this phone's code, to be signed by scripts/debug-unlock.sh, and takes the unlock it prints
+@Composable
+private fun DebugUnlock(vm: GameViewModel, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val code = DebugAccess.pretty(vm.deviceCode)
+    if (vm.debugUnlocked) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Debug Menu") },
+            text = { Text("The Debug menu is on for this phone ($code).") },
+            confirmButton = { TextButton(onDismiss) { Text("OK") } },
+        )
+        return
+    }
+    var unlock by remember { mutableStateOf("") }
+    var wrong by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Debug Menu") },
+        text = {
+            Column {
+                Text("This phone's code is $code. Paste the unlock that scripts/debug-unlock.sh makes for it.")
+                TextButton({
+                    context.getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("Code", vm.deviceCode))
+                }) { Text("Copy Code") }
+                // As typed, without the keyboard correcting it into words
+                OutlinedTextField(unlock, { unlock = it; wrong = false }, label = { Text("Unlock") }, singleLine = true,
+                    isError = wrong,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false,
+                                                      keyboardType = KeyboardType.Password),
+                    supportingText = if (wrong) {{ Text("That unlock doesn't fit this phone's code") }} else null)
+            }
+        },
+        confirmButton = { TextButton({ if (vm.unlockDebug(unlock)) onDismiss() else wrong = true }) { Text("Unlock") } },
+        dismissButton = { TextButton(onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable

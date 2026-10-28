@@ -190,9 +190,7 @@ class TableLayout(val width: Float, val height: Float, val insets: Insets = Inse
 
     companion object {
         // Height / width of the card images
-        const val ASPECT = 726f / 500f
-        // Corner radius as a fraction of card width, matching the corners cut into the card images
-        const val CORNER_FRACTION = 0.06f
+        const val ASPECT = 242.6669922f / 167.0869141f
         const val FANNED_SLICE = 5f
         const val BANNER_HEIGHT = 48f
         const val BANNER_SPACING = 8f

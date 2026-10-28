@@ -95,17 +95,20 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
     var drag by remember { mutableStateOf<Drag?>(null) }
     val game = vm.game
 
-    // The card art, decoded at the size it's drawn.  The last set stays up while a new size decodes.
+    // The card art, drawn at the size it's shown.  The last set stays up while a new size or set is drawn.
     val widthPx = with(density) { layout.cardWidth.dp.roundToPx() }
+    val cardFaces = vm.cardFaces(layout.roomy)
     var faces by remember { mutableStateOf<CardArt.Faces?>(null) }
-    LaunchedEffect(widthPx, layout.roomy, vm.cardBackVersion) {
+    LaunchedEffect(widthPx, cardFaces, vm.cardBackVersion) {
         faces = withContext(Dispatchers.Default) {
-            CardArt.decode(resources, max(widthPx, 1), layout.roomy, vm.customBackFile.takeIf { vm.hasCustomBack })
+            CardArt.decode(resources, max(widthPx, 1), cardFaces, vm.customBackFile.takeIf { vm.hasCustomBack })
         }
     }
 
     val placed = if (game.won) Placement.victory(layout) else Placement.place(game.table, layout, drag?.let { it.from to it.index })
-    val corner = RoundedCornerShape((layout.cardWidth * TableLayout.CORNER_FRACTION).dp)
+    // The corners of the faces showing, which the backs, outlines and shadows follow
+    val cornerFraction = cardFaces.cornerFraction
+    val corner = RoundedCornerShape((layout.cardWidth * cornerFraction).dp)
 
     // Outlines of the stacks' spots, under the cards, so they show when the cards move off them
     if (!game.won) {
@@ -195,7 +198,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
             .offset((box.left - 2).dp, (box.top - 2).dp)
             .size((box.width + 4).dp, (box.height + 4).dp)
             .zIndex(9_999f)
-            .border(2.5.dp, colors.dropHighlight, RoundedCornerShape((layout.cardWidth * TableLayout.CORNER_FRACTION + 2).dp)))
+            .border(2.5.dp, colors.dropHighlight, RoundedCornerShape((layout.cardWidth * cornerFraction + 2).dp)))
     }
 
     // Touches: drag a card or run to move it, double-tap a card to send it up, and tap the deck or anywhere off the
