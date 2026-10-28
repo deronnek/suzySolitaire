@@ -15,6 +15,8 @@
 		0BAA5E1A2E9C000000000019 /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000018 /* Products.storekit */; };
 		0BAA5E1A2E9C00000000000D /* ViewController+NoMoves.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */; };
 		0BAA5E1A2E9C00000000000F /* ViewController+Hints.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */; };
+		0BAA5E1A2E9C00000000001B /* ViewController+Victory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000001A /* ViewController+Victory.swift */; };
+		0BAA5E1A2E9C00000000001D /* ViewController+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000001C /* ViewController+Debug.swift */; };
 		0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */; };
 		0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */; };
 		0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */; };
@@ -159,6 +161,8 @@
 		0BAA5E1A2E9C000000000018 /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 		0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+NoMoves.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Hints.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C00000000001A /* ViewController+Victory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Victory.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C00000000001C /* ViewController+Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Debug.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Appearance.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Controls.swift"; sourceTree = "<group>"; };
 		0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -352,6 +356,8 @@
 				0BAA5E1A2E9C00000000000C /* ViewController+NoMoves.swift */,
 				0BAA5E1A2E9C000000000016 /* ViewController+UnlimitedUndo.swift */,
 				0BAA5E1A2E9C00000000000E /* ViewController+Hints.swift */,
+				0BAA5E1A2E9C00000000001A /* ViewController+Victory.swift */,
+				0BAA5E1A2E9C00000000001C /* ViewController+Debug.swift */,
 				0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */,
 				0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */,
 				0BAA5E1A2E9C000000000008 /* ViewController+Accessibility.swift */,
@@ -712,6 +718,8 @@
 				0BAA5E1A2E9C00000000000D /* ViewController+NoMoves.swift in Sources */,
 				0BAA5E1A2E9C000000000017 /* ViewController+UnlimitedUndo.swift in Sources */,
 				0BAA5E1A2E9C00000000000F /* ViewController+Hints.swift in Sources */,
+				0BAA5E1A2E9C00000000001B /* ViewController+Victory.swift in Sources */,
+				0BAA5E1A2E9C00000000001D /* ViewController+Debug.swift in Sources */,
 				0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */,
 				0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */,
 				0BAA5E1A2E9C000000000009 /* ViewController+Accessibility.swift in Sources */,
@@ -804,6 +812,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",

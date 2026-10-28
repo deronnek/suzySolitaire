@@ -7,7 +7,7 @@ import PhotosUI
 import UIKit
 
 // The "..." menu in the bottom corner: a hint, auto moves, the no-moves banner, the drop highlight, the card back, resetting wins and losses,
-// Unlimited Undo, and the About box
+// Unlimited Undo, the About box, and on engineers' phones the Debug menu (see ViewController+Debug.swift)
 extension ViewController: PHPickerViewControllerDelegate {
 
     func buildMenu() -> UIMenu {
@@ -52,7 +52,9 @@ extension ViewController: PHPickerViewControllerDelegate {
         let howToPlay = UIAction(title: "How to Play", image: UIImage(systemName: "questionmark.circle")) { _ in
             self.showHowToPlay()
         }
-        return UIMenu(children: [UIMenu(options: .displayInline, children: [hint, howToPlay]), auto, noMoves, drops, cardBack, resetStats, self.unlimitedUndoMenu(), about])
+        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay]), auto, noMoves, drops, cardBack, resetStats,
+                                       self.unlimitedUndoMenu(), about, self.debugMenu()]
+        return UIMenu(children: items.compactMap { $0 })
     }
 
     func showHowToPlay() {

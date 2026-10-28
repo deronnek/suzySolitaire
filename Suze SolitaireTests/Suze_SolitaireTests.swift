@@ -3,6 +3,7 @@
 //  Suze SolitaireTests
 //
 
+import CryptoKit
 import StoreKitTest
 import XCTest
 @testable import Suze_Solitaire
@@ -561,6 +562,122 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.justWon = true
         vc.startNewGameWithSender(sender: vc)
         XCTAssertNil(vc.gameBeforeNewGame)
+    }
+
+    // Every card up on its suit stack, from the starter rank round to the one below it
+    func restoreWonTable(_ vc: ViewController) {
+        let suitStacks = (0..<4).map { suit in (6..<19).map { suit * 13 + $0 % 13 } }
+        let board = ViewController.SavedGame.Board(fub: [], deck: [], deal: [], suitStacks: suitStacks, cardStacks: [[], [], [], []])
+        XCTAssertTrue(vc.restoreBoard(board, suitStackStarter: 7))
+    }
+
+    func testWinningCelebratesUntilNewGame() throws {
+        restoreWonTable(vc)
+        vc.finishTurn()
+        XCTAssertTrue(vc.justWon)
+        XCTAssertEqual(vc.score, 205)
+        XCTAssertEqual(vc.wins, 1)
+        let victory = try XCTUnwrap(vc.victoryView)
+        XCTAssertTrue(victory.superview === vc.view)
+        // All 52 cards take part, in four rows of a suit each from Ace to King
+        XCTAssertEqual(victory.cardViews.count, 52)
+        XCTAssertTrue(allStacks(vc).allSatisfy { $0!.view.isHidden }, "the table's stacks are out of sight")
+        XCTAssertGreaterThan(vc.view.subviews.firstIndex(of: vc.menuButton)!, vc.view.subviews.firstIndex(of: victory)!,
+                             "the buttons stay usable over it")
+
+        vc.startNewGameWithSender(sender: vc)
+        XCTAssertNil(vc.victoryView)
+        XCTAssertNil(victory.superview)
+        XCTAssertFalse(vc.view.subviews.contains { $0 is VictoryView })
+        XCTAssertEqual(vc.losses, 0, "a won game isn't a loss")
+        XCTAssertTrue(allStacks(vc).allSatisfy { !$0!.view.isHidden })
+    }
+
+    func testSkippingTheCelebrationShowsNewGame() throws {
+        restoreWonTable(vc)
+        vc.finishTurn()
+        let victory = try XCTUnwrap(vc.victoryView)
+        XCTAssertFalse(victory.endingIsShowing)
+        victory.skip()
+        let shown = expectation(description: "New Game shows")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            XCTAssertTrue(victory.endingIsShowing)
+            shown.fulfill()
+        }
+        wait(for: [shown], timeout: 3)
+    }
+
+    func testScoreCountsToItsNewValueOnceShowing() throws {
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = vc.navigationController
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+        XCTAssertNotNil(vc.view.window)
+        vc.doInitTable = false
+        vc.score = 0
+        vc.scoreCounter.count(to: 0, animated: false)
+        vc.score = 250
+        XCTAssertEqual(vc.score, 250, "the score itself changes at once")
+        XCTAssertEqual(vc.chalkLine.accessibilityLabel, "$250, Wins: 0, Losses: 0", "and VoiceOver reads it")
+        XCTAssertTrue(vc.chalkLine.text!.hasPrefix("$0 "), "while the felt counts up to it")
+        let counted = expectation(description: "counted")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            XCTAssertTrue(self.vc.chalkLine.text!.hasPrefix("$250 "))
+            counted.fulfill()
+        }
+        wait(for: [counted], timeout: 3)
+        window.isHidden = true
+    }
+
+    func testDebugUnlockFitsOnlyItsPhone() {
+        let realKey = DebugAccess.publicKey
+        defer { DebugAccess.publicKey = realKey }
+        let key = P256.Signing.PrivateKey()
+        DebugAccess.publicKey = key.publicKey
+        let code = DebugAccess.deviceCode
+        XCTAssertTrue(code.allSatisfy { "0123456789ABCDEFGHJKMNPQRSTVWXYZ".contains($0) })
+        XCTAssertEqual(code.count, 8)
+        // As scripts/debug-unlock.sh prints it: URL-safe base 64 without padding
+        let signature = try! key.signature(for: DebugAccess.message(for: code)).derRepresentation.base64EncodedString()
+        let unlock = signature.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        XCTAssertTrue(DebugAccess.isValid(unlock, for: code))
+        XCTAssertTrue(DebugAccess.isValid(" \(unlock)\n", for: code), "pasted with stray space")
+        XCTAssertFalse(DebugAccess.isValid(unlock, for: "ABCD1234"), "another phone")
+        XCTAssertFalse(DebugAccess.isValid("not an unlock", for: code))
+        // The real key's own unlock, from scripts/debug-unlock.sh ABCD-1234
+        DebugAccess.publicKey = realKey
+        XCTAssertTrue(DebugAccess.isValid("MEQCIFaSCtB2u1mIEYzSOSQ-t87dpgtZa-FoM33DYDB1wB1rAiAXA0SlPH9qv_h1D7RXwc6dvrgH80eidlBvz07LT5lkzw", for: "ABCD1234"))
+    }
+
+    func testDebugMenuIsInBuildsFromXcode() throws {
+        let menu = try XCTUnwrap(vc.menuButton.menu)
+        let debug = try XCTUnwrap(menu.children.last as? UIMenu)
+        XCTAssertEqual(debug.title, "Debug")
+        XCTAssertEqual(debug.children.map { $0.title }, ["Almost Won", "Win Now"])
+    }
+
+    func testAlmostWonIsOneMoveFromWinning() {
+        let losses = vc.losses
+        vc.dealAlmostWon()
+        XCTAssertEqual(vc.losses, losses, "not a loss")
+        XCTAssertNotNil(vc.gameBeforeNewGame, "Undo brings back the game it replaced")
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 36)
+        vc.autoMoves = true
+        vc.finishTurn()
+        XCTAssertTrue(vc.justWon)
+    }
+
+    func testWinNowWins() throws {
+        let wins = vc.wins
+        vc.winNow()
+        XCTAssertTrue(vc.justWon)
+        XCTAssertEqual(vc.wins, wins + 1)
+        XCTAssertTrue(vc.suitStacks.allSatisfy { $0!.cards.count == 13 })
+        XCTAssertEqual(try XCTUnwrap(vc.victoryView).cardViews.count, 52)
+        // And from the celebration, Almost Won deals again
+        vc.dealAlmostWon()
+        XCTAssertFalse(vc.justWon)
+        XCTAssertNil(vc.victoryView)
     }
 
     func testUndoGoesBackOnlyOneNewGame() {
