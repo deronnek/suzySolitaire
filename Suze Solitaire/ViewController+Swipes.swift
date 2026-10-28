@@ -6,9 +6,9 @@
 import UIKit
 
 // Shortcuts for the buttons: swiping in from the left edge of the screen to the middle undoes, as the Undo button does,
-// and swiping in from the right edge to the middle shows a hint, as Hint in the "..." menu does.  A pill in the middle
-// of the table grows as the finger comes in and lights up, with a tick, once letting go would do it; going back toward
-// the edge before letting go calls it off.
+// and swiping in from the right edge to the middle shows a hint, as Hint in the "..." menu does.  A pill across the top
+// of the table fills from the side the swipe came from as the finger comes in, and lights up, with a tick, once letting
+// go would do it; going back toward the edge before letting go calls it off.
 extension ViewController {
 
     // How close to the middle the finger has to come
@@ -44,14 +44,14 @@ extension ViewController {
             case .began, .changed:
                 let pill = self.swipePill ?? self.makeSwipePill(fromLeft: fromLeft, available: available)
                 self.swipePill = pill
+                pill.progress = available ? progress : 0
                 if armed != self.swipeArmed {
                     self.swipeArmed = armed
-                    self.styleSwipePill(pill, fromLeft: fromLeft, available: available, armed: armed)
+                    pill.isArmed = armed
                     if armed {
                         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     }
                 }
-                self.placeSwipePill(pill, near: point, progress: progress)
             case .ended:
                 self.dismissSwipePill(done: armed)
                 if armed {
@@ -67,63 +67,125 @@ extension ViewController {
         }
     }
 
-    func makeSwipePill(fromLeft: Bool, available: Bool) -> UIButton {
-        let pill = self.cornerButton(symbol: fromLeft ? "arrow.uturn.backward" : "lightbulb")
-        pill.isUserInteractionEnabled = false
-        pill.configuration?.imagePadding = 8
-        pill.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 20)
-        self.styleSwipePill(pill, fromLeft: fromLeft, available: available, armed: false)
+    func makeSwipePill(fromLeft: Bool, available: Bool) -> SwipePill {
+        let pill = SwipePill(fromLeft: fromLeft)
+        pill.title = fromLeft ? (available ? "Undo" : "Nothing to Undo") : "Hint"
+        pill.isAvailable = available
         self.view.addSubview(pill)
+        self.placeSwipePill(pill)
+        pill.layoutIfNeeded()
         return pill
     }
 
-    func styleSwipePill(_ pill: UIButton, fromLeft: Bool, available: Bool, armed: Bool) {
-        var config: UIButton.Configuration
-        if #available(iOS 26.0, *) {
-            config = armed ? .prominentGlass() : .glass()
-        }
-        else {
-            config = armed ? .filled() : .gray()
-            config.cornerStyle = .capsule
-        }
-        if let old = pill.configuration {
-            config.image = old.image
-            config.imagePadding = old.imagePadding
-            config.contentInsets = old.contentInsets
-        }
-        config.title = fromLeft ? (available ? "Undo" : "Nothing to Undo") : "Hint"
-        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 17, weight: .semibold)
-        pill.configuration = config
-        pill.alpha = available ? 1 : 0.6
-    }
-
-    // In the middle of the table, a little above the finger so it stays in sight, and smaller the further the finger is
-    // from the middle
-    func placeSwipePill(_ pill: UIButton, near point: CGPoint, progress: CGFloat) {
-        let size = pill.systemLayoutSizeFitting(CGSize(width: 0, height: self.cornerButtonSize))
-        let safe = self.view.bounds.inset(by: self.view.safeAreaInsets)
-        let y = min(max(point.y - 80, safe.minY + size.height / 2 + 8), safe.maxY - size.height / 2 - 8)
-        pill.bounds = CGRect(origin: .zero, size: CGSize(width: size.width, height: self.cornerButtonSize))
+    // Across the top of the table, below the status bar and the Dynamic Island, and above the cards where there's room
+    func placeSwipePill(_ pill: SwipePill) {
+        let statusBar = self.view.window?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
+        // The window's inset, since the view's counts the navigation bar, which the table doesn't show
+        let top = max(statusBar, self.view.window?.safeAreaInsets.top ?? 0, 4)
+        let stacks = ([self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks).compactMap { $0?.view }
+        let cardsTop = stacks.map { $0.frame.minY }.min() ?? top + 60
+        let height = SwipePill.height
+        let y = cardsTop - top >= height + 8 ? (top + cardsTop) / 2 : top + 4 + height / 2
+        pill.bounds = CGRect(x: 0, y: 0, width: SwipePill.width, height: height)
         pill.center = CGPoint(x: self.view.bounds.midX, y: y)
-        let scale = 0.6 + 0.4 * progress
-        pill.transform = CGAffineTransform(scaleX: scale, y: scale)
-        pill.layer.opacity = Float(0.25 + 0.75 * progress)
     }
 
-    // Pops the pill when the swipe did its job, and fades it either way
+    // Lights the pill up when the swipe did its job, and fades it either way
     func dismissSwipePill(done: Bool) {
         guard let pill = self.swipePill else {
             return
         }
         self.swipePill = nil
         self.swipeArmed = false
-        let grow = done && !UIAccessibility.isReduceMotionEnabled
-        UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState]) {
+        UIView.animate(withDuration: 0.25, delay: done ? 0.15 : 0, options: [.beginFromCurrentState]) {
             pill.alpha = 0
-            pill.transform = grow ? CGAffineTransform(scaleX: 1.2, y: 1.2) : CGAffineTransform(scaleX: 0.6, y: 0.6)
         } completion: { _ in
             pill.removeFromSuperview()
         }
+    }
+}
+
+// A capsule saying what the swipe will do, which fills from the side the swipe came from as the finger nears the middle
+// of the screen, and turns solid once letting go would do it
+final class SwipePill: UIView {
+    static let width: CGFloat  = 200
+    static let height: CGFloat = 36
+
+    let fromLeft: Bool
+    private let background: UIVisualEffectView
+    private let fill = UIView()
+    private let icon = UIImageView()
+    private let label = UILabel()
+
+    var title: String {
+        get { self.label.text ?? "" }
+        set { self.label.text = newValue }
+    }
+    var isAvailable = true {
+        didSet { self.restyle() }
+    }
+    // How far the finger has come, from 0 at the edge to 1 at the middle
+    var progress: CGFloat = 0 {
+        didSet { self.setNeedsLayout() }
+    }
+    var isArmed = false {
+        didSet { self.restyle() }
+    }
+
+    init(fromLeft: Bool) {
+        self.fromLeft = fromLeft
+        if #available(iOS 26.0, *) {
+            self.background = UIVisualEffectView(effect: UIGlassEffect())
+        }
+        else {
+            self.background = UIVisualEffectView(effect: UIBlurEffect(style: .systemThickMaterial))
+        }
+        super.init(frame: .zero)
+        self.isUserInteractionEnabled = false
+        self.clipsToBounds = true
+        self.background.clipsToBounds = true
+        self.addSubview(self.background)
+        self.background.contentView.addSubview(self.fill)
+        self.icon.image = UIImage(systemName: fromLeft ? "arrow.uturn.backward" : "lightbulb",
+                                  withConfiguration: UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold))
+        self.icon.contentMode = .center
+        self.label.font = .systemFont(ofSize: 15, weight: .semibold)
+        self.label.adjustsFontSizeToFitWidth = true
+        self.label.minimumScaleFactor = 0.7
+        self.background.contentView.addSubview(self.icon)
+        self.background.contentView.addSubview(self.label)
+        self.restyle()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let bounds = self.bounds
+        self.layer.cornerRadius = bounds.height / 2
+        self.background.frame = bounds
+        self.background.layer.cornerRadius = bounds.height / 2
+        let width = bounds.width * max(0, min(1, self.progress))
+        self.fill.frame = CGRect(x: self.fromLeft ? 0 : bounds.width - width, y: 0, width: width, height: bounds.height)
+        // The symbol and title together in the middle
+        let iconSize = self.icon.intrinsicContentSize
+        let labelWidth = min(self.label.intrinsicContentSize.width, bounds.width - iconSize.width - 40)
+        let total = iconSize.width + 6 + labelWidth
+        let x = (bounds.width - total) / 2
+        self.icon.frame  = CGRect(x: x, y: 0, width: iconSize.width, height: bounds.height)
+        self.label.frame = CGRect(x: x + iconSize.width + 6, y: 0, width: labelWidth, height: bounds.height)
+    }
+
+    private func restyle() {
+        let tint = self.tintColor ?? .systemBlue
+        self.fill.backgroundColor = self.isArmed ? tint : tint.withAlphaComponent(0.35)
+        let text: UIColor = self.isArmed ? .white : .label
+        self.icon.tintColor = text
+        self.label.textColor = text
+        self.icon.alpha  = self.isAvailable ? 1 : 0.5
+        self.label.alpha = self.isAvailable ? 1 : 0.5
     }
 }
 

@@ -1289,10 +1289,17 @@ final class Suze_SolitaireTests: XCTestCase {
         let width = vc.view.bounds.width, y = vc.view.bounds.midY
         vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
         let pill = try XCTUnwrap(vc.swipePill)
-        XCTAssertEqual(pill.configuration?.title, "Undo")
+        XCTAssertEqual(pill.title, "Undo")
         XCTAssertFalse(vc.swipeArmed)
+        // The pill stays one size above the cards, and fills as the finger comes in
+        let size = pill.bounds.size
+        XCTAssertLessThan(pill.frame.maxY, vc.cardStacks.compactMap { $0?.view.frame.minY }.min()!)
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 4, y: y))
+        XCTAssertEqual(pill.progress, 0.5, accuracy: 0.1)
+        XCTAssertEqual(pill.bounds.size, size)
         vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
         XCTAssertTrue(vc.swipeArmed)
+        XCTAssertEqual(pill.progress, 1)
         vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 2, y: y))
         XCTAssertNil(vc.swipePill)
         XCTAssertEqual(allStacks(vc).map(tags), board)
@@ -1315,7 +1322,7 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.canUndo = false
         vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
         vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
-        XCTAssertEqual(vc.swipePill?.configuration?.title, "Nothing to Undo")
+        XCTAssertEqual(vc.swipePill?.title, "Nothing to Undo")
         XCTAssertFalse(vc.swipeArmed)
         vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 2, y: y))
         XCTAssertEqual(allStacks(vc).map(tags), dealt)
@@ -1326,7 +1333,7 @@ final class Suze_SolitaireTests: XCTestCase {
         let card = try XCTUnwrap(vc.findMove()).card
         let width = vc.view.bounds.width, y = vc.view.bounds.midY
         vc.edgeSwipe(from: .right, state: .began, at: CGPoint(x: width - 10, y: y))
-        XCTAssertEqual(vc.swipePill?.configuration?.title, "Hint")
+        XCTAssertEqual(vc.swipePill?.title, "Hint")
         vc.edgeSwipe(from: .right, state: .changed, at: CGPoint(x: width / 2, y: y))
         vc.edgeSwipe(from: .right, state: .ended, at: CGPoint(x: width / 2, y: y))
         XCTAssertNotNil(card.view.layer.animation(forKey: "hint"))
