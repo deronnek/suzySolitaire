@@ -2,7 +2,8 @@
 //  ViewController+Debug.swift
 //  Suze Solitaire
 //
-//  A Debug section in the "..." menu, for trying out things that are hard to reach by playing, such as winning.
+//  A Debug section in the "..." menu, for trying out things that are hard to reach by playing, such as winning, and
+//  the other sets of card faces.
 //  Builds run from Xcode always have it.  TestFlight builds have it only on phones unlocked for an engineer: a long
 //  press on the score shows the phone's code, scripts/debug-unlock.sh signs it with a private key kept off the repo,
 //  and the signature pasted back unlocks that phone alone.  App Store builds never have it.
@@ -18,6 +19,15 @@ enum DebugAccess {
     static var publicKey = try! P256.Signing.PublicKey(x963Representation: Data(base64Encoded:
         "BPe5Gm1nJoI/ZZacIF5VhIe+55zySg73efHpT+6dJJk0VuFfQ2noCjMKqcBT0odK6c2mpAgP2cjhrZk/Qjpozjk=")!)
     static let unlockKey = "DebugUnlock"
+    static let cardFacesKey = "DebugCardFaces"
+
+    // The card faces picked in the Debug menu, if any, while it's unlocked
+    static var cardFaces: CardFaces? {
+        guard self.isUnlocked else {
+            return nil
+        }
+        return UserDefaults.standard.string(forKey: self.cardFacesKey).flatMap(CardFaces.init(rawValue:))
+    }
 
     // Whether this copy came from TestFlight (or Xcode), found out at launch (see checkInstall)
     static var isTestFlight = false
@@ -107,14 +117,36 @@ extension ViewController {
         let winNow = UIAction(title: "Win Now", image: UIImage(systemName: "trophy")) { _ in
             self.winNow()
         }
-        var children: [UIMenuElement] = [almostWon, winNow]
+        var children: [UIMenuElement] = [almostWon, winNow, self.cardFacesMenu()]
         if !DebugAccess.isXcodeBuild {
             children.append(UIAction(title: "Lock Debug Menu", image: UIImage(systemName: "lock")) { _ in
                 UserDefaults.standard.removeObject(forKey: DebugAccess.unlockKey)
+                // Back to the game's own card faces
+                self.updateCardFaces()
                 self.updateMenu()
             })
         }
         return UIMenu(title: "Debug", image: UIImage(systemName: "ladybug"), children: children)
+    }
+
+    // Which of the four sets of card faces to show, or Automatic for the game's own choice by table size
+    func cardFacesMenu() -> UIMenu {
+        let picked = DebugAccess.cardFaces
+        let choose = { [unowned self] (faces: CardFaces?) in
+            UserDefaults.standard.set(faces?.rawValue, forKey: DebugAccess.cardFacesKey)
+            self.updateCardFaces()
+            self.updateMenu()
+        }
+        let automatic = UIAction(title: "Automatic", subtitle: "Small on a phone, large on a roomy table", state: picked == nil ? .on : .off) { _ in
+            choose(nil)
+        }
+        let sets = CardFaces.allCases.map { faces in
+            UIAction(title: faces.title, state: picked == faces ? .on : .off) { _ in
+                choose(faces)
+            }
+        }
+        return UIMenu(title: "Card Faces", subtitle: (picked ?? Card.faces).title, image: UIImage(systemName: "suit.spade"),
+                      children: [UIMenu(options: .displayInline, children: [automatic]), UIMenu(options: .displayInline, children: sets)])
     }
 
     // A long press on the score shows this phone's code, to be signed by scripts/debug-unlock.sh, and takes the unlock
@@ -145,6 +177,7 @@ extension ViewController {
             let unlock = alert.textFields?.first?.text ?? ""
             if DebugAccess.isValid(unlock, for: code) {
                 UserDefaults.standard.set(unlock, forKey: DebugAccess.unlockKey)
+                self.updateCardFaces()
                 self.updateMenu()
                 self.announce("Debug menu unlocked")
             }

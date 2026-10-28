@@ -71,6 +71,7 @@ xcodebuild test -project "Suze Solitaire.xcodeproj" -scheme "Suze Solitaire" \
 | `scripts/screenshots.sh` | Regenerates the App Store screenshots: 6.9" iPhone, 13" iPad in landscape, and iPhone Duo folded. |
 | `scripts/layout-screenshots.sh` | Screenshots every layout (iPhone and iPad in both orientations, iPhone Duo folded and unfolded) for checking. |
 | `scripts/appstore-metadata.py` | Uploads the listing in `AppStore/Metadata`, the screenshots and the newest build to the App Store version being prepared. It never submits anything. |
+| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into `Assets.xcassets/Cards` as vector images: big-rank cards for phone-sized tables and the full design for roomy ones, each in Arial and Abril Fatface. |
 | `scripts/appstore-iap.py` | Sets up the Unlimited Undo in-app purchase in App Store Connect: name, description, price, territories and review screenshot. |
 
 The App Store Connect scripts share their API helpers in `scripts/asc.py`.
@@ -78,6 +79,7 @@ The App Store Connect scripts share their API helpers in `scripts/asc.py`.
 ## Credits
 
 Written by Kevin DeRonne, and updated in 2026 by David Seelig. The default card back is a photo Kevin took; the card
-faces come from an open-source card set.
+faces come from [svg-playing-cards](https://github.com/seeligd/svg-playing-cards), based on Byron Knoll's
+public-domain [Vector Playing Cards](https://code.google.com/archive/p/vector-playing-cards/).
 
 Copyright 2026 Kevin DeRonne and David Seelig.

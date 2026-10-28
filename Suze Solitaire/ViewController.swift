@@ -785,7 +785,7 @@ class ViewController: UIViewController {
         // The roomy layout and its big cards, whatever the device: a full iPad, or iPhone Duo unfolded.  Narrow windows
         // (Split View, Slide Over, Stage Manager, a folded Duo) use the compact layout.
         let isPad = self.roomyTable
-        self.useLargeCardArt(isPad)
+        self.updateCardFaces()
         
         var cardWidth, cardHeight: CGFloat
         var fubPoint, deckPoint, dealPoint: CGPoint
@@ -861,15 +861,10 @@ class ViewController: UIViewController {
     func createCards() {
         let backImgFile = "cardback.png";
         var tagCounter  = 0;
-        var faceImgFile = String()
-        
         
         for suit in [cardSuit.Clubs, .Diamonds, .Hearts, .Spades] {
             for i in 1...13 {
-                faceImgFile = String.init(format: suit.simpleDescription() + "%d-iphone.png", i)
-                let largeFaceImgFile = String.init(format: suit.simpleDescription() + "%d.png", i)
-                let aCard = Card(suit: suit, rank: i, faceImageFilename: faceImgFile, largeFaceImageFilename: largeFaceImgFile,
-                                 backImageFilename: backImgFile, tag: tagCounter)
+                let aCard = Card(suit: suit, rank: i, backImageFilename: backImgFile, tag: tagCounter)
                 self.cards.append(aCard)
                 tagCounter += 1;
             }

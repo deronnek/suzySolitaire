@@ -34,14 +34,16 @@ extension ViewController {
         (self.navigationController?.navigationBar.frame.height ?? 44) < 1
     }
 
-    // Switches every card between its small- and large-table art, keeping covered and face-down cards as they are
-    func useLargeCardArt(_ large: Bool) {
-        guard large != Card.largeArt else {
+    // Switches every card to the faces for this table, keeping covered and face-down cards as they are: big corner ranks
+    // on a phone-sized table and the full design on a roomy one, unless the Debug menu picked others
+    func updateCardFaces() {
+        let faces = DebugAccess.cardFaces ?? CardFaces.standard(large: self.roomyTable)
+        guard faces != Card.faces else {
             return
         }
         let cards = self.viewTagToCard.values.compactMap { $0 }
         let showingFaces = cards.filter { $0.view.image === $0.faceImage }
-        Card.largeArt = large
+        Card.faces = faces
         for card in showingFaces {
             card.view.image = card.faceImage
         }
