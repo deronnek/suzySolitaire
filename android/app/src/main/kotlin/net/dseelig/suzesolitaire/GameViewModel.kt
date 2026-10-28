@@ -271,15 +271,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     val isDebuggable = application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     var debugUnlocked by mutableStateOf(isDebuggable || DebugAccess.isValid(prefs.getString(DebugAccess.UNLOCK_KEY, null) ?: "", deviceCode))
         private set
-    // The card faces picked in the Debug menu, if any
-    private var pickedCardFaces by mutableStateOf(
-        prefs.getString(DebugAccess.CARD_FACES_KEY, null)?.let { name -> CardFaces.entries.firstOrNull { it.name == name } })
-
-    // The card faces picked in the Debug menu while it's unlocked, or null for the game's own
-    val debugCardFaces: CardFaces? get() = pickedCardFaces.takeIf { debugUnlocked }
+    // The card faces picked in the menu's Cards › Artwork, or null for Automatic, the game's own by the table's size
+    var pickedCardFaces by mutableStateOf(
+        prefs.getString(CARD_FACES_KEY, null)?.let { name -> CardFaces.entries.firstOrNull { it.name == name } })
+        private set
 
     // The faces to show on a table of this size
-    fun cardFaces(roomy: Boolean) = debugCardFaces ?: CardFaces.standard(roomy)
+    fun cardFaces(roomy: Boolean) = pickedCardFaces ?: CardFaces.standard(roomy)
 
     // Takes an unlock made by scripts/debug-unlock.sh for this phone's code; false if it doesn't fit
     fun unlockDebug(unlock: String): Boolean {
@@ -297,9 +295,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         debugUnlocked = isDebuggable
     }
 
-    fun setDebugCardFaces(faces: CardFaces?) {
+    fun pickCardFaces(faces: CardFaces?) {
         pickedCardFaces = faces
-        prefs.edit().apply { if (faces == null) remove(DebugAccess.CARD_FACES_KEY) else putString(DebugAccess.CARD_FACES_KEY, faces.name) }.apply()
+        prefs.edit().apply { if (faces == null) remove(CARD_FACES_KEY) else putString(CARD_FACES_KEY, faces.name) }.apply()
     }
 
     // Swaps the game for one a card from winning, without counting a loss; Undo brings back the game it replaced
@@ -400,6 +398,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val SHOWS_NO_MOVES = "ShowsNoMoves"
         const val HIGHLIGHTS_DROPS = "HighlightsDrops"
+        const val CARD_FACES_KEY = "CardFaces"
         const val NO_MOVES_DELAY_MS = 8_000L
 
         // Tests and screenshot builds swap in a FakeUpgradeStore

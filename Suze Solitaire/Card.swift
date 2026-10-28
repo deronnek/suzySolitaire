@@ -63,10 +63,10 @@ enum CardFaces: String, CaseIterable {
 
     var title: String {
         switch self {
-            case .smallArial: "Small, Arial"
-            case .smallAbril: "Small, Abril Fatface"
-            case .largeArial: "Large, Arial"
-            case .largeAbril: "Large, Abril Fatface"
+            case .smallArial: "Big Ranks, Arial"
+            case .smallAbril: "Big Ranks, Abril Fatface"
+            case .largeArial: "Classic, Arial"
+            case .largeAbril: "Classic, Abril Fatface"
         }
     }
 
@@ -80,6 +80,14 @@ enum CardFaces: String, CaseIterable {
     // The faces the game shows on a table of either size
     static func standard(large: Bool) -> CardFaces {
         large ? .largeArial : .smallArial
+    }
+
+    static let pickedKey = "CardFaces"
+
+    // The faces picked in the Cards menu, or nil for Automatic, the game's own choice by the table's size
+    static var picked: CardFaces? {
+        get { UserDefaults.standard.string(forKey: self.pickedKey).flatMap(CardFaces.init(rawValue:)) }
+        set { UserDefaults.standard.set(newValue?.rawValue, forKey: self.pickedKey) }
     }
 }
 

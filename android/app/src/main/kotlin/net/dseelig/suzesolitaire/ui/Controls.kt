@@ -3,7 +3,9 @@ package net.dseelig.suzesolitaire.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.pm.PackageManager
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,10 +31,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +74,9 @@ import net.dseelig.suzesolitaire.R
 import net.dseelig.suzesolitaire.game.Pile
 import net.dseelig.suzesolitaire.game.PlayState
 import net.dseelig.suzesolitaire.game.Spot
+import net.dseelig.suzesolitaire.store.UpgradeState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
 
 // New Game in the top left corner, Undo in the top right, the menu in the bottom right with the score beside it, and the
@@ -144,42 +152,15 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
     val upgrade by vm.store.state.collectAsStateWithLifecycle()
     var confirmReset by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
+    // Which page of the menu is showing; it opens on the first
+    var page by remember(open) { mutableStateOf(MenuPage.Main) }
     DropdownMenu(expanded = open, onDismissRequest = onDismiss) {
-        MenuItem("Hint", onDismiss, vm::showHint)
-        MenuItem("How to Play", onDismiss, onHowToPlay)
-        HorizontalDivider()
-        ToggleItem("Auto Moves", vm.autoMoves, vm::toggleAutoMoves)
-        ToggleItem("Show When Stuck", vm.showsNoMoves, vm::toggleShowsNoMoves)
-        ToggleItem("Highlight Drop Spot", vm.highlightsDrops, vm::toggleHighlightsDrops)
-        HorizontalDivider()
-        MenuItem("Choose Card Back…", onDismiss, onChooseCardBack)
-        if (vm.hasCustomBack) {
-            MenuItem("Use Default Card Back", onDismiss) { vm.setCardBack(null) }
-        }
-        MenuItem("Reset Wins & Losses…", onDismiss) { confirmReset = true }
-        HorizontalDivider()
-        when {
-            upgrade.owned -> DropdownMenuItem(
-                text = { Column { Text("Unlimited Undo"); Text("Purchased. Thank you!", style = MaterialTheme.typography.bodySmall) } },
-                onClick = {}, enabled = false)
-            upgrade.pending -> DropdownMenuItem(
-                text = { Column { Text("Unlimited Undo"); Text("Waiting for payment", style = MaterialTheme.typography.bodySmall) } },
-                onClick = {}, enabled = false)
-            else -> DropdownMenuItem(
-                text = {
-                    Column {
-                        Text("Unlimited Undo" + (upgrade.price?.let { " · $it" } ?: ""))
-                        Text("Undo every move, even auto moves", style = MaterialTheme.typography.bodySmall)
-                    }
-                },
-                onClick = {
-                    onDismiss()
-                    activity?.let(vm::buyUnlimitedUndo)
-                })
-        }
-        MenuItem("About", onDismiss) { showAbout = true }
-        if (vm.debugUnlocked) {
-            DebugItems(vm, onDismiss)
+        when (page) {
+            MenuPage.Cards -> CardsPage(vm, onBack = { page = MenuPage.Main }, onPage = { page = it })
+            MenuPage.Artwork -> ArtworkPage(vm, onBack = { page = MenuPage.Cards })
+            MenuPage.Back -> BackPage(vm, onDismiss, onChooseCardBack, onBack = { page = MenuPage.Cards })
+            MenuPage.Main -> MainPage(vm, onDismiss, onHowToPlay, onPage = { page = it }, onReset = { confirmReset = true },
+                onAbout = { showAbout = true }, buy = { activity?.let(vm::buyUnlimitedUndo) }, upgrade = upgrade)
         }
     }
     if (confirmReset) {
@@ -203,19 +184,115 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
     }
 }
 
-// The Debug section: a game one card from winning, winning on the spot, and which card faces to show
+private enum class MenuPage { Main, Cards, Artwork, Back }
+
+@Composable
+private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -> Unit, onPage: (MenuPage) -> Unit, onReset: () -> Unit,
+                     onAbout: () -> Unit, buy: () -> Unit, upgrade: UpgradeState) {
+    MenuItem("Hint", onDismiss, vm::showHint)
+    MenuItem("How to Play", onDismiss, onHowToPlay)
+    HorizontalDivider()
+    ToggleItem("Auto Moves", vm.autoMoves, vm::toggleAutoMoves)
+    ToggleItem("Show When Stuck", vm.showsNoMoves, vm::toggleShowsNoMoves)
+    ToggleItem("Highlight Drop Spot", vm.highlightsDrops, vm::toggleHighlightsDrops)
+    HorizontalDivider()
+    PageItem("Cards") { onPage(MenuPage.Cards) }
+    MenuItem("Reset Wins & Losses…", onDismiss, onReset)
+    HorizontalDivider()
+    when {
+        upgrade.owned -> DropdownMenuItem(
+            text = { Column { Text("Unlimited Undo"); Text("Purchased. Thank you!", style = MaterialTheme.typography.bodySmall) } },
+            onClick = {}, enabled = false)
+        upgrade.pending -> DropdownMenuItem(
+            text = { Column { Text("Unlimited Undo"); Text("Waiting for payment", style = MaterialTheme.typography.bodySmall) } },
+            onClick = {}, enabled = false)
+        else -> DropdownMenuItem(
+            text = {
+                Column {
+                    Text("Unlimited Undo" + (upgrade.price?.let { " · $it" } ?: ""))
+                    Text("Undo every move, even auto moves", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            onClick = {
+                onDismiss()
+                buy()
+            })
+    }
+    MenuItem("About", onDismiss, onAbout)
+    if (vm.debugUnlocked) {
+        DebugItems(vm, onDismiss)
+    }
+}
+
+// The cards' artwork and back, each a page of its own, as the iOS app's Cards submenu
+@Composable
+private fun CardsPage(vm: GameViewModel, onBack: () -> Unit, onPage: (MenuPage) -> Unit) {
+    BackItem("Cards", onBack)
+    PageItem("Artwork", vm.pickedCardFaces?.title ?: "Automatic") { onPage(MenuPage.Artwork) }
+    PageItem("Back", if (vm.hasCustomBack) "Photo" else "Default") { onPage(MenuPage.Back) }
+}
+
+// Which of the four sets of card faces to show, or Automatic for the game's own by the table's size, each with its king
+// of hearts to show what it looks like.  The menu stays open, so the table behind it shows the pick.
+@Composable
+private fun ArtworkPage(vm: GameViewModel, onBack: () -> Unit) {
+    BackItem("Artwork", onBack)
+    val picked = vm.pickedCardFaces
+    RadioItem("Automatic", picked == null, "Big ranks on small cards, classic on large ones") { vm.pickCardFaces(null) }
+    HorizontalDivider()
+    for (faces in CardFaces.entries) {
+        RadioItem(faces.title, picked == faces, preview = { ArtworkPreview(faces) }) { vm.pickCardFaces(faces) }
+    }
+}
+
+@Composable
+private fun BackPage(vm: GameViewModel, onDismiss: () -> Unit, onChooseCardBack: () -> Unit, onBack: () -> Unit) {
+    BackItem("Back", onBack)
+    MenuItem("Choose Photo…", onDismiss, onChooseCardBack)
+    DropdownMenuItem(text = { Text("Use Default") }, enabled = vm.hasCustomBack, onClick = { onDismiss(); vm.setCardBack(null) })
+}
+
+@Composable
+private fun ArtworkPreview(faces: CardFaces) {
+    val resources = LocalContext.current.resources
+    val width = 20.dp
+    val widthPx = with(LocalDensity.current) { width.roundToPx() }
+    val image by produceState<ImageBitmap?>(null, faces, widthPx) {
+        value = withContext(Dispatchers.Default) { CardArt.preview(resources, faces, widthPx) }
+    }
+    Box(Modifier.size(width, width * TableLayout.ASPECT).clip(RoundedCornerShape(width * faces.cornerFraction))) {
+        image?.let { Image(it, contentDescription = null) }
+    }
+}
+
+// A row that opens another page of the menu
+@Composable
+private fun PageItem(text: String, detail: String? = null, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Column { Text(text); detail?.let { Text(it, style = MaterialTheme.typography.bodySmall) } } },
+        trailingIcon = { Text("›", style = MaterialTheme.typography.titleLarge) },
+        onClick = onClick,
+    )
+}
+
+// The top of a page, going back to the one before
+@Composable
+private fun BackItem(text: String, onBack: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(text, style = MaterialTheme.typography.titleSmall) },
+        leadingIcon = { Icon(painterResource(R.drawable.ic_back), contentDescription = "Back", modifier = Modifier.size(20.dp)) },
+        onClick = onBack,
+    )
+    HorizontalDivider()
+}
+
+// The Debug section: a game one card from winning, and winning on the spot
 @Composable
 private fun DebugItems(vm: GameViewModel, onDismiss: () -> Unit) {
     HorizontalDivider()
     SectionLabel("Debug")
     MenuItem("Almost Won", onDismiss, vm::dealAlmostWon)
     MenuItem("Win Now", onDismiss, vm::winNow)
-    SectionLabel("Card Faces")
-    val picked = vm.debugCardFaces
-    RadioItem("Automatic", picked == null) { vm.setDebugCardFaces(null) }
-    for (faces in CardFaces.entries) {
-        RadioItem(faces.title, picked == faces) { vm.setDebugCardFaces(faces) }
-    }
     if (!vm.isDebuggable) {
         HorizontalDivider()
         MenuItem("Lock Debug Menu", onDismiss, vm::lockDebug)
@@ -229,10 +306,11 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun RadioItem(text: String, selected: Boolean, onClick: () -> Unit) {
+private fun RadioItem(text: String, selected: Boolean, detail: String? = null, preview: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     DropdownMenuItem(
-        text = { Text(text) },
+        text = { Column { Text(text); detail?.let { Text(it, style = MaterialTheme.typography.bodySmall) } } },
         leadingIcon = { RadioButton(selected = selected, onClick = null) },
+        trailingIcon = preview,
         onClick = onClick,
         modifier = Modifier.semantics { this.selected = selected },
     )

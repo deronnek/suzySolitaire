@@ -17,7 +17,7 @@ OPTIONAL HELP, OFF UNTIL YOU WANT IT
 MADE FOR YOUR DEVICE
 • Portrait and landscape on iPhone and iPad, including Split View and Slide Over
 • Dark mode with a dimmer table
-• Pick any photo as your card back
+• Choose your card artwork, and pick any photo as your card back
 • Gentle haptics as you pick up and drag cards
 • Full VoiceOver support, with actions to select and move cards
 • Your game, score, wins and losses are saved automatically

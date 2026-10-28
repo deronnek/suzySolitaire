@@ -17,14 +17,14 @@ import java.io.File
 // The four sets of card faces, made from the iOS app's SVGs (see scripts/import-cards.py, CardVectors and VectorArt):
 // big corner ranks for the small cards
 // of a phone-sized table, or the full design for a roomy table's big cards, each with its ranks in Arial or Abril
-// Fatface.  The game uses the Arial ones; the Debug menu can show any of them.  Each set has its own corner radius, as a
+// Fatface.  The game uses the Arial ones unless the player picks others in the menu's Cards › Artwork.  Each set has its own corner radius, as a
 // fraction of the card's width: the small cards' corners have a radius of 10 of the card's 167 units, and the large
 // ones' 6.86 inside a 0.25 margin, so their curve is centred 7.11 in from each edge.
 enum class CardFaces(val title: String, val cornerFraction: Float, val files: IntArray) {
-    SmallArial("Small, Arial", 10f / 167.0869141f, CardVectors.smallArial),
-    SmallAbril("Small, Abril Fatface", 10f / 167.0869141f, CardVectors.smallAbril),
-    LargeArial("Large, Arial", 7.11f / 167.0869141f, CardVectors.largeArial),
-    LargeAbril("Large, Abril Fatface", 7.11f / 167.0869141f, CardVectors.largeAbril);
+    SmallArial("Big Ranks, Arial", 10f / 167.0869141f, CardVectors.smallArial),
+    SmallAbril("Big Ranks, Abril Fatface", 10f / 167.0869141f, CardVectors.smallAbril),
+    LargeArial("Classic, Arial", 7.11f / 167.0869141f, CardVectors.largeArial),
+    LargeAbril("Classic, Abril Fatface", 7.11f / 167.0869141f, CardVectors.largeAbril);
 
     companion object {
         // The faces the game shows on a table of either size
@@ -73,6 +73,14 @@ object CardArt {
                 android.util.Log.i("CardArt", "Drew ${cardFaces.name} at $widthPx px in ${(System.nanoTime() - started) / 1_000_000} ms")
             }
         }
+
+    // A set's king of hearts, for the menu to show what the set looks like
+    fun preview(resources: Resources, cardFaces: CardFaces, widthPx: Int): ImageBitmap {
+        val king = cardFaces.files[KING_OF_HEARTS]
+        return render(VectorArt.read(resources.openRawResource(king).use { it.readBytes() }), widthPx, (widthPx * TableLayout.ASPECT).toInt())
+    }
+
+    private const val KING_OF_HEARTS = 38
 
     private fun render(art: VectorArt, widthPx: Int, heightPx: Int): ImageBitmap {
         val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)

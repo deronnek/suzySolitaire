@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -192,6 +193,20 @@ class TableScreenTest {
         compose.onNodeWithContentDescription("1. Cards must alternate colors in the lower four stacks and count down.").assertExists()
         compose.onNodeWithContentDescription("Back").performClick()
         compose.onNodeWithContentDescription("New Game").assertExists()
+    }
+
+    @Test
+    fun theCardsMenuPicksTheArtwork() {
+        start()
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.onNodeWithText("Cards").performClick()
+        compose.onNodeWithText("Back").assertExists()
+        compose.onNodeWithText("Artwork").performClick()
+        compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Automatic"))
+        compose.onNodeWithText("Classic, Abril Fatface").performClick()
+        compose.waitForIdle()
+        assertEquals("LargeAbril", context.getSharedPreferences("settings", 0).getString(GameViewModel.CARD_FACES_KEY, null))
+        compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Classic, Abril Fatface"))
     }
 
     @Test

@@ -14,14 +14,12 @@ import java.util.Base64
 import net.dseelig.suzesolitaire.game.Card
 import net.dseelig.suzesolitaire.game.Table
 
-// The Debug section of the menu, for trying out things that are hard to reach by playing, such as winning, and the other
-// sets of card faces.  Debuggable builds always have it.  Others have it only on phones unlocked for an engineer, as in
+// The Debug section of the menu, for trying out things that are hard to reach by playing, such as winning.  Debuggable builds always have it.  Others have it only on phones unlocked for an engineer, as in
 // the iOS app: a long press on the score shows the phone's code, scripts/debug-unlock.sh signs it with a private key kept
 // off the repo, and the signature pasted back unlocks that phone alone.  (Android can't tell a Play testing track from
 // the store itself, so unlike iOS a store copy can be unlocked too, by someone with the key.)
 object DebugAccess {
     const val UNLOCK_KEY = "DebugUnlock"
-    const val CARD_FACES_KEY = "DebugCardFaces"
 
     // The public half of the key scripts/debug-unlock.sh signs with, as an uncompressed P-256 point (the iOS app's too)
     private const val PUBLIC_KEY = "BPe5Gm1nJoI/ZZacIF5VhIe+55zySg73efHpT+6dJJk0VuFfQ2noCjMKqcBT0odK6c2mpAgP2cjhrZk/Qjpozjk="

@@ -47,7 +47,7 @@ final class Suze_SolitaireTests: XCTestCase {
         Card.customBackImage = nil
         CardStack.isDark     = false
         Card.faces           = .smallArial
-        UserDefaults.standard.removeObject(forKey: DebugAccess.cardFacesKey)
+        UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
         vc = nil
@@ -665,7 +665,7 @@ final class Suze_SolitaireTests: XCTestCase {
         let menu = try XCTUnwrap(vc.menuButton.menu)
         let debug = try XCTUnwrap(menu.children.last as? UIMenu)
         XCTAssertEqual(debug.title, "Debug")
-        XCTAssertEqual(debug.children.map { $0.title }, ["Almost Won", "Win Now", "Card Faces"])
+        XCTAssertEqual(debug.children.map { $0.title }, ["Almost Won", "Win Now"])
     }
 
     func testEveryCardHasEveryFace() {
@@ -680,16 +680,27 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(cards.last?.assetName, "king_of_spades")
     }
 
-    func testTheDebugMenuSwitchesCardFaces() throws {
+    func testTheCardsMenuHasArtworkAndBack() throws {
+        let menu = try XCTUnwrap(vc.menuButton.menu)
+        let cards = try XCTUnwrap(menu.children.compactMap { $0 as? UIMenu }.first { $0.title == "Cards" })
+        XCTAssertEqual(cards.children.map { $0.title }, ["Artwork", "Back"])
+        let artwork = try XCTUnwrap(cards.children.first as? UIMenu)
+        let choices = artwork.children.compactMap { $0 as? UIMenu }.flatMap { $0.children }.compactMap { $0 as? UIAction }
+        XCTAssertEqual(choices.map { $0.title }, ["Automatic"] + CardFaces.allCases.map { $0.title })
+        XCTAssertEqual(choices.first?.state, .on, "Automatic is the default")
+        XCTAssertTrue(choices.dropFirst().allSatisfy { $0.image != nil }, "each set shows its king")
+    }
+
+    func testTheCardsMenuSwitchesArtwork() throws {
         let top = try XCTUnwrap(vc.fub!.cards.last)
         XCTAssertEqual(Card.faces, .smallArial)
-        UserDefaults.standard.set(CardFaces.largeAbril.rawValue, forKey: DebugAccess.cardFacesKey)
+        UserDefaults.standard.set(CardFaces.largeAbril.rawValue, forKey: CardFaces.pickedKey)
         vc.updateCardFaces()
-        XCTAssertEqual(Card.faces, .largeAbril, "a pick from the Debug menu wins over the table's size")
+        XCTAssertEqual(Card.faces, .largeAbril, "the player's pick wins over the table's size")
         XCTAssertTrue(top.view.image === top.faceImage)
         XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage, "covered cards stay blank")
         // Automatic goes back to the game's own choice
-        UserDefaults.standard.removeObject(forKey: DebugAccess.cardFacesKey)
+        UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         vc.updateCardFaces()
         XCTAssertEqual(Card.faces, CardFaces.standard(large: vc.roomyTable))
     }
@@ -701,7 +712,7 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(top.view.layer.cornerRadius, top.view.bounds.width * 10 / 167.0869141, accuracy: 0.01)
 
         // The large cards' corners are tighter, and the outline, backs and blank faces follow them
-        UserDefaults.standard.set(CardFaces.largeArial.rawValue, forKey: DebugAccess.cardFacesKey)
+        UserDefaults.standard.set(CardFaces.largeArial.rawValue, forKey: CardFaces.pickedKey)
         vc.redrawTable()
         XCTAssertEqual(top.view.layer.cornerRadius, top.view.bounds.width * 7.11 / 167.0869141, accuracy: 0.01)
         XCTAssertTrue(back.view.image === Card.backImage)

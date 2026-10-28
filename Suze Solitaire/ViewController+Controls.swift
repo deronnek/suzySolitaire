@@ -35,9 +35,9 @@ extension ViewController {
     }
 
     // Switches every card to the faces for this table, keeping covered and face-down cards as they are: big corner ranks
-    // on a phone-sized table and the full design on a roomy one, unless the Debug menu picked others
+    // on a phone-sized table and the full design on a roomy one, unless the player picked others in the Cards menu
     func updateCardFaces() {
-        let faces = DebugAccess.cardFaces ?? CardFaces.standard(large: self.roomyTable)
+        let faces = CardFaces.picked ?? CardFaces.standard(large: self.roomyTable)
         guard faces != Card.faces else {
             return
         }

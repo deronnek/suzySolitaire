@@ -32,7 +32,7 @@ These are the App Store screenshots, made by `scripts/screenshots.sh` from the g
   folded or unfolded. New Game is always top left, Undo top right and "…" bottom right, with the score along the bottom.
 - **Accessibility:** full VoiceOver support, with actions to select and move cards, and a score that follows the text
   size set in Settings.
-- **Personal touches:** dark mode with a dimmer table, any photo as the card back, and gentle haptics.
+- **Personal touches:** dark mode with a dimmer table, a choice of card artwork (big ranks or the classic design, in Arial or Abril Fatface), any photo as the card back, and gentle haptics.
 - **Saved automatically:** the game, score, wins and losses survive quitting the app.
 
 No ads, no accounts, and no data collected; see the [privacy policy](AppStore/PRIVACY.md).
