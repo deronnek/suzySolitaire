@@ -56,12 +56,17 @@ You need Xcode 27 (27.1 for the iPhone Duo simulator). The app runs on iOS 17 an
 2. To sign with your own team, create a git-ignored `Signing.local.xcconfig` next to `Signing.xcconfig` that sets
    `DEVELOPMENT_TEAM` and `PRODUCT_BUNDLE_IDENTIFIER`. `Signing.xcconfig` holds the defaults and the version number.
 
-Run the tests (77 of them, covering the rules, layout in every orientation, saving, undo and the in-app purchase) with:
+Run the tests (91 of them, covering the rules, layout in every orientation, saving, undo, the in-app purchase and the
+card faces) with:
 
 ```sh
-xcodebuild test -project "Suze Solitaire.xcodeproj" -scheme "Suze Solitaire" \
-    -destination "platform=iOS Simulator,name=iPhone 18 Pro"
+scripts/test.sh                                   # on an iPhone 18 Pro simulator, about 20 seconds
+scripts/test.sh "iPad Pro 13-inch (M5)" -only-testing:"Suze SolitaireTests/Suze_SolitaireTests/testWindowSizeChoosesLayout"
 ```
+
+It fails any test that runs over a minute instead of hanging, and skips the diagnostics xcodebuild otherwise collects
+from the simulator after a run, which can take it ten minutes. The purchase test uses a StoreKit test session, so it
+needs no Apple Account; the app doesn't check the real App Store while it hosts the tests.
 
 ## Scripts
 

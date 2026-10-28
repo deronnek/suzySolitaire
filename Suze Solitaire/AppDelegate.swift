@@ -14,9 +14,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Checks for Unlimited Undo and watches for purchases made elsewhere
-        UndoStore.shared.start()
+        // Checks for Unlimited Undo and watches for purchases made elsewhere.  Not while the app hosts the tests: asking
+        // the App Store from a simulator with no Apple Account puts up a sign-in alert that blocks the tests, and stays
+        // up across runs.  The purchase test uses its own UndoStore with a StoreKit test session instead.
+        if !AppDelegate.isHostingTests {
+            UndoStore.shared.start()
+        }
         return true
+    }
+
+    static var isHostingTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
     
     func applicationWillResignActive(_ application: UIApplication) {
