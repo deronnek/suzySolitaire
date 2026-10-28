@@ -87,6 +87,10 @@ extension ViewController {
         let press = UILongPressGestureRecognizer(target: self, action: #selector(self.scorePressed))
         self.chalkLine.isUserInteractionEnabled = true
         self.chalkLine.addGestureRecognizer(press)
+        // Builds from Xcode have the menu anyway, and asking in the simulator wants an Apple Account
+        guard !DebugAccess.isXcodeBuild else {
+            return
+        }
         Task {
             await DebugAccess.checkInstall()
             self.updateMenu()

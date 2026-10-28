@@ -151,6 +151,9 @@ class ViewController: UIViewController {
     var justWon    = false
     // The celebration of a win, over the table until New Game (see ViewController+Victory.swift)
     var victoryView: VictoryView? = nil
+    // The pill showing what an edge swipe will do, and whether letting go now would do it (see ViewController+Swipes.swift)
+    var swipePill: SwipePill? = nil
+    var swipeArmed = false
     // The rank of the first card in the suitStacks
     var suitStackStarter = -1
     
@@ -191,6 +194,7 @@ class ViewController: UIViewController {
         
         self.setUpChalk()
         self.setUpDebugAccess()
+        self.setUpEdgeSwipes()
         // New Game is a plus, like the New Game button in the "No moves left" banner
         self.newGameBarButtonItem = self.navigationItem.leftBarButtonItem
         self.newGameBarButtonItem.title = nil
@@ -214,6 +218,9 @@ class ViewController: UIViewController {
             DispatchQueue.main.asyncAfter(deadline: .now() + finishAfter) {
                 self.finishTurn()
             }
+        }
+        if UserDefaults.standard.bool(forKey: "DemoEdgeSwipes") && self.doInitTable {
+            self.demoEdgeSwipes()
         }
         #endif
         if self.doInitTable {
@@ -1382,7 +1389,17 @@ class ViewController: UIViewController {
 
 extension ViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if gestureRecognizer is UIScreenEdgePanGestureRecognizer {
+            return true
+        }
         return self.doubleTapCouldPutUp(touch.view)
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if let swipe = gestureRecognizer as? UIScreenEdgePanGestureRecognizer {
+            return self.edgeSwipeCanBegin(from: swipe.edges, at: swipe.location(in: self.view))
+        }
+        return true
     }
 }
 

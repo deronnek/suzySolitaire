@@ -1282,6 +1282,81 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNil(before.last!.cardParent)
     }
 
+    func testSwipingFromTheLeftEdgeToTheMiddleUndoes() throws {
+        let board = allStacks(vc).map(tags)
+        vc.tapDeck()
+        XCTAssertTrue(vc.canUndo)
+        let width = vc.view.bounds.width, y = vc.view.bounds.midY
+        vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
+        let pill = try XCTUnwrap(vc.swipePill)
+        XCTAssertEqual(pill.title, "Undo")
+        XCTAssertFalse(vc.swipeArmed)
+        // The pill stays one size above the cards, and fills as the finger comes in
+        let size = pill.bounds.size
+        XCTAssertLessThan(pill.frame.maxY, vc.cardStacks.compactMap { $0?.view.frame.minY }.min()!)
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 4, y: y))
+        XCTAssertEqual(pill.progress, 0.5, accuracy: 0.1)
+        XCTAssertEqual(pill.bounds.size, size)
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
+        XCTAssertTrue(vc.swipeArmed)
+        XCTAssertEqual(pill.progress, 1)
+        vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 2, y: y))
+        XCTAssertNil(vc.swipePill)
+        XCTAssertEqual(allStacks(vc).map(tags), board)
+    }
+
+    func testAnEdgeSwipeThatStopsShortDoesNothing() {
+        let board = allStacks(vc).map(tags)
+        vc.tapDeck()
+        let dealt = allStacks(vc).map(tags)
+        let width = vc.view.bounds.width, y = vc.view.bounds.midY
+        vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
+        // Back toward the edge before letting go
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 4, y: y))
+        XCTAssertFalse(vc.swipeArmed)
+        vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 4, y: y))
+        XCTAssertEqual(allStacks(vc).map(tags), dealt)
+        XCTAssertNotEqual(allStacks(vc).map(tags), board)
+        // And with nothing to undo, reaching the middle doesn't count
+        vc.canUndo = false
+        vc.edgeSwipe(from: .left, state: .began, at: CGPoint(x: 10, y: y))
+        vc.edgeSwipe(from: .left, state: .changed, at: CGPoint(x: width / 2, y: y))
+        XCTAssertEqual(vc.swipePill?.title, "Nothing to Undo")
+        XCTAssertFalse(vc.swipeArmed)
+        vc.edgeSwipe(from: .left, state: .ended, at: CGPoint(x: width / 2, y: y))
+        XCTAssertEqual(allStacks(vc).map(tags), dealt)
+    }
+
+    func testSwipingFromTheRightEdgeToTheMiddleShowsAHint() throws {
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        let card = try XCTUnwrap(vc.findMove()).card
+        let width = vc.view.bounds.width, y = vc.view.bounds.midY
+        vc.edgeSwipe(from: .right, state: .began, at: CGPoint(x: width - 10, y: y))
+        XCTAssertEqual(vc.swipePill?.title, "Hint")
+        vc.edgeSwipe(from: .right, state: .changed, at: CGPoint(x: width / 2, y: y))
+        vc.edgeSwipe(from: .right, state: .ended, at: CGPoint(x: width / 2, y: y))
+        XCTAssertNotNil(card.view.layer.animation(forKey: "hint"))
+    }
+
+    func testUndoSwipesStartOnlyBelowTheCards() {
+        let bottom = vc.cardsBottom()
+        let below = CGPoint(x: 4, y: bottom + 20), among = CGPoint(x: 4, y: bottom - 20)
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: among))
+        // Hints come from anywhere along the right edge
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .right, at: CGPoint(x: vc.view.bounds.width - 4, y: among.y)))
+    }
+
+    func testEdgeSwipesWaitOutTheCelebration() {
+        let below = CGPoint(x: 4, y: vc.cardsBottom() + 20)
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
+        restoreWonTable(vc)
+        vc.finishTurn()
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: below))
+        XCTAssertFalse(vc.edgeSwipeCanBegin(from: .right, at: below))
+    }
+
     func testRulesTextIsNumberedWithoutAsterisks() {
         let text = HowToPlayViewController.rulesText().string
         XCTAssertFalse(text.contains("*"))
