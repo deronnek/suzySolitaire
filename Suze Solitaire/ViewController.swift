@@ -48,6 +48,7 @@ class ViewController: UIViewController {
     lazy var menuButton    = self.makeMenuButton()
     // The score, wins and losses written on the felt beside the "..." button
     let chalkLine = UILabel()
+    lazy var scoreCounter = ScoreCounter { [unowned self] in self.updateChalk() }
     // The size the table was last laid out for (see viewDidLayoutSubviews)
     var laidOutSize = CGSize.zero
     // Banners sit this far above the toolbar, and the table stops short of them
@@ -69,6 +70,8 @@ class ViewController: UIViewController {
         }
         set(newScore) {
             bucksBarButtonItem.title = String(format: "$%d", newScore)
+            // Once the table is showing, the score on the felt counts its way to the new one
+            self.scoreCounter.count(to: newScore, animated: self.view.window != nil && !self.doInitTable)
             if newScore < 0 {
                 bucksBarButtonItem.tintColor = .systemRed
             }
@@ -146,6 +149,8 @@ class ViewController: UIViewController {
     
     var deckTaps   = 0
     var justWon    = false
+    // The celebration of a win, over the table until New Game (see ViewController+Victory.swift)
+    var victoryView: VictoryView? = nil
     // The rank of the first card in the suitStacks
     var suitStackStarter = -1
     
@@ -200,6 +205,13 @@ class ViewController: UIViewController {
         // scripts/layout-screenshots.sh passes -ScreenshotOrientation landscape to see the landscape layout
         if UserDefaults.standard.string(forKey: "ScreenshotOrientation") == "landscape" {
             self.view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+        }
+        // scripts/win-video.sh passes -FinishTurnAfter <seconds> to play out the saved game's auto moves untouched
+        let finishAfter = UserDefaults.standard.double(forKey: "FinishTurnAfter")
+        if finishAfter > 0 && self.doInitTable {
+            DispatchQueue.main.asyncAfter(deadline: .now() + finishAfter) {
+                self.finishTurn()
+            }
         }
         if self.doInitTable {
             if let saved = self.loadSavedGame() {
@@ -408,12 +420,7 @@ class ViewController: UIViewController {
         self.clearTable()
         
         if self.justWon {
-            // Have to get rid of the cards differently if we just won, as they are now just subviews of our view
-            for v in self.view.subviews {
-                if v.isKind(of:UIImageView.self) {
-                    v.removeFromSuperview();
-                }
-            }
+            self.endCelebration()
             self.justWon = false
         }
         else {
@@ -928,7 +935,7 @@ class ViewController: UIViewController {
         }
         let point: CGPoint? = touch.location(in: self.view)
         
-        if self.activeCard != nil && (self.justWon || self.activeCardSourceStack?.stackType != .deck) {
+        if self.activeCard != nil && self.activeCardSourceStack?.stackType != .deck {
             self.activeCard!.setPos(point: CGPoint(x: point!.x - CGFloat(self.xCap), y: point!.y - CGFloat(self.yCap)))
             // Show what the drag uncovers (only once the card moves, so taps don't flash it)
             self.activeCardSourceStack?.updateFaces(lifting: self.activeCard)
@@ -1206,36 +1213,7 @@ class ViewController: UIViewController {
             self.undoHistory.removeAll()
             self.canUndo = false
             
-            // Visual "reward" for winning
-            
-            let offset = CGFloat(75)
-            var stacknum = CGFloat(0)
-            for cs in self.suitStacks {
-                var cardnum  = CGFloat(0)
-                for card in cs!.cards {
-                    card.view.removeFromSuperview()  // not necessary I believe; a view can only have one superview
-                    self.view.addSubview(card.view)
-                    card.cardParent = nil
-                    let x = (cardnum*card.view.frame.size.width*0.735)+10;
-                    let y = offset+(stacknum as CGFloat*(card.view.frame.size.height))
-                    var rect = card.view.frame;
-                    rect.origin = CGPoint(x:x, y:y)
-                    
-                    card.view.frame = rect
-                    card.cardParent = nil
-                    
-                    let screenWidth  = CGRectGetWidth(self.view.bounds)
-                    let screenHeight = CGRectGetHeight(self.view.bounds)
-                    
-                    if x>screenWidth || y>screenHeight {
-                        NSLog("KDR OUT OF BOUNDS!!!!!!!!!!!!!")
-                    }
-                    
-                    cardnum += 1
-                }
-                stacknum += 1
-            }
-            
+            self.celebrateWin()
         }
         self.justWon = true
     }

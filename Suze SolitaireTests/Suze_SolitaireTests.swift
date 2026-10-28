@@ -563,6 +563,71 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNil(vc.gameBeforeNewGame)
     }
 
+    // Every card up on its suit stack, from the starter rank round to the one below it
+    func restoreWonTable(_ vc: ViewController) {
+        let suitStacks = (0..<4).map { suit in (6..<19).map { suit * 13 + $0 % 13 } }
+        let board = ViewController.SavedGame.Board(fub: [], deck: [], deal: [], suitStacks: suitStacks, cardStacks: [[], [], [], []])
+        XCTAssertTrue(vc.restoreBoard(board, suitStackStarter: 7))
+    }
+
+    func testWinningCelebratesUntilNewGame() throws {
+        restoreWonTable(vc)
+        vc.finishTurn()
+        XCTAssertTrue(vc.justWon)
+        XCTAssertEqual(vc.score, 205)
+        XCTAssertEqual(vc.wins, 1)
+        let victory = try XCTUnwrap(vc.victoryView)
+        XCTAssertTrue(victory.superview === vc.view)
+        // All 52 cards take part, in four rows of a suit each from Ace to King
+        XCTAssertEqual(victory.cardViews.count, 52)
+        XCTAssertTrue(allStacks(vc).allSatisfy { $0!.view.isHidden }, "the table's stacks are out of sight")
+        XCTAssertGreaterThan(vc.view.subviews.firstIndex(of: vc.menuButton)!, vc.view.subviews.firstIndex(of: victory)!,
+                             "the buttons stay usable over it")
+
+        vc.startNewGameWithSender(sender: vc)
+        XCTAssertNil(vc.victoryView)
+        XCTAssertNil(victory.superview)
+        XCTAssertFalse(vc.view.subviews.contains { $0 is VictoryView })
+        XCTAssertEqual(vc.losses, 0, "a won game isn't a loss")
+        XCTAssertTrue(allStacks(vc).allSatisfy { !$0!.view.isHidden })
+    }
+
+    func testSkippingTheCelebrationShowsNewGame() throws {
+        restoreWonTable(vc)
+        vc.finishTurn()
+        let victory = try XCTUnwrap(vc.victoryView)
+        XCTAssertFalse(victory.endingIsShowing)
+        victory.skip()
+        let shown = expectation(description: "New Game shows")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            XCTAssertTrue(victory.endingIsShowing)
+            shown.fulfill()
+        }
+        wait(for: [shown], timeout: 3)
+    }
+
+    func testScoreCountsToItsNewValueOnceShowing() throws {
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = vc.navigationController
+        window.makeKeyAndVisible()
+        window.layoutIfNeeded()
+        XCTAssertNotNil(vc.view.window)
+        vc.doInitTable = false
+        vc.score = 0
+        vc.scoreCounter.count(to: 0, animated: false)
+        vc.score = 250
+        XCTAssertEqual(vc.score, 250, "the score itself changes at once")
+        XCTAssertEqual(vc.chalkLine.accessibilityLabel, "$250, Wins: 0, Losses: 0", "and VoiceOver reads it")
+        XCTAssertTrue(vc.chalkLine.text!.hasPrefix("$0 "), "while the felt counts up to it")
+        let counted = expectation(description: "counted")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            XCTAssertTrue(self.vc.chalkLine.text!.hasPrefix("$250 "))
+            counted.fulfill()
+        }
+        wait(for: [counted], timeout: 3)
+        window.isHidden = true
+    }
+
     func testUndoGoesBackOnlyOneNewGame() {
         let losses = vc.losses
         vc.startNewGameWithSender(sender: vc)
