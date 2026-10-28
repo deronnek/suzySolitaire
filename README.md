@@ -2,8 +2,8 @@
 
 # Suze Solitaire
 
-A classic Canfield-style solitaire for iPhone, iPad and iPhone Duo, written by Kevin DeRonne in 2016 and brought up
-to date with Xcode 27 and iOS 27 in 2026.
+A classic Canfield-style solitaire for iPhone, iPad, iPhone Duo and Android, written by Kevin DeRonne in 2016, brought
+up to date with Xcode 27 and iOS 27 in 2026, and brought to Android.
 
 Thirteen cards start face up in the blind beside the deck. One card is dealt to the upper stacks, and its rank starts
 all four of them. Build the upper stacks up by suit, wrapping from King to Ace, and build the four lower stacks down in
@@ -76,10 +76,60 @@ needs no Apple Account; the app doesn't check the real App Store while it hosts 
 | `scripts/screenshots.sh` | Regenerates the App Store screenshots: 6.9" iPhone, 13" iPad in landscape, and iPhone Duo folded. |
 | `scripts/layout-screenshots.sh` | Screenshots every layout (iPhone and iPad in both orientations, iPhone Duo folded and unfolded) for checking. |
 | `scripts/appstore-metadata.py` | Uploads the listing in `AppStore/Metadata`, the screenshots and the newest build to the App Store version being prepared. It never submits anything. |
-| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into `Assets.xcassets/Cards` as vector images: big-rank cards for phone-sized tables and the full design for roomy ones, each in Arial and Abril Fatface. |
+| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into both apps as vector images (`Assets.xcassets/Cards` and `android/app/src/main/assets/cards`): big-rank cards for phone-sized tables and the full design for roomy ones, each in Arial and Abril Fatface. |
+| `scripts/debug-unlock.sh` | Signs a phone's code (long-press the score to see it) to unlock the Debug menu on that phone, iOS or Android, with a private key kept outside the repo. |
 | `scripts/appstore-iap.py` | Sets up the Unlimited Undo in-app purchase in App Store Connect: name, description, price, territories and review screenshot. |
 
 The App Store Connect scripts share their API helpers in `scripts/asc.py`.
+
+## Android
+
+`android/` holds the Android version: the same game, rules, card art, card back, colors and features, written in Kotlin
+with Jetpack Compose and Material 3. It runs on Android 14 and later, on phones, tablets and foldables. The [privacy
+policy](AppStore/PRIVACY.md) covers both versions.
+
+| Phone | Tablet | Foldable (unfolded) |
+| :---: | :---: | :---: |
+| <img src="android/screenshots/phone.png" alt="Android phone" width="200"> | <img src="android/screenshots/tablet.png" alt="Android tablet, in landscape" width="400"> | <img src="android/screenshots/foldable.png" alt="Android foldable, unfolded" width="250"> |
+
+- **Same game:** `game/` is the rules, scoring and undo in plain Kotlin, and saves games in the same JSON as the iOS app.
+  The table follows the iOS layout, with Material 3 filled tonal buttons in place of Liquid Glass and Android's ⋮ menu.
+- **Unlimited Undo** is the same $5 one-time purchase, through Google Play Billing (product `unlimited_undo`).
+  Purchases come back automatically with the Google account, so there's no Restore button.
+- **Icon:** an adaptive icon drawn from the same layers as `AppIcon.icon`, with a monochrome layer for themed icons.
+- **Font:** the score is in [Jost](https://github.com/indestructible-type/Jost), an open-source font after Futura
+  (licensed under the SIL Open Font License, in `android/licenses`).
+- **Card faces** are the same SVGs as the iOS app's. `scripts/import-cards.py` flattens them with Android Studio's SVG
+  converter and stores them as compact path data in `res/raw`, which the app draws at the size each card is shown
+  (`VectorArt.kt`).
+- **Debug menu:** debuggable builds always have it; other builds only on a phone unlocked with `scripts/debug-unlock.sh`,
+  as on iOS. It has Almost Won, Win Now and the four sets of card faces.
+- **Dependencies:** only Jetpack Compose, Material 3, Activity, Lifecycle and Play Billing; no other libraries.
+
+To build it, run `scripts/android-emulators.sh` once (it installs a JDK, the Android SDK and the emulators with Homebrew),
+then:
+
+```sh
+cd android
+./gradlew testDebugUnitTest          # 48 tests: rules, undo, saving, the layout of every window size and the Debug menu
+./gradlew connectedDebugAndroidTest  # 12 tests on a running emulator: dragging, tapping, TalkBack, the menu and buying
+./gradlew assembleRelease
+```
+
+`scripts/android-screenshots.sh` screenshots every layout (phone and tablet in both orientations, and a foldable) on
+the emulators.
+
+Releases go to Google Play's internal testing track, Android's equivalent of TestFlight:
+
+| Script | What it does |
+| --- | --- |
+| `scripts/play-upload.sh` | Builds a signed App Bundle and uploads it to internal testing, with release notes from `WHATS_NEW`. |
+| `scripts/play-iap.py` | Creates or updates the $5 Unlimited Undo product, priced in every region. |
+| `scripts/play-metadata.py` | Updates the store listing from `android/store`: descriptions, icon, feature graphic and screenshots. |
+
+They sign in with a Play Console service account key named in the git-ignored `scripts/play.local.env`
+(`PLAY_KEY_PATH=...`). Builds are signed with an upload key kept outside the repo, in
+`~/.android/suze-solitaire-signing.properties`; Google Play re-signs them with the app's own key.
 
 ## Credits
 

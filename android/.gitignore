@@ -1,0 +1,11 @@
+.gradle/
+build/
+local.properties
+.kotlin/
+*.iml
+.idea/
+captures/
+# Release signing settings and Play Console credentials stay on this machine
+signing.local.properties
+*.jks
+*.keystore
