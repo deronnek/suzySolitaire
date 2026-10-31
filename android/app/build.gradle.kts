@@ -67,6 +67,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.billing)
+    // Play services, which billing brings in, asks for fragment 1.1.0, which Google has marked outdated
+    implementation(libs.androidx.fragment)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 

@@ -1,8 +1,5 @@
 package net.dseelig.suzesolitaire
 
-import android.annotation.SuppressLint
-import android.content.pm.ActivityInfo
-import android.content.pm.ApplicationInfo
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -29,19 +26,11 @@ import net.dseelig.suzesolitaire.ui.TableScreen
 class MainActivity : ComponentActivity() {
     private val game: GameViewModel by viewModels()
 
-    // Locking the orientation is only for the screenshot script, in debug builds
-    @SuppressLint("SourceLockedOrientationActivity")
     override fun onCreate(savedInstanceState: Bundle?) {
         // The felt runs under the status and navigation bars, which show light icons on it
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT), navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
-        // scripts/android-screenshots.sh launches debug builds with an orientation, as the iOS scripts do
-        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-            when (intent.getStringExtra("screenshotOrientation")) {
-                "landscape" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                "portrait" -> requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            }
-        }
+        applyScreenshotOrientation(this)
         setContent {
             SuzeTheme {
                 var showingRules by rememberSaveable { mutableStateOf(false) }
