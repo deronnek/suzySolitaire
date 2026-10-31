@@ -181,10 +181,6 @@ extension ViewController: PHPickerViewControllerDelegate {
         if let date = ViewController.buildDate(buildNumber: build) {
             message += "\nBuilt " + DateFormatter.localizedString(from: date, dateStyle: .long, timeStyle: .short)
         }
-        // So a tester can tell whether a long press on the score should offer the debug unlock
-        if DebugAccess.isTestFlight {
-            message += "\nTestFlight"
-        }
         let alert = UIAlertController(title: "Suze Solitaire", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         self.present(alert, animated: true)

@@ -7,6 +7,7 @@
 #     (the first version can't have release notes)
 #   Metadata/subtitle.txt, privacy_policy_url.txt and copyright.txt
 #   Metadata/age_rating.json, the answers to the age rating questions
+#   Metadata/review_notes.txt, the Notes in App Review Information
 #   Screenshots/iPhone-6.9.png, iPad-13.png and iPhone-Duo.png (from scripts/screenshots.sh), replacing the ones already
 #     there
 #
@@ -112,6 +113,10 @@ def main():
     with open(os.path.join(ROOT, "Metadata", "age_rating.json")) as f:
         patch("ageRatingDeclarations", info["id"], json.load(f))
     print("  age rating")
+
+    review = call("GET", f"/v1/appStoreVersions/{version['id']}/appStoreReviewDetail")["data"]
+    patch("appStoreReviewDetails", review["id"], {"notes": text("review_notes.txt")})
+    print("  App Review notes")
 
     builds = call("GET", "/v1/builds", query={"filter[app]": app["id"], "filter[preReleaseVersion.version]": version_string,
                                                "filter[processingState]": "VALID", "sort": "-uploadedDate", "limit": 200})["data"]
