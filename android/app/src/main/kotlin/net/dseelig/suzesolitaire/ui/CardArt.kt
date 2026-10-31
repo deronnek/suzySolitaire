@@ -14,21 +14,21 @@ import net.dseelig.suzesolitaire.R
 import net.dseelig.suzesolitaire.game.Card
 import java.io.File
 
-// The four sets of card faces, made from the iOS app's SVGs (see scripts/import-cards.py, CardVectors and VectorArt):
-// big corner ranks for the small cards
-// of a phone-sized table, or the full design for a roomy table's big cards, each with its ranks in Arial or Abril
-// Fatface.  The game uses the Arial ones unless the player picks others in the menu's Cards › Artwork.  Each set has its own corner radius, as a
-// fraction of the card's width: the small cards' corners have a radius of 10 of the card's 167 units, and the large
-// ones' 6.86 inside a 0.25 margin, so their curve is centred 7.11 in from each edge.
+// The four sets of card faces, made from the same SVGs as the iOS app's (see scripts/import-cards.py, CardVectors and
+// VectorArt): big corner ranks for the small cards of a phone-sized table, or the full design for a roomy table's big
+// cards, each with its ranks in Roboto or Abril Fatface.  Roboto stands in for the iOS app's Arial, which Android
+// doesn't have.  The game uses the Roboto ones unless the player picks others in the menu's Cards › Artwork.  Each set
+// has its own corner radius, as a fraction of the card's width: the small cards' corners have a radius of 10 of the
+// card's 167 units, and the large ones' 6.86 inside a 0.25 margin, so their curve is centred 7.11 in from each edge.
 enum class CardFaces(val title: String, val cornerFraction: Float, val files: IntArray) {
-    SmallArial("Big Ranks, Arial", 10f / 167.0869141f, CardVectors.smallArial),
+    SmallRoboto("Big Ranks, Roboto", 10f / 167.0869141f, CardVectors.smallRoboto),
     SmallAbril("Big Ranks, Abril Fatface", 10f / 167.0869141f, CardVectors.smallAbril),
-    LargeArial("Classic, Arial", 7.11f / 167.0869141f, CardVectors.largeArial),
+    LargeRoboto("Classic, Roboto", 7.11f / 167.0869141f, CardVectors.largeRoboto),
     LargeAbril("Classic, Abril Fatface", 7.11f / 167.0869141f, CardVectors.largeAbril);
 
     companion object {
         // The faces the game shows on a table of either size
-        fun standard(roomy: Boolean) = if (roomy) LargeArial else SmallArial
+        fun standard(roomy: Boolean) = if (roomy) LargeRoboto else SmallRoboto
     }
 }
 

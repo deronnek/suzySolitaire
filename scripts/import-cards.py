@@ -6,15 +6,19 @@ vector images they draw at any card size.
 
 Four decks go into each app:
 
-    SmallArial, SmallAbril   big corner ranks, for the small cards of a phone-sized table
-    LargeArial, LargeAbril   the full card design, for the big cards of a roomy table
+    Small..., SmallAbril   big corner ranks, for the small cards of a phone-sized table
+    Large..., LargeAbril   the full card design, for the big cards of a roomy table
+
+the first of each in Arial on iOS, which comes with the phone, and Roboto on Android, which doesn't have Arial; Roboto
+is close to it and freely licensed.
 
 iOS gets them as vector images in Assets.xcassets/Cards, each deck a folder that names its images
-(Cards/SmallArial/queen_of_hearts).  Android gets them in android/app/src/main/res/raw (card_smallarial_queen_of_hearts),
+(Cards/SmallArial/queen_of_hearts).  Android gets them in android/app/src/main/res/raw (card_smallroboto_queen_of_hearts),
 first converted with Android Studio's own converter (scripts/svg2vector), which flattens each card into plain paths,
 clips and gradients, then written as numbers the app draws straight from (see VectorArt.kt), where reading the SVGs or
 even the converter's XML took seconds; CardVectors.kt lists them.
-The games use the Arial ones; the Debug menu can switch to any of them (see CardFaces in Card.swift and CardArt.kt).
+The games use the Arial or Roboto ones; the Cards menu can switch to any of them (see CardFaces in Card.swift and
+CardArt.kt).
 
 The large decks' face art is written more compactly on the way in, with tools/make_small.py's rounding, which needs
 fontTools and svgpathtools (pip install fonttools svgpathtools).  The Android conversion needs the JDK that
@@ -35,7 +39,10 @@ IOS_CARDS = os.path.join(ROOT, 'Suze Solitaire', 'Assets.xcassets', 'Cards')
 ANDROID_RAW = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'res', 'raw')
 ANDROID_LIST = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'kotlin', 'net', 'dseelig', 'suzesolitaire', 'ui',
                             'CardVectors.kt')
-DECKS = {'SmallArial': 'arial/small', 'SmallAbril': 'small', 'LargeArial': 'arial', 'LargeAbril': '.'}
+DECKS = {'SmallArial': 'arial/small', 'SmallRoboto': 'roboto/small', 'SmallAbril': 'small',
+         'LargeArial': 'arial', 'LargeRoboto': 'roboto', 'LargeAbril': '.'}
+IOS_DECKS = ['SmallArial', 'SmallAbril', 'LargeArial', 'LargeAbril']
+ANDROID_DECKS = ['SmallRoboto', 'SmallAbril', 'LargeRoboto', 'LargeAbril']
 CARD_W, CARD_H = 167.0869141, 242.6669922
 SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king']
@@ -72,8 +79,9 @@ def main():
     write_json(os.path.join(IOS_CARDS, 'Contents.json'), {'info': INFO})
     for deck, folder in DECKS.items():
         ios_deck = os.path.join(IOS_CARDS, deck)
-        os.makedirs(ios_deck)
-        write_json(os.path.join(ios_deck, 'Contents.json'), {'info': INFO, 'properties': {'provides-namespace': True}})
+        if deck in IOS_DECKS:
+            os.makedirs(ios_deck)
+            write_json(os.path.join(ios_deck, 'Contents.json'), {'info': INFO, 'properties': {'provides-namespace': True}})
         for suit in SUITS:
             for rank in RANKS:
                 name = f'{rank}_of_{suit}'
@@ -82,7 +90,10 @@ def main():
                 if deck.startswith('Large') and rank in ('jack', 'queen', 'king'):
                     # Everything kept, with coordinates rounded to a tenth of a unit: under a fiftieth of a pixel
                     svg = make_small.trim(svg, (-1e9, -1e9, 1e9, 1e9))
-                write(os.path.join(android_svgs, f'card_{deck.lower()}_{name}.svg'), svg)
+                if deck in ANDROID_DECKS:
+                    write(os.path.join(android_svgs, f'card_{deck.lower()}_{name}.svg'), svg)
+                if deck not in IOS_DECKS:
+                    continue
 
                 imageset = os.path.join(ios_deck, f'{name}.imageset')
                 os.makedirs(imageset)
@@ -98,7 +109,8 @@ def main():
                 })
     import_android(android_svgs)
     shutil.rmtree(android_svgs)
-    print(f'Imported {len(DECKS) * 52} cards into {os.path.relpath(IOS_CARDS, ROOT)} and {os.path.relpath(ANDROID_RAW, ROOT)}')
+    print(f'Imported {len(IOS_DECKS) * 52} cards into {os.path.relpath(IOS_CARDS, ROOT)} and {len(ANDROID_DECKS) * 52} into '
+          f'{os.path.relpath(ANDROID_RAW, ROOT)}')
 
 
 # The card files VectorArt.kt reads.  Big-endian throughout.
@@ -252,7 +264,7 @@ def import_android(svgs):
     lines = ['package net.dseelig.suzesolitaire.ui', '', 'import net.dseelig.suzesolitaire.R', '',
              '// Made by scripts/import-cards.py: each set of card faces, in Card number order (see Card)',
              'object CardVectors {']
-    for deck in DECKS:
+    for deck in ANDROID_DECKS:
         lines.append(f'    val {deck[0].lower() + deck[1:]} = intArrayOf(')
         for suit in SUITS:
             for rank in RANKS:

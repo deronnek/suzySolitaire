@@ -67,7 +67,7 @@ class DebugAccessTest {
             assertEquals(faces.name, 52, faces.files.size)
             assertEquals(faces.name, 52, faces.files.toSet().size)
         }
-        assertEquals(CardFaces.SmallArial, CardFaces.standard(roomy = false))
-        assertEquals(CardFaces.LargeArial, CardFaces.standard(roomy = true))
+        assertEquals(CardFaces.SmallRoboto, CardFaces.standard(roomy = false))
+        assertEquals(CardFaces.LargeRoboto, CardFaces.standard(roomy = true))
     }
 }
