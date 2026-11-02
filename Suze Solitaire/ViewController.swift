@@ -402,14 +402,27 @@ class ViewController: UIViewController {
     @discardableResult
     func putUp(card: Card, from sourceStack: CardStack) -> Bool {
         self.activeCard = card
-        for i in 0..<4 {
-            let topCard = self.suitStacks[i]!.cards.last
-            if self.acceptCardMove(sourceStack: sourceStack, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
-                self.performMove(card: card, from: sourceStack, to: self.suitStacks[i]!)
-                return true
-            }
+        guard let destination = self.upperStack(for: card, from: sourceStack) else {
+            return false
         }
-        return false
+        self.performMove(card: card, from: sourceStack, to: destination)
+        return true
+    }
+
+    // The upper stack card would go to, if any will take it.  A card starting a stack goes where the colors keep
+    // alternating across the upper stacks: the leftmost empty stack at odds with the fewest cards already up.
+    func upperStack(for card: Card, from sourceStack: CardStack) -> CardStack? {
+        let uppers = self.suitStacks.compactMap { $0 }
+        func conflicts(_ i: Int) -> Int {
+            return uppers.indices.filter { j in
+                guard let up = uppers[j].cards.first else {
+                    return false
+                }
+                return (up.color == card.color) != ((i - j) % 2 == 0)
+            }.count
+        }
+        let candidates = uppers.indices.filter { self.destinationAccepts(card, from: sourceStack.stackType, to: uppers[$0], onTopOfCard: uppers[$0].cards.last) }
+        return candidates.min { conflicts($0) < conflicts($1) }.map { uppers[$0] }
     }
 
     
@@ -1237,7 +1250,7 @@ class ViewController: UIViewController {
                 
                 if self.acceptCardMove(sourceStack: self.cardStacks[j]!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                     // Make the move
-                    self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.cardStacks[j]!, destinationStack: self.suitStacks[i]!)
+                    self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.cardStacks[j]!, destinationStack: self.upperStack(for: self.activeCard!, from: self.cardStacks[j]!)!)
                     self.activeCard = backupActive
                     return true
                 }
@@ -1247,7 +1260,7 @@ class ViewController: UIViewController {
             self.activeCard = self.fub!.cards.last
             if self.acceptCardMove(sourceStack: self.fub!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                 // Make the move
-                self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.fub!, destinationStack: self.suitStacks[i]!)
+                self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.fub!, destinationStack: self.upperStack(for: self.activeCard!, from: self.fub!)!)
                 self.activeCard = backupActive;
                 return true;
             }
@@ -1256,7 +1269,7 @@ class ViewController: UIViewController {
             self.activeCard = self.deal!.cards.last
             if self.acceptCardMove(sourceStack: self.deal!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
                 // Make the move
-                self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.deal!, destinationStack: self.suitStacks[i]!)
+                self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.deal!, destinationStack: self.upperStack(for: self.activeCard!, from: self.deal!)!)
                 self.activeCard = backupActive;
                 return true;
             }

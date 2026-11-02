@@ -61,7 +61,7 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     // Sends the top card of from to whichever upper stack will take it, as a double tap does
     fun putUp(from: Spot): Boolean {
         val stack = table.cards(from)
-        val to = Spot.uppers.firstOrNull { stack.isNotEmpty() && table.canMove(from, stack.lastIndex, it) } ?: return false
+        val to = stack.lastOrNull()?.let { table.upperFor(it, from.pile) } ?: return false
         return move(from, stack.lastIndex, to)
     }
 

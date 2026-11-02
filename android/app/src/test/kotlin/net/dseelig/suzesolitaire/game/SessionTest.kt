@@ -21,6 +21,20 @@ class SessionTest {
     }
 
     @Test
+    fun cardsGoUpSoTheColorsAlternate() {
+        val aces = listOf(Suit.Clubs, Suit.Spades, Suit.Diamonds, Suit.Hearts).map { card(1, it) }
+        val s = session(table(lower = deadLowerStacks(), deal = aces))
+        repeat(4) { assertTrue(s.putUp(Spot.Deal)) }
+        assertEquals(listOf(Suit.Hearts, Suit.Spades, Suit.Diamonds, Suit.Clubs), s.table.upper.map { it.first().suit })
+
+        // A red dragged up second leaves no way to alternate, so the next red goes where it clashes least
+        val upper = listOf(emptyList(), listOf(card(1, Suit.Hearts)), emptyList(), emptyList())
+        val t = session(table(lower = deadLowerStacks(), upper = upper, deal = listOf(card(1, Suit.Diamonds))))
+        assertTrue(t.putUp(Spot.Deal))
+        assertEquals(listOf(card(1, Suit.Diamonds)), t.table.upper[3])
+    }
+
+    @Test
     fun illegalMoveLeavesBoardAlone() {
         val s = session(table(lower = deadLowerStacks(), deal = listOf(card(2, Suit.Clubs))))
         val before = s.game

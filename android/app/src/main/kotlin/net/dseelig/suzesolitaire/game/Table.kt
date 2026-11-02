@@ -143,7 +143,7 @@ data class Table(
             for (from in Spot.lowers + Spot.Blind + Spot.Deal) {
                 val stack = cards(from)
                 if (stack.isNotEmpty() && canMove(from, stack.lastIndex, to)) {
-                    return Move(from, stack.lastIndex, to)
+                    return Move(from, stack.lastIndex, upperFor(stack.last(), from.pile) ?: to)
                 }
             }
         }
@@ -172,7 +172,7 @@ data class Table(
                         continue
                     }
                     if (to.pile == Pile.Upper) {
-                        return Move(from, i, to)
+                        return Move(from, i, upperFor(stack[i], from.pile) ?: to)
                     }
                     if (below != null) {
                         // Uncovers a card that isn't part of the run, frees one to go up, or splits the run into an empty
@@ -194,7 +194,17 @@ data class Table(
     }
 
     // An upper or lower stack that card, on top of a stack of kind from, could go to
-    fun destinationFor(card: Card, from: Pile): Spot? = (Spot.uppers + Spot.lowers).firstOrNull { accepts(card, from, it) }
+    fun destinationFor(card: Card, from: Pile): Spot? = upperFor(card, from) ?: Spot.lowers.firstOrNull { accepts(card, from, it) }
+
+    // The upper stack card would go to, if any will take it.  A card starting a stack goes where the colors keep
+    // alternating across the upper stacks: the leftmost empty stack at odds with the fewest cards already up.
+    fun upperFor(card: Card, from: Pile): Spot? {
+        fun conflicts(to: Spot) = Spot.uppers.count { other ->
+            val up = cards(other).firstOrNull()
+            up != null && (up.isRed == card.isRed) != ((to.index - other.index) % 2 == 0)
+        }
+        return Spot.uppers.filter { accepts(card, from, it) }.minByOrNull(::conflicts)
+    }
 
     // The cards that will be on top of the deal as the deck is dealt through, turning it over once, without playing any
     fun cardsTheDeckWillDeal(): List<Card> {

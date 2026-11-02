@@ -1033,6 +1033,20 @@ final class Suze_SolitaireTests: XCTestCase {
         }
     }
 
+    func testCardsGoUpSoTheColorsAlternate() {
+        setUpBoard(lower: deadLowerStacks(), fub: [take(1, .Clubs), take(1, .Spades), take(1, .Diamonds), take(1, .Hearts)])
+        while let card = vc.fub!.cards.last {
+            XCTAssertTrue(vc.putUp(card: card, from: vc.fub!))
+        }
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.first!.suit }, [.Hearts, .Spades, .Diamonds, .Clubs])
+
+        // A red dragged up second leaves no way to alternate, so the next red goes where it clashes least
+        setUpBoard(lower: deadLowerStacks(), fub: [take(1, .Diamonds)])
+        vc.suitStacks[1]!.addCard(toadd: take(1, .Hearts))
+        XCTAssertTrue(vc.putUp(card: vc.fub!.cards.last!, from: vc.fub!))
+        XCTAssertEqual(vc.suitStacks[3]!.cards.first?.suit, .Diamonds)
+    }
+
     func testDoubleTapPutsUpTheTopCardWithoutDelayingTouches() throws {
         let doubleTap = try XCTUnwrap(vc.view.gestureRecognizers?.compactMap { $0 as? UITapGestureRecognizer }.first { $0.numberOfTapsRequired == 2 })
         XCTAssertFalse(doubleTap.delaysTouchesEnded, "taps and drops would wait for the double tap to fail")
