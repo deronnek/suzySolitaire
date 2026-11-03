@@ -79,6 +79,20 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
         return true
     }
 
+    // Makes the next auto move, if Auto Moves is on and a card can go up, as part of the last turn.  Returns false once
+    // there's none to make, checking then for a win.
+    fun autoMoveStep(): Boolean {
+        val move = if (autoMoves && !finishing && !game.won) table.autoMove() else null
+        if (move == null) {
+            finishTurn()
+            return false
+        }
+        apply(move)
+        // The free undo can't take back a turn with auto moves in it
+        lastTurnUndoable = false
+        return true
+    }
+
     // Sends the top card of from to whichever upper stack will take it, as a double tap does
     fun putUp(from: Spot): Boolean {
         val stack = table.cards(from)
@@ -187,14 +201,6 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     }
 
     private fun finishTurn() {
-        if (autoMoves && !finishing) {
-            while (true) {
-                val move = table.autoMove() ?: break
-                apply(move)
-                // The free undo can't take back a turn with auto moves in it
-                lastTurnUndoable = false
-            }
-        }
         if (table.isWon && !game.won) {
             game = game.copy(won = true, score = game.score + Game.WIN_BONUS, wins = game.wins + 1)
             // A won game is over, so there's nothing to go back to

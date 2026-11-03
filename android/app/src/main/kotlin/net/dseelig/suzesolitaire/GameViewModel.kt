@@ -85,6 +85,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // Whether the cards are going up by themselves to win (see finish), which nothing interrupts
     var finishing by mutableStateOf(false)
         private set
+    // Whether Auto Moves is putting cards up, one at a time (see autoMove).  Play carries on meanwhile.
+    var autoMoving by mutableStateOf(false)
+        private set
+    // Whether the player is dragging cards, which auto moves wait for
+    var holding = false
     // The card a TalkBack user has picked to move, and where it is (see TableScreen's stack actions)
     var selection by mutableStateOf<Pair<Spot, Int>?>(null)
         private set
@@ -95,6 +100,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private var dealtAt = System.currentTimeMillis()
     private var noMovesJob: Job? = null
+    private var autoMoveJob: Job? = null
     private var serial = 0
 
     init {
@@ -153,6 +159,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val wasWon = game.won
+        stopAutoMoves()
         session.newGame(Random.Default)
         dealtAt = System.currentTimeMillis()
         publish()
@@ -160,7 +167,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun undo() {
-        if (!finishing && session.undo()) {
+        if (!finishing && session.canUndo) {
+            stopAutoMoves()
+            session.undo()
             publish()
             announce("Undone")
         }
@@ -174,6 +183,47 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         else if (game.won) {
             announce("You won! $${Game.WIN_BONUS}")
         }
+        else {
+            autoMove()
+        }
+    }
+
+    // Puts up whatever cards Auto Moves can, one at a time at the pace a won game finishes, from wherever the table is
+    // as each goes.  A turn while they're going, such as dealing quickly, adds to the cards they put up.
+    private fun autoMove() {
+        if (!session.autoMoves || autoMoveJob?.isActive == true) {
+            return
+        }
+        autoMoveJob = viewModelScope.launch {
+            autoMoving = true
+            delay(FINISH_INTERVAL_MS)
+            while (true) {
+                // A card the player is dragging stays in their hand
+                while (holding) {
+                    delay(FINISH_INTERVAL_MS)
+                }
+                if (!session.autoMoveStep()) {
+                    break
+                }
+                publish()
+                delay(FINISH_INTERVAL_MS)
+            }
+            if (session.game.won) {
+                // Once the last card lands
+                delay(FINISH_SLIDE_MS - FINISH_INTERVAL_MS)
+            }
+            autoMoving = false
+            publish()
+            if (game.won) {
+                announce("You won! $${Game.WIN_BONUS}")
+            }
+        }
+    }
+
+    private fun stopAutoMoves() {
+        autoMoveJob?.cancel()
+        autoMoveJob = null
+        autoMoving = false
     }
 
     // Puts the rest of the cards up one at a time, then wins once the last one lands
@@ -334,6 +384,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // Swaps the game for one a card from winning, without counting a loss; Undo brings back the game it replaced
     fun dealAlmostWon() {
+        stopAutoMoves()
         session.replaceTable(DebugAccess.ALMOST_WON)
         dealtAt = System.currentTimeMillis()
         publish()
@@ -432,7 +483,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         const val HIGHLIGHTS_DROPS = "HighlightsDrops"
         const val CARD_FACES_KEY = "CardFaces"
         const val NO_MOVES_DELAY_MS = 8_000L
-        // How often the next card goes up as a won game finishes itself
+        // How often the next card goes up as a won game finishes itself, or by Auto Moves
         const val FINISH_INTERVAL_MS = 160L
 
         // Tests and screenshot builds swap in a FakeUpgradeStore

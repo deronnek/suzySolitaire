@@ -728,7 +728,49 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 36)
         vc.autoMoves = true
         vc.finishTurn()
-        XCTAssertTrue(vc.justWon)
+        waitUntil { self.vc.justWon }
+    }
+
+    func waitUntil(_ condition: @escaping () -> Bool) {
+        wait(for: [expectation(for: NSPredicate { _, _ in condition() }, evaluatedWith: nil)], timeout: 20)
+    }
+
+    func testAutoMovesPutCardsUpOneAtATime() {
+        vc.dealAlmostWon()
+        let score = vc.score
+        vc.autoMoves = true
+        vc.finishTurn()
+        XCTAssertTrue(vc.autoMoving)
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 36, "none go up straight away")
+        // The first goes up after a moment, and the next a moment later
+        let first = XCTestExpectation(description: "the first card is up")
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishInterval * 1.5) { first.fulfill() }
+        wait(for: [first], timeout: 2)
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 37)
+        waitUntil { self.vc.justWon }
+        XCTAssertEqual(vc.score, score + 5 * 16 + 250)
+    }
+
+    func testDealingWhileAutoMovesAreGoingAddsToThem() {
+        setUpBoard(lower: deadLowerStacks(), deck: [take(1, .Hearts)], fub: [take(1, .Clubs)])
+        vc.autoMoves = true
+        vc.finishTurn()
+        vc.tapDeck()
+        vc.finishTurn()
+        waitUntil { !self.vc.autoMoving }
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 2)
+    }
+
+    func testUndoStopsAutoMoves() {
+        setUpBoard(lower: deadLowerStacks(), deck: [take(2, .Hearts)], fub: [take(1, .Clubs)])
+        vc.autoMoves = true
+        vc.finishTurn()
+        vc.undoMove(self)
+        XCTAssertFalse(vc.autoMoving)
+        let expectation = XCTestExpectation(description: "nothing goes up")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { expectation.fulfill() }
+        wait(for: [expectation], timeout: 2)
+        XCTAssertTrue(vc.suitStacks.allSatisfy { $0!.cards.isEmpty })
     }
 
     func testWinNowWins() throws {
@@ -1059,7 +1101,7 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(vc.finishingWin)
         XCTAssertFalse(vc.justWon, "the rest go up one at a time")
         XCTAssertFalse(vc.view.isUserInteractionEnabled)
-        wait(for: [expectation(for: NSPredicate { _, _ in self.vc.justWon }, evaluatedWith: nil)], timeout: 20)
+        waitUntil { self.vc.justWon }
         XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }, [13, 13, 13, 13])
         XCTAssertEqual(vc.score, score + 5 * left + 250)
         XCTAssertTrue(vc.view.isUserInteractionEnabled)
@@ -1296,7 +1338,7 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.viewTagToStack[starter.view.tag] = vc.cardStacks[1]
         vc.autoMoves = true
         vc.finishTurn()
-        XCTAssertTrue(vc.suitStacks.contains { $0!.cards.contains { $0 === starter } }, "auto moves should have put the card up")
+        waitUntil { self.vc.suitStacks.contains { $0!.cards.contains { $0 === starter } } }
         assertLinksConsistent()
 
         // Move a run, undo it, and recycle the deck
@@ -1525,7 +1567,7 @@ final class Suze_SolitaireTests: XCTestCase {
         let before = allStacks(vc).map(tags)
         vc.performMove(card: try XCTUnwrap(vc.deal!.cards.last), from: vc.deal!, to: vc.cardStacks[0]!)
         vc.finishTurn()
-        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }.reduce(0, +), 1, "the ace went up by itself")
+        waitUntil { self.vc.suitStacks.map { $0!.cards.count }.reduce(0, +) == 1 }
         XCTAssertTrue(vc.canUndo, "auto moves don't use up the undo")
         vc.undoMove(self)
         XCTAssertEqual(allStacks(vc).map(tags), before)

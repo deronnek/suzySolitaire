@@ -97,8 +97,24 @@ class SessionTest {
     fun theFreeUndoCantTakeBackAutoMoves() {
         val s = session(table(lower = deadLowerStacks(), deal = listOf(card(4, Suit.Hearts)), blind = listOf(card(1, Suit.Clubs))), auto = true)
         assertTrue(s.move(Spot.Deal, 0, Spot.lower(0)))
+        assertTrue(s.canUndo)
+        // Auto moves go one at a time, after the turn
+        assertTrue(s.autoMoveStep())
+        assertFalse(s.autoMoveStep())
         assertEquals("the ace went up by itself", 1, s.table.upper.sumOf { it.size })
         assertFalse(s.canUndo)
+    }
+
+    @Test
+    fun autoMovesPutUpOneCardAtATimeAndThenWin() {
+        val s = session(DebugAccess.ALMOST_WON, auto = true)
+        val cardsUp = mutableListOf<Int>()
+        while (s.autoMoveStep()) {
+            cardsUp += s.table.upper.flatten().size
+        }
+        assertTrue(s.game.won)
+        // Each step puts up exactly one card
+        assertEquals((37..52).toList(), cardsUp)
     }
 
     @Test
@@ -124,6 +140,7 @@ class SessionTest {
             score = 10, unlimited = true, auto = true)
         val before = s.game
         s.move(Spot.Deal, 0, Spot.lower(0))
+        while (s.autoMoveStep()) {}
         assertTrue("auto moves don't use up the undo", s.canUndo)
         s.undo()
         assertEquals(before, s.game)

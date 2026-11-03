@@ -137,18 +137,9 @@ data class Table(
             copy(deck = deck.dropLast(count), deal = deal + deck.takeLast(count).reversed())
         }
 
-    // The move Auto Moves makes next: for each upper stack in turn, a lower stack's, the blind's or the deal's top card
-    fun autoMove(): Move? {
-        for (to in Spot.uppers) {
-            for (from in Spot.lowers + Spot.Blind + Spot.Deal) {
-                val stack = cards(from)
-                if (stack.isNotEmpty() && canMove(from, stack.lastIndex, to)) {
-                    return Move(from, stack.lastIndex, upperFor(stack.last(), from.pile) ?: to)
-                }
-            }
-        }
-        return null
-    }
+    // The move Auto Moves makes next: the lowest-ranked top card of a lower stack, the blind or the deal that can go up,
+    // so the upper stacks rise together
+    fun autoMove(): Move? = lowestPutUp(Spot.lowers + Spot.Blind + Spot.Deal)
 
     // MARK: Looking for moves
 
@@ -214,8 +205,10 @@ data class Table(
         }
 
     // The lowest-ranked card a lower stack can put up, so the upper stacks rise together as a won game finishes
-    fun finishingMove(): Move? = Spot.lowers.mapNotNull { from ->
-        top(from)?.let { card -> upperFor(card, Pile.Lower)?.let { Move(from, cards(from).lastIndex, it) } }
+    fun finishingMove(): Move? = lowestPutUp(Spot.lowers)
+
+    private fun lowestPutUp(from: List<Spot>): Move? = from.mapNotNull { spot ->
+        top(spot)?.let { card -> upperFor(card, spot.pile)?.let { Move(spot, cards(spot).lastIndex, it) } }
     }.minByOrNull { upRank(top(it.from)!!) }
 
     // The upper stack card would go to, if any will take it.  A card starting a stack goes where the colors keep

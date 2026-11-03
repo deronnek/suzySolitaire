@@ -63,7 +63,7 @@ import kotlin.math.roundToInt
 
 // How long cards take to slide to a new place, as on iOS
 const val SLIDE_MS = 200
-// How long each card takes to go up as a won game finishes itself, as on iOS
+// How long each card takes to go up as a won game finishes itself or by Auto Moves, as on iOS
 const val FINISH_SLIDE_MS = 450L
 
 // The card being dragged, and the cards on top of it, from where they were picked up
@@ -155,7 +155,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
     // A tick as each card goes up by itself
     val cardsUp = game.table.upper.sumOf { it.size }
     LaunchedEffect(cardsUp) {
-        if (vm.finishing) {
+        if (vm.finishing || vm.autoMoving) {
             view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
         }
     }
@@ -172,11 +172,10 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
                 anim.snapTo(target)
             }
             else if (anim.targetValue != target) {
-                // The cards following the player's up by themselves take longer; a card just let go keeps pace with
-                // the distance it carries
-                // A card let go here slides on from where it was dropped, the distance it carries shrinking as it goes
+                // The cards going up by themselves take longer, so each can be seen going.  A card let go here slides
+                // on from where it was dropped, keeping pace with the distance it carries as that shrinks.
                 release[p.card]?.let { carried -> launch { settle(release, p.card, carried) } }
-                anim.animateTo(target, if (vm.finishing && p.card !in release) tween(FINISH_SLIDE_MS.toInt(), easing = FastOutSlowInEasing)
+                anim.animateTo(target, if ((vm.finishing || vm.autoMoving) && p.spot.pile == Pile.Upper && p.card !in release) tween(FINISH_SLIDE_MS.toInt(), easing = FastOutSlowInEasing)
                                        else tween(SLIDE_MS, easing = LinearOutSlowInEasing))
             }
         }
@@ -265,6 +264,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
                         dragged = true
                     }
                     if (dragged) {
+                        vm.holding = true
                         change.consume()
                         val offset = Offset(delta.x.toDp().value, delta.y.toDp().value)
                         val target = dropTarget(vm, currentLayout, hit!!.spot, hit.index, offset)
@@ -275,6 +275,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
                     }
                 }
                 if (dragged) {
+                    vm.holding = false
                     val d = drag
                     drag = null
                     if (d != null) {

@@ -13,7 +13,7 @@ import UIKit
 extension ViewController {
     // MARK: Finishing a won game
 
-    // How often the next card goes up, and how long each takes to get there
+    // How often the next card goes up, and how long each takes to get there, here and for Auto Moves
     static let finishInterval: TimeInterval = 0.16
     static let finishSlideDuration: TimeInterval = 0.45
 
@@ -51,7 +51,7 @@ extension ViewController {
         self.finishingWin = true
         if UIAccessibility.isReduceMotionEnabled || UIAccessibility.isVoiceOverRunning {
             let frames = self.cardFrames()
-            while self.putUpLowestCard() {}
+            while self.putUpLowestCard(from: self.cardStacks) {}
             self.layOutAndSlide(from: frames)
             self.finishingWin = false
             self.finishTurn()
@@ -64,7 +64,7 @@ extension ViewController {
 
     func putUpNextCard() {
         let frames = self.cardFrames()
-        guard self.putUpLowestCard() else {
+        guard self.putUpLowestCard(from: self.cardStacks) else {
             // Once the last card lands
             DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishSlideDuration) { [weak self] in
                 guard let self else {
@@ -76,16 +76,16 @@ extension ViewController {
             }
             return
         }
-        self.layOutAndSlide(from: frames, duration: ViewController.finishSlideDuration, cutShortSlides: false)
+        self.layOutAndSlide(from: frames, duration: ViewController.finishSlideDuration)
         UISelectionFeedbackGenerator().selectionChanged()
         DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishInterval) { [weak self] in
             self?.putUpNextCard()
         }
     }
 
-    // Moves the lowest-ranked card that can go up from a lower stack to its upper stack, for $5; returns whether one did
-    func putUpLowestCard() -> Bool {
-        let moves = self.cardStacks.compactMap { $0 }.compactMap { source -> (card: Card, from: CardStack, to: CardStack)? in
+    // Moves the lowest-ranked top card of sources that can go up to its upper stack, for $5; returns whether one did
+    func putUpLowestCard(from sources: [CardStack?]) -> Bool {
+        let moves = sources.compactMap { $0 }.compactMap { source -> (card: Card, from: CardStack, to: CardStack)? in
             guard let card = source.cards.last, let upper = self.upperStack(for: card, from: source) else {
                 return nil
             }
@@ -99,6 +99,73 @@ extension ViewController {
         self.activeCard = nil
         self.moveCardBetweenStacks(cardToMove: move.card, sourceStack: move.from, destinationStack: move.to)
         return true
+    }
+
+    // MARK: Auto Moves
+
+    // Auto Moves puts cards up one at a time, lowest first, at the pace a won game finishes, so each can be seen going
+    // up.  Play carries on meanwhile: a deal or move while they're going adds to the cards they put up.  With Reduce
+    // Motion or VoiceOver on, they all go up at once.
+    func startAutoMoves() {
+        guard !self.autoMoving else {
+            return
+        }
+        if UIAccessibility.isReduceMotionEnabled || UIAccessibility.isVoiceOverRunning {
+            let frames = self.cardFrames()
+            while self.putUpLowestCard(from: self.autoMoveSources) {
+                self.canUndo = false
+            }
+            self.layOutAndSlide(from: frames)
+            return
+        }
+        self.autoMoving = true
+        let run = self.autoMoveRun
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishInterval) { [weak self] in
+            self?.autoMoveNextCard(run: run)
+        }
+    }
+
+    var autoMoveSources: [CardStack?] {
+        return self.cardStacks + [self.fub, self.deal]
+    }
+
+    func autoMoveNextCard(run: Int) {
+        guard self.autoMoving, run == self.autoMoveRun else {
+            return
+        }
+        let next = { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishInterval) {
+                self?.autoMoveNextCard(run: run)
+            }
+        }
+        // A card the player is holding stays in their hand
+        if self.activeCard != nil, let touch = self.activeTouch, touch.phase != .ended && touch.phase != .cancelled {
+            next()
+            return
+        }
+        let frames = self.cardFrames()
+        guard self.autoMoves, !self.finishingWin, !self.justWon, self.putUpLowestCard(from: self.autoMoveSources) else {
+            self.autoMoving = false
+            // Once the last card lands
+            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishSlideDuration - ViewController.finishInterval) { [weak self] in
+                guard let self, run == self.autoMoveRun else {
+                    return
+                }
+                self.checkForWin()
+                self.updateNoMovesBanner()
+            }
+            return
+        }
+        // The free undo can't take back a turn with auto moves in it
+        self.canUndo = false
+        self.layOutAndSlide(from: frames, duration: ViewController.finishSlideDuration)
+        UISelectionFeedbackGenerator().selectionChanged()
+        next()
+    }
+
+    func stopAutoMoves() {
+        self.autoMoveRun += 1
+        self.autoMoving = false
     }
 
     // Hands the won table over to a VictoryView, which plays out the celebration over the felt
