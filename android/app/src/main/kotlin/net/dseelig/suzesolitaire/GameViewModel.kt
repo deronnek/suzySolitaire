@@ -34,6 +34,7 @@ import net.dseelig.suzesolitaire.store.PlayUpgradeStore
 import net.dseelig.suzesolitaire.store.PurchaseOutcome
 import net.dseelig.suzesolitaire.store.UpgradeStore
 import net.dseelig.suzesolitaire.ui.CardFaces
+import net.dseelig.suzesolitaire.ui.FINISH_SLIDE_MS
 import net.dseelig.suzesolitaire.ui.TableLayout
 import java.io.File
 import kotlin.random.Random
@@ -81,6 +82,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // Something for TalkBack to read out, such as "New game dealt"; the serial makes repeats count
     var announcement by mutableStateOf<Pair<String, Int>?>(null)
         private set
+    // Whether the cards are going up by themselves to win (see finish), which nothing interrupts
+    var finishing by mutableStateOf(false)
+        private set
     // The card a TalkBack user has picked to move, and where it is (see TableScreen's stack actions)
     var selection by mutableStateOf<Pair<Spot, Int>?>(null)
         private set
@@ -114,6 +118,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // MARK: Playing
 
     fun move(from: Spot, index: Int, to: Spot): Boolean {
+        if (finishing) {
+            return false
+        }
         val moved = session.move(from, index, to)
         if (moved) {
             afterTurn()
@@ -121,9 +128,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         return moved
     }
 
-    fun canMove(from: Spot, index: Int, to: Spot) = !game.won && game.table.canMove(from, index, to)
+    fun canMove(from: Spot, index: Int, to: Spot) = !game.won && !finishing && game.table.canMove(from, index, to)
 
     fun putUp(from: Spot): Boolean {
+        if (finishing) {
+            return false
+        }
         val moved = session.putUp(from)
         if (moved) {
             afterTurn()
@@ -132,13 +142,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun deal() {
-        if (session.deal()) {
+        if (!finishing && session.deal()) {
             dealtAt = System.currentTimeMillis()
             afterTurn()
         }
     }
 
     fun newGame() {
+        if (finishing) {
+            return
+        }
         val wasWon = game.won
         session.newGame(Random.Default)
         dealtAt = System.currentTimeMillis()
@@ -147,7 +160,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun undo() {
-        if (session.undo()) {
+        if (!finishing && session.undo()) {
             publish()
             announce("Undone")
         }
@@ -155,7 +168,26 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun afterTurn() {
         publish()
-        if (game.won) {
+        if (session.finishing) {
+            finish()
+        }
+        else if (game.won) {
+            announce("You won! $${Game.WIN_BONUS}")
+        }
+    }
+
+    // Puts the rest of the cards up one at a time, then wins once the last one lands
+    private fun finish() {
+        finishing = true
+        viewModelScope.launch {
+            delay(FINISH_INTERVAL_MS)
+            while (session.finishStep()) {
+                publish()
+                delay(FINISH_INTERVAL_MS)
+            }
+            delay(FINISH_SLIDE_MS - FINISH_INTERVAL_MS)
+            finishing = false
+            publish()
             announce("You won! $${Game.WIN_BONUS}")
         }
     }
@@ -400,6 +432,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         const val HIGHLIGHTS_DROPS = "HighlightsDrops"
         const val CARD_FACES_KEY = "CardFaces"
         const val NO_MOVES_DELAY_MS = 8_000L
+        // How often the next card goes up as a won game finishes itself
+        const val FINISH_INTERVAL_MS = 160L
 
         // Tests and screenshot builds swap in a FakeUpgradeStore
         var storeFactory: (Application, kotlinx.coroutines.CoroutineScope) -> UpgradeStore = { app, scope -> PlayUpgradeStore(app, scope) }

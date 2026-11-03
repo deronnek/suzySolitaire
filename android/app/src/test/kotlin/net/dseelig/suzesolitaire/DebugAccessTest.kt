@@ -44,8 +44,10 @@ class DebugAccessTest {
         session.replaceTable(table)
         assertEquals("no loss counted", 1, session.game.losses)
         assertTrue("Undo brings back the game it replaced", session.canUndo)
-        // Putting the 2 of clubs up on its ace wins, with Auto Moves putting up the rest
+        // Putting the 2 of clubs up on its ace wins, with the rest following it up
         assertTrue(session.putUp(Spot.lower(0)))
+        assertTrue(session.finishing)
+        while (session.finishStep()) {}
         assertTrue(session.game.won)
         assertEquals(3, session.game.wins)
     }

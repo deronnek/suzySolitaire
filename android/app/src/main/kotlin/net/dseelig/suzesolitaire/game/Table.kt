@@ -196,6 +196,28 @@ data class Table(
     // An upper or lower stack that card, on top of a stack of kind from, could go to
     fun destinationFor(card: Card, from: Pile): Spot? = upperFor(card, from) ?: Spot.lowers.firstOrNull { accepts(card, from, it) }
 
+    // A card's rank counted from the starter, the order the upper stacks build in
+    fun upRank(card: Card) = (card.rank - starter + 13) % 13
+
+    // Whether every card left is on the lower stacks, in an order that lets them all go up
+    val winIsCertain: Boolean
+        get() {
+            if (blind.isNotEmpty() || deck.isNotEmpty() || deal.isNotEmpty() || lower.all { it.isEmpty() }) {
+                return false
+            }
+            var table = this
+            while (true) {
+                val move = table.finishingMove() ?: break
+                table = table.move(move.from, move.index, move.to)
+            }
+            return table.lower.all { it.isEmpty() }
+        }
+
+    // The lowest-ranked card a lower stack can put up, so the upper stacks rise together as a won game finishes
+    fun finishingMove(): Move? = Spot.lowers.mapNotNull { from ->
+        top(from)?.let { card -> upperFor(card, Pile.Lower)?.let { Move(from, cards(from).lastIndex, it) } }
+    }.minByOrNull { upRank(top(it.from)!!) }
+
     // The upper stack card would go to, if any will take it.  A card starting a stack goes where the colors keep
     // alternating across the upper stacks: the leftmost empty stack at odds with the fewest cards already up.
     fun upperFor(card: Card, from: Pile): Spot? {

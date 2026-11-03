@@ -11,6 +11,96 @@
 import UIKit
 
 extension ViewController {
+    // MARK: Finishing a won game
+
+    // How often the next card goes up, and how long each takes to get there
+    static let finishInterval: TimeInterval = 0.16
+    static let finishSlideDuration: TimeInterval = 0.45
+
+    // Whether every card left is on the lower stacks, in an order that lets them all go up
+    func winIsCertain() -> Bool {
+        guard self.fub!.cards.isEmpty, self.deck!.cards.isEmpty, self.deal!.cards.isEmpty else {
+            return false
+        }
+        var lower = self.cardStacks.map { $0!.cards }
+        guard lower.contains(where: { !$0.isEmpty }) else {
+            return false
+        }
+        // The rank, counted from the starter, each suit needs next
+        var next = [cardSuit: Int]()
+        for case let stack? in self.suitStacks {
+            if let first = stack.cards.first {
+                next[first.suit] = stack.cards.count
+            }
+        }
+        while let i = lower.indices.first(where: { i in lower[i].last.map { self.finishRank($0) == next[$0.suit, default: 0] } ?? false }) {
+            let card = lower[i].removeLast()
+            next[card.suit] = self.finishRank(card) + 1
+        }
+        return lower.allSatisfy { $0.isEmpty }
+    }
+
+    // A card's rank counted from the starter, the order the upper stacks build in
+    func finishRank(_ card: Card) -> Int {
+        return (card.rank - self.suitStackStarter + 13) % 13
+    }
+
+    // Puts the rest of the cards up one at a time, lowest first so the upper stacks rise together, then wins.  With
+    // Reduce Motion or VoiceOver on, they all go up at once.
+    func finishWin() {
+        self.finishingWin = true
+        if UIAccessibility.isReduceMotionEnabled || UIAccessibility.isVoiceOverRunning {
+            let frames = self.cardFrames()
+            while self.putUpLowestCard() {}
+            self.layOutAndSlide(from: frames)
+            self.finishingWin = false
+            self.finishTurn()
+            return
+        }
+        // Nothing to touch until the cards are all up
+        self.view.isUserInteractionEnabled = false
+        self.putUpNextCard()
+    }
+
+    func putUpNextCard() {
+        let frames = self.cardFrames()
+        guard self.putUpLowestCard() else {
+            // Once the last card lands
+            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishSlideDuration) { [weak self] in
+                guard let self else {
+                    return
+                }
+                self.view.isUserInteractionEnabled = true
+                self.finishingWin = false
+                self.finishTurn()
+            }
+            return
+        }
+        self.layOutAndSlide(from: frames, duration: ViewController.finishSlideDuration, cutShortSlides: false)
+        UISelectionFeedbackGenerator().selectionChanged()
+        DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.finishInterval) { [weak self] in
+            self?.putUpNextCard()
+        }
+    }
+
+    // Moves the lowest-ranked card that can go up from a lower stack to its upper stack, for $5; returns whether one did
+    func putUpLowestCard() -> Bool {
+        let moves = self.cardStacks.compactMap { $0 }.compactMap { source -> (card: Card, from: CardStack, to: CardStack)? in
+            guard let card = source.cards.last, let upper = self.upperStack(for: card, from: source) else {
+                return nil
+            }
+            return (card, source, upper)
+        }
+        guard let move = moves.min(by: { self.finishRank($0.card) < self.finishRank($1.card) }) else {
+            return false
+        }
+        self.activeCard = move.card
+        _ = self.acceptCardMove(sourceStack: move.from, destinationStack: move.to, onTopOfCard: move.to.cards.last)
+        self.activeCard = nil
+        self.moveCardBetweenStacks(cardToMove: move.card, sourceStack: move.from, destinationStack: move.to)
+        return true
+    }
+
     // Hands the won table over to a VictoryView, which plays out the celebration over the felt
     func celebrateWin() {
         let stacks = [self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks

@@ -63,9 +63,19 @@ import kotlin.math.roundToInt
 
 // How long cards take to slide to a new place, as on iOS
 const val SLIDE_MS = 200
+// How long each card takes to go up as a won game finishes itself, as on iOS
+const val FINISH_SLIDE_MS = 450L
 
 // The card being dragged, and the cards on top of it, from where they were picked up
 private data class Drag(val from: Spot, val index: Int, val offset: Offset, val target: Spot?)
+
+// Shrinks the distance a card let go after a drag carries to nothing, then lets it go
+private suspend fun settle(release: MutableMap<Card, Animatable<Offset, *>>, card: Card, carried: Animatable<Offset, *>) {
+    carried.animateTo(Offset.Zero, tween(SLIDE_MS, easing = LinearOutSlowInEasing))
+    if (release[card] === carried) {
+        release.remove(card)
+    }
+}
 
 @Composable
 fun TableScreen(vm: GameViewModel, onHowToPlay: () -> Unit, onChooseCardBack: () -> Unit) {
@@ -142,6 +152,13 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
             })
         }
     }
+    // A tick as each card goes up by itself
+    val cardsUp = game.table.upper.sumOf { it.size }
+    LaunchedEffect(cardsUp) {
+        if (vm.finishing) {
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        }
+    }
     val hinted = vm.hint?.cards.orEmpty().toSet()
     val draggedCards = drag?.let { d -> game.table.cards(d.from).drop(d.index).toSet() }.orEmpty()
     val selected = vm.selection?.let { (spot, index) -> game.table.cards(spot).drop(index).toSet() }.orEmpty()
@@ -155,7 +172,12 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
                 anim.snapTo(target)
             }
             else if (anim.targetValue != target) {
-                anim.animateTo(target, tween(SLIDE_MS, easing = LinearOutSlowInEasing))
+                // The cards following the player's up by themselves take longer; a card just let go keeps pace with
+                // the distance it carries
+                // A card let go here slides on from where it was dropped, the distance it carries shrinking as it goes
+                release[p.card]?.let { carried -> launch { settle(release, p.card, carried) } }
+                anim.animateTo(target, if (vm.finishing && p.card !in release) tween(FINISH_SLIDE_MS.toInt(), easing = FastOutSlowInEasing)
+                                       else tween(SLIDE_MS, easing = LinearOutSlowInEasing))
             }
         }
         val dragging = p.card in draggedCards
@@ -213,7 +235,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
         .pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                if (vm.game.won) {
+                if (vm.game.won || vm.finishing) {
                     return@awaitEachGesture
                 }
                 val start = Offset(down.position.x.toDp().value, down.position.y.toDp().value)
@@ -256,18 +278,18 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
                     val d = drag
                     drag = null
                     if (d != null) {
-                        // The cards slide on from where they were let go: to their new place, or back where they were
-                        for (card in vm.game.table.cards(d.from).drop(d.index)) {
-                            val carried = Animatable(d.offset, Offset.VectorConverter)
-                            release[card] = carried
-                            scope.launch {
-                                carried.animateTo(Offset.Zero, tween(SLIDE_MS, easing = LinearOutSlowInEasing))
-                                if (release[card] === carried) {
-                                    release.remove(card)
-                                }
+                        // The cards slide on from where they were let go: to their new place, starting with the slide there
+                        // (see the cards above) so they keep together even when the table is slow to redraw, or back where
+                        // they were
+                        val cards = vm.game.table.cards(d.from).drop(d.index)
+                        val carried = cards.associateWith { Animatable(d.offset, Offset.VectorConverter) }
+                        release.putAll(carried)
+                        val moved = !cancelled && d.target != null && vm.move(d.from, d.index, d.target)
+                        if (!moved) {
+                            for ((card, offset) in carried) {
+                                scope.launch { settle(release, card, offset) }
                             }
                         }
-                        val moved = !cancelled && d.target != null && vm.move(d.from, d.index, d.target)
                         view.performHapticFeedback(if (moved) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.REJECT)
                     }
                     return@awaitEachGesture

@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import net.dseelig.suzesolitaire.DebugAccess
 import org.junit.Test
 import kotlin.random.Random
 
@@ -32,6 +33,33 @@ class SessionTest {
         val t = session(table(lower = deadLowerStacks(), upper = upper, deal = listOf(card(1, Suit.Diamonds))))
         assertTrue(t.putUp(Spot.Deal))
         assertEquals(listOf(card(1, Suit.Diamonds)), t.table.upper[3])
+    }
+
+    @Test
+    fun puttingACardUpFinishesACertainWinOneCardAtATime() {
+        val s = session(DebugAccess.ALMOST_WON, auto = true)
+        val from = Spot.lowers.first { spot -> s.table.top(spot)?.let { s.table.upperFor(it, Pile.Lower) } != null }
+        assertTrue(s.putUp(from))
+        assertTrue(s.finishing)
+        val left = s.table.lower.sumOf { it.size }
+        assertTrue("Auto Moves waits for the cards to go up one by one", left > 0)
+        val score = s.game.score
+        repeat(left) {
+            assertTrue(s.finishStep())
+            assertFalse(s.game.won)
+        }
+        assertFalse(s.finishStep())
+        assertTrue(s.game.won)
+        assertFalse(s.finishing)
+        assertEquals(score + Game.CARD_UP * left + Game.WIN_BONUS, s.game.score)
+    }
+
+    @Test
+    fun aWinThatIsntCertainWaitsForThePlayer() {
+        val s = session(table(lower = deadLowerStacks(), deal = listOf(card(1, Suit.Clubs)), deck = listOf(card(2, Suit.Clubs))))
+        assertTrue(s.putUp(Spot.Deal))
+        assertFalse(s.finishing)
+        assertFalse(s.finishStep())
     }
 
     @Test

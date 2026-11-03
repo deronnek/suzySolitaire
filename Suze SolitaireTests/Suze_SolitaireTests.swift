@@ -1035,9 +1035,11 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testCardsGoUpSoTheColorsAlternate() {
         setUpBoard(lower: deadLowerStacks(), fub: [take(1, .Clubs), take(1, .Spades), take(1, .Diamonds), take(1, .Hearts)])
+        let score = vc.score
         while let card = vc.fub!.cards.last {
             XCTAssertTrue(vc.putUp(card: card, from: vc.fub!))
         }
+        XCTAssertEqual(vc.score, score + 20, "$5 a card")
         XCTAssertEqual(vc.suitStacks.map { $0!.cards.first!.suit }, [.Hearts, .Spades, .Diamonds, .Clubs])
 
         // A red dragged up second leaves no way to alternate, so the next red goes where it clashes least
@@ -1045,6 +1047,31 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.suitStacks[1]!.addCard(toadd: take(1, .Hearts))
         XCTAssertTrue(vc.putUp(card: vc.fub!.cards.last!, from: vc.fub!))
         XCTAssertEqual(vc.suitStacks[3]!.cards.first?.suit, .Diamonds)
+    }
+
+    func testPuttingACardUpFinishesACertainWin() throws {
+        vc.dealAlmostWon()
+        let score = vc.score
+        let left = vc.cardStacks.reduce(0) { $0 + $1!.cards.count }
+        let source = try XCTUnwrap(vc.cardStacks.compactMap { $0 }.first { vc.upperStack(for: $0.cards.last!, from: $0) != nil })
+        XCTAssertTrue(vc.putUp(card: source.cards.last!, from: source))
+        vc.finishTurn()
+        XCTAssertTrue(vc.finishingWin)
+        XCTAssertFalse(vc.justWon, "the rest go up one at a time")
+        XCTAssertFalse(vc.view.isUserInteractionEnabled)
+        wait(for: [expectation(for: NSPredicate { _, _ in self.vc.justWon }, evaluatedWith: nil)], timeout: 20)
+        XCTAssertEqual(vc.suitStacks.map { $0!.cards.count }, [13, 13, 13, 13])
+        XCTAssertEqual(vc.score, score + 5 * left + 250)
+        XCTAssertTrue(vc.view.isUserInteractionEnabled)
+    }
+
+    func testAWinThatIsntCertainWaitsForThePlayer() {
+        // A card still in the deck
+        setUpBoard(lower: deadLowerStacks(), deck: [take(2, .Clubs)], fub: [take(1, .Clubs)])
+        XCTAssertTrue(vc.putUp(card: vc.fub!.cards.last!, from: vc.fub!))
+        XCTAssertFalse(vc.winIsCertain())
+        vc.finishTurn()
+        XCTAssertFalse(vc.finishingWin)
     }
 
     func testDoubleTapPutsUpTheTopCardWithoutDelayingTouches() throws {

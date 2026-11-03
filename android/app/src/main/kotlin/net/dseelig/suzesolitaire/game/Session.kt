@@ -35,6 +35,10 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     private var lastTurnUndoable = false
     // Since New Game, before the first turn of the new game
     private var justDealtNewGame = false
+    // Whether the rest of the cards are to go up by themselves, one finishStep at a time: the player put one up and
+    // every card left is on the lower stacks, in an order that lets them all go up
+    var finishing = false
+        private set
 
     val table: Table get() = game.table
 
@@ -54,7 +58,24 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
         }
         recordTurn()
         apply(Move(from, index, to))
+        finishing = to.pile == Pile.Upper && table.winIsCertain
         finishTurn()
+        return true
+    }
+
+    // Puts up the next card of a game finishing itself, as part of the turn that started it.  Returns false once they're
+    // all up, and the game is won.
+    fun finishStep(): Boolean {
+        if (!finishing) {
+            return false
+        }
+        val move = table.finishingMove()
+        if (move == null) {
+            finishing = false
+            finishTurn()
+            return false
+        }
+        apply(move)
         return true
     }
 
@@ -166,7 +187,7 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     }
 
     private fun finishTurn() {
-        if (autoMoves) {
+        if (autoMoves && !finishing) {
             while (true) {
                 val move = table.autoMove() ?: break
                 apply(move)

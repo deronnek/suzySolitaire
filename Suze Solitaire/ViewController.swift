@@ -149,6 +149,8 @@ class ViewController: UIViewController {
     
     var deckTaps   = 0
     var justWon    = false
+    // Whether the cards are going up on their own to win (see finishWin)
+    var finishingWin = false
     // The celebration of a win, over the table until New Game (see ViewController+Victory.swift)
     var victoryView: VictoryView? = nil
     // The pill showing what an edge swipe will do, and whether letting go now would do it (see ViewController+Swipes.swift)
@@ -212,10 +214,14 @@ class ViewController: UIViewController {
             self.view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
         }
         #if DEBUG
-        // scripts/win-video.sh passes -FinishTurnAfter <seconds> to play out the saved game's auto moves untouched
+        // scripts/win-video.sh passes -FinishTurnAfter <seconds> to put up the saved game's next card untouched, which
+        // the rest follow up when the win is certain
         let finishAfter = UserDefaults.standard.double(forKey: "FinishTurnAfter")
         if finishAfter > 0 && self.doInitTable {
             DispatchQueue.main.asyncAfter(deadline: .now() + finishAfter) {
+                if let move = self.findMove(), move.to.stackType == .suitstack {
+                    self.putUp(card: move.card, from: move.from)
+                }
                 self.finishTurn()
             }
         }
@@ -402,7 +408,8 @@ class ViewController: UIViewController {
     @discardableResult
     func putUp(card: Card, from sourceStack: CardStack) -> Bool {
         self.activeCard = card
-        guard let destination = self.upperStack(for: card, from: sourceStack) else {
+        guard let destination = self.upperStack(for: card, from: sourceStack),
+              self.acceptCardMove(sourceStack: sourceStack, destinationStack: destination, onTopOfCard: destination.cards.last) else {
             return false
         }
         self.performMove(card: card, from: sourceStack, to: destination)
@@ -534,7 +541,8 @@ class ViewController: UIViewController {
     static let slideDuration: TimeInterval = 0.2
 
     // Lays out the table, then slides each card that moved from where it was (see cardFrames) to its new place
-    func layOutAndSlide(from oldFrames: [Int: CGRect]) {
+    func layOutAndSlide(from oldFrames: [Int: CGRect], duration: TimeInterval = ViewController.slideDuration,
+                        cutShortSlides: Bool = true) {
         self.redrawTable()
         if UIAccessibility.isReduceMotionEnabled {
             return
@@ -548,7 +556,7 @@ class ViewController: UIViewController {
         }
         // Cards still sliding from the last move, such as when the deck is tapped quickly, jump to where they were
         // going.  A layout that moves nothing, like the one at the end of each turn, leaves them to finish.
-        if !moved.isEmpty {
+        if !moved.isEmpty && cutShortSlides {
             for case let card? in self.viewTagToCard.values {
                 card.view.layer.removeAnimation(forKey: "position")
                 card.view.layer.removeAnimation(forKey: "bounds")
@@ -559,7 +567,7 @@ class ViewController: UIViewController {
             // Keep the moving card above the stacks it passes over
             self.view.bringSubviewToFront(superview)
             card.view.frame = start
-            UIView.animate(withDuration: ViewController.slideDuration, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+            UIView.animate(withDuration: duration, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
                 card.view.frame = end
             }
         }
@@ -1124,6 +1132,11 @@ class ViewController: UIViewController {
     
     // Everything that happens after the player moves: automatic moves, layout, and checking for a win
     func finishTurn() {
+        // A card put up once every card is out on the table: the rest follow it up, one by one
+        if !self.finishingWin, self.lastMove?.to.stackType == .suitstack, self.winIsCertain() {
+            self.finishWin()
+            return
+        }
         let frames = self.cardFrames()
         // Make all possible moves to suitstacks
         if self.autoMoves {
