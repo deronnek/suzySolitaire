@@ -570,6 +570,13 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(allStacks(vc).allSatisfy { $0!.view.superview === vc.view })
     }
 
+    func testNewGameFloatsItsCostOffTheScore() throws {
+        vc.startNewGameWithSender(sender: vc)
+        let float = vc.view.subviews.compactMap { $0 as? UILabel }.first { $0.text == "-$45" }
+        XCTAssertNotNil(float)
+        XCTAssertEqual(try XCTUnwrap(float).frame.minX, vc.chalkLine.frame.minX, accuracy: 0.01)
+    }
+
     func testNoUndoAfterAWin() {
         vc.justWon = true
         vc.startNewGameWithSender(sender: vc)

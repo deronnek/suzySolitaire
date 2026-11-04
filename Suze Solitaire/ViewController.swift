@@ -471,6 +471,8 @@ class ViewController: UIViewController {
         self.activeCard = nil
         self.redrawTable()
         self.dealtDate = Date()
+        // Over the new table
+        self.floatOffScore("-$45", red: true)
         print("Found \(self.suitStacks.count) suitstacks")
         
         self.gameBeforeNewGame = nil

@@ -28,7 +28,12 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -37,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
@@ -143,6 +149,27 @@ private fun Score(vm: GameViewModel, layout: TableLayout, onLongPress: () -> Uni
         contentAlignment = Alignment.CenterStart) {
         BasicText(text, maxLines = 1, style = TextStyle(fontFamily = ScoreFont),
             autoSize = TextAutoSize.StepBased(minFontSize = (size * 0.5f).sp, maxFontSize = size.sp, stepSize = 0.5.sp))
+        vm.scoreFloat?.let { (amount, serial) -> key(serial) { ScoreFloat(amount, size) } }
+    }
+}
+
+const val SCORE_FLOAT_MS = 1400
+
+// An amount floating up off the score, in red, fading as it goes, as on iOS
+@Composable
+private fun ScoreFloat(amount: String, size: Float) {
+    val colors = LocalTableColors.current
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, tween(SCORE_FLOAT_MS, easing = FastOutSlowInEasing))
+    }
+    if (progress.value < 1f) {
+        BasicText(amount, maxLines = 1, style = TextStyle(fontFamily = ScoreFont, fontSize = size.sp, color = colors.negativeScore),
+            modifier = Modifier.graphicsLayer {
+                translationY = -size.sp.toPx() * 2.6f * progress.value
+                // Readable for a moment, then gone
+                alpha = ((1f - progress.value) / 0.5f).coerceIn(0f, 1f)
+            })
     }
 }
 

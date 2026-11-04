@@ -88,6 +88,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     // Whether Auto Moves is putting cards up, one at a time (see autoMove).  Play carries on meanwhile.
     var autoMoving by mutableStateOf(false)
         private set
+    // An amount floating up off the score, such as the $45 a new game costs; the serial starts it afresh each time
+    var scoreFloat by mutableStateOf<Pair<String, Int>?>(null)
+        private set
     // Whether the player is dragging cards, which auto moves wait for
     var holding = false
     // The card a TalkBack user has picked to move, and where it is (see TableScreen's stack actions)
@@ -162,6 +165,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         stopAutoMoves()
         session.newGame(Random.Default)
         dealtAt = System.currentTimeMillis()
+        serial += 1
+        scoreFloat = "-$${Game.GAME_COST}" to serial
         publish()
         announce(if (wasWon) "New game dealt" else "New game dealt. Undo brings back the game you were playing.")
     }
