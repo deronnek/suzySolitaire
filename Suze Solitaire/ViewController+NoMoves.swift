@@ -65,7 +65,7 @@ extension ViewController {
                         continue
                     }
                     if destination.stackType == .suitstack {
-                        return (card, source, destination)
+                        return (card, source, self.upperStack(for: card, from: source) ?? destination)
                     }
                     if let below = below {
                         // Uncovers a card that isn't part of the run, frees one to go up, or splits the run into an
@@ -95,7 +95,10 @@ extension ViewController {
 
     // An upper or lower stack that card, at the top of source, could go to
     func destination(for card: Card, from source: CardStack) -> CardStack? {
-        return (self.suitStacks + self.cardStacks).compactMap { $0 }.first { destination in
+        if let upper = self.upperStack(for: card, from: source) {
+            return upper
+        }
+        return self.cardStacks.compactMap { $0 }.first { destination in
             self.destinationAccepts(card, from: source.stackType, to: destination, onTopOfCard: destination.cards.last)
         }
     }

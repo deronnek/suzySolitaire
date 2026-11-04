@@ -3,3 +3,4 @@ build/
 xcuserdata/
 .DS_Store
 scripts/testflight.local.env
+scripts/play.local.env

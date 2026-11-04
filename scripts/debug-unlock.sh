@@ -1,14 +1,15 @@
 #!/bin/zsh
-# Unlocks the Debug menu on one phone running a TestFlight build.  Long-press the score on the felt to see the phone's
-# code, then:
+# Unlocks the Debug menu on one phone running a TestFlight build, or an Android phone running a Play build.  Long-press
+# the score on the felt to see the phone's code, then:
 #
 #   scripts/debug-unlock.sh ABCD-1234
 #
 # and paste what it prints into the same box on the phone.  The unlock works only on the phone with that code.
 #
 # It signs with the private key at ~/.suze-solitaire/debug-unlock-key.pem (or DEBUG_UNLOCK_KEY), which never goes in the
-# repo; ViewController+Debug.swift holds the public half.  Without the key, make a new pair with --new-key, put the
-# public key it prints in DebugAccess.publicKey, and ship a build: unlocks from the old key stop working.
+# repo; ViewController+Debug.swift and the Android app's DebugAccess.kt hold the public half.  Without the key, make a
+# new pair with --new-key, put the public key it prints in both apps' DebugAccess, and ship builds: unlocks from the old
+# key stop working.
 set -euo pipefail
 
 KEY=${DEBUG_UNLOCK_KEY:-$HOME/.suze-solitaire/debug-unlock-key.pem}

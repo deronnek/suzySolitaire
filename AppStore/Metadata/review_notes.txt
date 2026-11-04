@@ -1,0 +1,23 @@
+1. SCREEN RECORDING
+Attached to our reply in App Store Connect. It was recorded on an iPhone running the latest iOS, starts with launching the app and shows: dealing and playing a game, Undo, Hint, Auto Moves, the Cards menu (artwork and choosing a photo for the card back), How to Play, and buying Unlimited Undo, the app's only paid feature. The app has no accounts, no login and no user-generated content.
+
+2. PURPOSE AND AUDIENCE
+Suze Solitaire is a single-player card game, a Canfield-style solitaire for anyone who enjoys a quick game of patience. It's a relaxing, offline pastime with no ads, accounts or data collection. Its value is a clean, accessible game (full VoiceOver support, larger text, dark mode, haptics) that works the same on every iPhone and iPad size, in portrait and landscape.
+
+3. HOW TO USE IT
+No login, setup or sample files are needed. Launch the app and a game is dealt.
+- Tap the deck (top left) or anywhere on the table to deal three cards. Drag cards and runs between stacks, or double-tap a card to send it to the upper stacks. The rules are in the ••• menu > How to Play.
+- Top corners: New Game (left) and Undo (right). Undo takes back the last move for free.
+- ••• menu (bottom right): Hint, How to Play, Auto Moves, Show When Stuck, Highlight Drop Spot, Cards (Artwork: choose the card design; Back: choose a photo from the photo library for the card back), Reset Wins & Losses, Unlimited Undo, Restore Purchase, About.
+- Swipe from the left screen edge to undo, or from the right edge for a hint.
+- Paid content: the one In-App Purchase, "Unlimited Undo" (non-consumable, net.dseelig.SuzeSolitaire product unlimited_undo), is in the ••• menu. It lets Undo take back every move, not just the last one. "Restore Purchase" is right below it in the same menu.
+- A long press on the score shows a diagnostic code used only by the developer to turn on a test menu on our own devices. It needs a key that only the developer has and does nothing for anyone else; there is no hidden content for users.
+
+4. EXTERNAL SERVICES
+None besides Apple's own frameworks. The app makes no network requests of its own. It uses StoreKit for the In-App Purchase and the system photo picker (PHPicker) for an optional card-back photo, which stays on the device. No analytics, ads, accounts, AI or third-party SDKs.
+
+5. REGIONAL DIFFERENCES
+None. The app works the same in every region; only the In-App Purchase's local price differs. It is in English.
+
+6. THIRD-PARTY MATERIAL
+The app is not in a regulated industry. The card artwork is based on "Vector Playing Cards" by Byron Knoll, released into the public domain. The Abril Fatface font is used under the SIL Open Font License 1.1. The default card-back photo was taken by the app's original author, Kevin DeRonne.

@@ -6,7 +6,7 @@
 import PhotosUI
 import UIKit
 
-// The "..." menu in the bottom corner: a hint, auto moves, the no-moves banner, the drop highlight, the card back, resetting wins and losses,
+// The "..." menu in the bottom corner: a hint, auto moves, the no-moves banner, the drop highlight, the cards' artwork and back, resetting wins and losses,
 // Unlimited Undo, the About box, and on engineers' phones the Debug menu (see ViewController+Debug.swift)
 extension ViewController: PHPickerViewControllerDelegate {
 
@@ -39,7 +39,10 @@ extension ViewController: PHPickerViewControllerDelegate {
                                   attributes: Card.customBackImage == nil ? .disabled : []) { _ in
             self.setCardBack(nil)
         }
-        let cardBack = UIMenu(title: "Card Back", image: UIImage(systemName: "rectangle.portrait"), children: [choosePhoto, useDefault])
+        let back = UIMenu(title: "Back", subtitle: Card.customBackImage == nil ? "Default" : "Photo", image: UIImage(systemName: "photo"),
+                          children: [choosePhoto, useDefault])
+        let cards = UIMenu(title: "Cards", image: UIImage(systemName: "rectangle.portrait.on.rectangle.portrait"),
+                           children: [self.artworkMenu(), back])
 
         let resetStats = UIAction(title: "Reset Wins & Losses…", image: UIImage(systemName: "arrow.counterclockwise.circle"),
                                   attributes: .destructive) { _ in
@@ -52,9 +55,44 @@ extension ViewController: PHPickerViewControllerDelegate {
         let howToPlay = UIAction(title: "How to Play", image: UIImage(systemName: "questionmark.circle")) { _ in
             self.showHowToPlay()
         }
-        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay]), auto, noMoves, drops, cardBack, resetStats,
+        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay]), auto, noMoves, drops, cards, resetStats,
                                        self.unlimitedUndoMenu(), about, self.debugMenu()]
         return UIMenu(children: items.compactMap { $0 })
+    }
+
+    // Which of the four sets of card faces to show, or Automatic for the game's own choice by the table's size, each with
+    // its king of hearts to show what it looks like
+    func artworkMenu() -> UIMenu {
+        let picked = CardFaces.picked
+        let choose = { [unowned self] (faces: CardFaces?) in
+            CardFaces.picked = faces
+            // Laid out again, so the cards' outlines and shadows take the new faces' corners
+            self.redrawTable()
+            self.updateMenu()
+        }
+        let automatic = UIAction(title: "Automatic", subtitle: "Big ranks on small cards, classic on large ones",
+                                 image: UIImage(systemName: "wand.and.stars"), state: picked == nil ? .on : .off) { _ in
+            choose(nil)
+        }
+        let sets = CardFaces.allCases.map { faces in
+            UIAction(title: faces.title, image: self.artworkPreview(faces), state: picked == faces ? .on : .off) { _ in
+                choose(faces)
+            }
+        }
+        return UIMenu(title: "Artwork", subtitle: picked?.title ?? "Automatic", image: UIImage(systemName: "suit.heart"),
+                      children: [UIMenu(options: .displayInline, children: [automatic]), UIMenu(options: .displayInline, children: sets)])
+    }
+
+    // A set's king of hearts, small enough for a menu, with its corners
+    func artworkPreview(_ faces: CardFaces) -> UIImage? {
+        guard let king = UIImage(named: "\(faces.rawValue)/king_of_hearts") else {
+            return nil
+        }
+        let size = CGSize(width: 20, height: 20 * Card.aspectRatio)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * faces.cornerRadiusFraction).addClip()
+            king.draw(in: CGRect(origin: .zero, size: size))
+        }.withRenderingMode(.alwaysOriginal)
     }
 
     func showHowToPlay() {

@@ -35,9 +35,9 @@ extension ViewController {
     }
 
     // Switches every card to the faces for this table, keeping covered and face-down cards as they are: big corner ranks
-    // on a phone-sized table and the full design on a roomy one, unless the Debug menu picked others
+    // on a phone-sized table and the full design on a roomy one, unless the player picked others in the Cards menu
     func updateCardFaces() {
-        let faces = DebugAccess.cardFaces ?? CardFaces.standard(large: self.roomyTable)
+        let faces = CardFaces.picked ?? CardFaces.standard(large: self.roomyTable)
         guard faces != Card.faces else {
             return
         }
@@ -216,26 +216,54 @@ extension ViewController {
         // The score as it counts toward the real one (see ScoreCounter); VoiceOver reads the real one
         let shown = self.scoreCounter.shown.map { String(format: "$%d", $0) } ?? bucks.title
         let negative = (shown ?? "").hasPrefix("$-")
-        let shadow = NSShadow()
-        shadow.shadowColor      = UIColor.white.withAlphaComponent(0.35)
-        shadow.shadowBlurRadius = 1.5
-        func chalk(_ string: String?, red: Bool = false, size: CGFloat) -> NSAttributedString {
-            NSAttributedString(string: string ?? "", attributes: [
-                .font: UIFont(name: "Futura-Medium", size: size) ?? .systemFont(ofSize: size, weight: .medium),
-                .foregroundColor: red ? UIColor(red: 1, green: 0.62, blue: 0.6, alpha: 0.92) : UIColor.white.withAlphaComponent(0.88),
-                .shadow: shadow])
-        }
         let titles = [bucks.title, wins.title, losses.title]
+        let line = NSMutableAttributedString(attributedString: self.chalk(shown, red: negative))
+        for title in titles.dropFirst() {
+            line.append(self.chalk("   " + (title ?? "")))
+        }
+        self.chalkLine.attributedText     = line
+        self.chalkLine.accessibilityLabel = titles.compactMap { $0 }.joined(separator: ", ")
+    }
+
+    // Text written on the felt in Futura, in red for money lost
+    func chalk(_ string: String?, red: Bool = false) -> NSAttributedString {
         // Bigger on the bigger table, and following the text size set in Settings, up to twice as big so it stays on
         // the bottom row
         let base: CGFloat = self.roomyTable ? 24 : 17
         let size = min(UIFontMetrics(forTextStyle: .body).scaledValue(for: base, compatibleWith: self.traitCollection), base * 2)
-        let line = NSMutableAttributedString(attributedString: chalk(shown, red: negative, size: size))
-        for title in titles.dropFirst() {
-            line.append(chalk("   " + (title ?? ""), size: size))
+        let shadow = NSShadow()
+        shadow.shadowColor      = UIColor.white.withAlphaComponent(0.35)
+        shadow.shadowBlurRadius = 1.5
+        return NSAttributedString(string: string ?? "", attributes: [
+            .font: UIFont(name: "Futura-Medium", size: size) ?? .systemFont(ofSize: size, weight: .medium),
+            .foregroundColor: red ? UIColor(red: 1, green: 0.62, blue: 0.6, alpha: 0.92) : UIColor.white.withAlphaComponent(0.88),
+            .shadow: shadow])
+    }
+
+    static let scoreFloatDuration: TimeInterval = 1.4
+
+    // Floats an amount up off the score on the felt, fading as it goes, such as the $45 a new game costs.  With Reduce
+    // Motion on, it fades where it is.
+    func floatOffScore(_ amount: String, red: Bool) {
+        let label = UILabel()
+        label.attributedText = self.chalk(amount, red: red)
+        label.sizeToFit()
+        label.isAccessibilityElement = false
+        let line = self.chalkLine.frame
+        label.frame.origin = CGPoint(x: line.minX, y: line.midY - label.frame.height / 2)
+        self.view.addSubview(label)
+        let rise = UIAccessibility.isReduceMotionEnabled ? 0 : -label.frame.height * 2.2
+        UIView.animateKeyframes(withDuration: ViewController.scoreFloatDuration, delay: 0, options: [.calculationModeCubic]) {
+            UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 1) {
+                label.transform = CGAffineTransform(translationX: 0, y: rise)
+            }
+            // Readable for a moment, then gone
+            UIView.addKeyframe(withRelativeStartTime: 0.5, relativeDuration: 0.5) {
+                label.alpha = 0
+            }
+        } completion: { _ in
+            label.removeFromSuperview()
         }
-        self.chalkLine.attributedText     = line
-        self.chalkLine.accessibilityLabel = titles.compactMap { $0 }.joined(separator: ", ")
     }
 
     // Just above the "..." button and the score in portrait, where redrawTable leaves room for it, or in landscape beside
