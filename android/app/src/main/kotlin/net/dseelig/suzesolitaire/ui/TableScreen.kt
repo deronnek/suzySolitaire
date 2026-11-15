@@ -39,6 +39,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -83,7 +84,18 @@ fun TableScreen(vm: GameViewModel, onHowToPlay: () -> Unit, onChooseCardBack: ()
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     val safe = WindowInsets.safeDrawing
-    BoxWithConstraints(Modifier.fillMaxSize().background(colors.felt)) {
+    BoxWithConstraints(Modifier
+        .fillMaxSize()
+        .background(colors.felt)
+        // Sees every touch before the cards and controls do, without taking it from them
+        .pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    awaitPointerEvent(PointerEventPass.Initial)
+                    vm.touched()
+                }
+            }
+        }) {
         val insets = with(density) {
             Insets(safe.getLeft(this, direction).toDp().value, safe.getTop(this).toDp().value,
                 safe.getRight(this, direction).toDp().value, safe.getBottom(this).toDp().value)

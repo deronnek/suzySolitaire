@@ -101,7 +101,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var autoMovesFromSave = false
     private var restoredRecord: Triple<Int, Int, Int>? = null
 
-    private var dealtAt = System.currentTimeMillis()
+    // When the player last touched the screen or cards were dealt, which the no-moves banner waits a few seconds after
+    private var lastTouchAt = System.currentTimeMillis()
     private var noMovesJob: Job? = null
     private var autoMoveJob: Job? = null
     private var serial = 0
@@ -152,7 +153,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun deal() {
         if (!finishing && session.deal()) {
-            dealtAt = System.currentTimeMillis()
+            lastTouchAt = System.currentTimeMillis()
             afterTurn()
         }
     }
@@ -164,7 +165,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val wasWon = game.won
         stopAutoMoves()
         session.newGame(Random.Default)
-        dealtAt = System.currentTimeMillis()
+        lastTouchAt = System.currentTimeMillis()
         serial += 1
         scoreFloat = "-$${Game.GAME_COST}" to serial
         publish()
@@ -278,7 +279,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // The banner waits a few seconds after a deal, so it doesn't flash up while the player is still looking at the cards
+    // Any touch, even picking up a card and letting go without moving it, puts the no-moves banner off again
+    fun touched() {
+        lastTouchAt = System.currentTimeMillis()
+    }
+
+    // The banner waits until the screen has gone untouched, and cards undealt, for a few seconds, so it doesn't interrupt
+    // a player still looking for a move.  A touch while it waits pushes it back: the wait finds the touch and waits again.
     private fun updateNoMoves(forHint: Boolean = false) {
         noMovesJob?.cancel()
         if (game.won || !(showsNoMoves || forHint)) {
@@ -286,7 +293,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         val state = game.table.playState().takeIf { it != PlayState.CanPlay }
-        val wait = NO_MOVES_DELAY_MS - (System.currentTimeMillis() - dealtAt)
+        val wait = NO_MOVES_DELAY_MS - (System.currentTimeMillis() - lastTouchAt)
         if (state != null && !forHint && wait > 0) {
             noMoves = null
             noMovesJob = viewModelScope.launch {
@@ -391,7 +398,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun dealAlmostWon() {
         stopAutoMoves()
         session.replaceTable(DebugAccess.ALMOST_WON)
-        dealtAt = System.currentTimeMillis()
+        lastTouchAt = System.currentTimeMillis()
         publish()
         announce("Almost won game dealt")
     }

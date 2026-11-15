@@ -197,7 +197,7 @@ extension ViewController {
         self.deckTaps   = 0
         self.accessibilitySelection = nil
         self.redrawTable()
-        self.dealtDate = Date()
+        self.lastTouchDate = Date()
         self.updateNoMovesBanner()
         if let previousGame {
             self.offerNewGameUndo(restoring: previousGame)

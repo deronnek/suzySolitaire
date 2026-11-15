@@ -967,7 +967,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Playing it leaves nothing, once the deal is a few seconds old
         let four = vc.deal!.cards.last!
         vc.performMove(card: four, from: vc.deal!, to: vc.cardStacks[0]!)
-        vc.dealtDate = nil
+        vc.lastTouchDate = nil
         vc.finishTurn()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
 
@@ -995,27 +995,46 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testNoMovesLeftWaitsAfterTheDeal() {
         setUpBoard(lower: deadLowerStacks())
-        vc.dealtDate = Date()
+        vc.lastTouchDate = Date()
         vc.updateNoMovesBanner()
         XCTAssertNil(vc.noMovesBanner, "a game that was just dealt gets a few seconds before it's called")
         XCTAssertNotNil(vc.noMovesBannerTimer)
-        vc.dealtDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay)
+        vc.lastTouchDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay)
         vc.updateNoMovesBanner()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
         XCTAssertNil(vc.noMovesBannerTimer)
 
         // "Nothing to play" goes away when the deck is tapped, and waits again before coming back
         setUpBoard(lower: deadLowerStacks(), deck: [take(4, .Hearts), take(2, .Clubs), take(10, .Hearts), take(8, .Clubs)])
-        vc.dealtDate = nil
+        vc.lastTouchDate = nil
         vc.updateNoMovesBanner()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "Nothing to play")
         vc.tapDeck()
         vc.finishTurn()
         XCTAssertNil(vc.noMovesBanner, "dealing hides the banner")
         XCTAssertNotNil(vc.noMovesBannerTimer)
-        vc.dealtDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay)
+        vc.lastTouchDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay)
         vc.updateNoMovesBanner()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "Nothing to play")
+    }
+
+    func testTouchingTheScreenPutsOffTheNoMovesBanner() throws {
+        setUpBoard(lower: deadLowerStacks())
+        vc.lastTouchDate = Date(timeIntervalSinceNow: -ViewController.noMovesBannerDelay + 1)
+        vc.updateNoMovesBanner()
+        XCTAssertNil(vc.noMovesBanner)
+
+        // Picking up a card and letting go without moving it counts, as any touch does
+        let watcher = try XCTUnwrap(vc.view.gestureRecognizers?.first { $0 is TouchWatcher })
+        watcher.touchesBegan([], with: UIEvent())
+        watcher.touchesCancelled([], with: UIEvent())
+        let touched = try XCTUnwrap(vc.lastTouchDate)
+        XCTAssertLessThan(-touched.timeIntervalSinceNow, 1)
+
+        // The timer set before the touch finds it, and waits out the rest instead of showing the banner
+        vc.noMovesBannerTimer?.perform()
+        XCTAssertNil(vc.noMovesBanner)
+        XCTAssertNotNil(vc.noMovesBannerTimer)
     }
 
     func testHintWigglesTheCardToMove() throws {
@@ -1036,7 +1055,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Asking for a hint shows "No moves left" even with the banner turned off and the game just dealt
         vc.showsNoMoves = false
         setUpBoard(lower: deadLowerStacks())
-        vc.dealtDate = Date()
+        vc.lastTouchDate = Date()
         vc.showHint()
         XCTAssertEqual(vc.noMovesBanner?.accessibilityIdentifier, "No moves left")
     }

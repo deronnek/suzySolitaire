@@ -118,6 +118,24 @@ class TableScreenTest {
     }
 
     @Test
+    fun touchingTheTablePutsOffTheNoMovesBanner() {
+        context.getSharedPreferences("settings", 0).edit().putBoolean("ShowsNoMoves", true).commit()
+        launch(lower = listOf(listOf(card(5, Suit.Spades)), listOf(card(5, Suit.Hearts)), listOf(card(9, Suit.Clubs)), listOf(card(9, Suit.Diamonds))),
+            deal = emptyList())
+        // Dragging a card somewhere it can't go, every few seconds, keeps the banner away well past its delay
+        repeat(4) {
+            Thread.sleep(GameViewModel.NO_MOVES_DELAY_MS / 3)
+            compose.onRoot().performTouchInput { swipe(centerOf("Lower stack 1"), centerOf("Lower stack 2"), durationMillis = 300) }
+            compose.waitForIdle()
+            assertTrue(compose.onAllNodes(hasText("No moves left")).fetchSemanticsNodes().isEmpty())
+        }
+        // Left alone, it comes up
+        compose.waitUntil(GameViewModel.NO_MOVES_DELAY_MS + 3_000) {
+            compose.onAllNodes(hasText("No moves left")).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
     fun doubleTapPutsUpACard() {
         launch(lower = listOf(listOf(card(5, Suit.Spades)), emptyList(), emptyList(), emptyList()), deal = listOf(card(1, Suit.Clubs)))
         compose.onRoot().performTouchInput { doubleClick(centerOf("Deal")) }
