@@ -1,9 +1,11 @@
 package net.dseelig.suzesolitaire.game
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.json.JSONObject
 import org.junit.Test
 import java.io.File
 import kotlin.random.Random
@@ -18,6 +20,35 @@ class SavedGameTest {
         val loaded = SavedGame.decode(SavedGame.encode(game, autoMoves = true))!!
         assertEquals(game, loaded.game)
         assertTrue(loaded.autoMoves)
+    }
+
+    @Test
+    fun theStatsAndTheGamesMovesAndTimeAreSaved() {
+        val stats = GameStats(games = 4, streak = 2, bestStreak = 3, cardsUp = 70, bestGame = 460, worstGame = -45, timedGames = 3,
+                              timedWins = 2, moves = 210, winMoves = 150, seconds = 900.5, fewestWinMoves = 70, fastestWin = 240.25)
+        val game = Game(Table.deal(Card.all.shuffled(Random(5))), score = 120, wins = 3, losses = 1, stats = stats, moves = 12, seconds = 61.5)
+        val loaded = SavedGame.decode(SavedGame.encode(game, autoMoves = false))!!
+        assertEquals(game, loaded.game)
+        assertEquals(stats, loaded.stats)
+
+        // Nothing yet in the stats that can be empty, as the iOS app leaves those out
+        val fresh = SavedGame.encode(Game.first(Random(2)), autoMoves = false)
+        assertFalse(fresh.contains("bestGame"))
+        assertEquals(GameStats(), SavedGame.decode(fresh)!!.stats)
+    }
+
+    @Test
+    fun aGameSavedBeforeStatsHasNoMovesCounted() {
+        val game = Game(Table.deal(Card.all.shuffled(Random(5))), score = 0, wins = 2, losses = 1)
+        val old = JSONObject(SavedGame.encode(game, false)).apply {
+            remove("stats")
+            remove("gameMoves")
+            remove("gameSeconds")
+        }
+        val loaded = SavedGame.decode(old.toString())!!
+        assertEquals(GameStats(), loaded.game!!.stats)
+        assertNull(loaded.game!!.moves)
+        assertEquals(2, loaded.wins)
     }
 
     @Test

@@ -20,8 +20,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import net.dseelig.suzesolitaire.ui.HowToPlayScreen
+import net.dseelig.suzesolitaire.ui.StatsScreen
 import net.dseelig.suzesolitaire.ui.SuzeTheme
 import net.dseelig.suzesolitaire.ui.TableScreen
+
+// The pages over the table
+private enum class Page { Table, HowToPlay, Stats }
 
 class MainActivity : ComponentActivity() {
     private val game: GameViewModel by viewModels()
@@ -33,19 +37,19 @@ class MainActivity : ComponentActivity() {
         applyScreenshotOrientation(this)
         setContent {
             SuzeTheme {
-                var showingRules by rememberSaveable { mutableStateOf(false) }
+                var page by rememberSaveable { mutableStateOf(Page.Table) }
                 // The system photo picker gives the app only the photo chosen, so no permission is needed
                 val pickBack = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
                     uri?.let(game::setCardBack)
                 }
-                BackHandler(enabled = showingRules) { showingRules = false }
-                AnimatedContent(showingRules, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "screen") { rules ->
-                    if (rules) {
-                        HowToPlayScreen(onBack = { showingRules = false })
-                    }
-                    else {
-                        TableScreen(game,
-                            onHowToPlay = { showingRules = true },
+                BackHandler(enabled = page != Page.Table) { page = Page.Table }
+                AnimatedContent(page, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "screen") { showing ->
+                    when (showing) {
+                        Page.HowToPlay -> HowToPlayScreen(onBack = { page = Page.Table })
+                        Page.Stats -> StatsScreen(game, onBack = { page = Page.Table })
+                        Page.Table -> TableScreen(game,
+                            onHowToPlay = { page = Page.HowToPlay },
+                            onStats = { page = Page.Stats },
                             onChooseCardBack = { pickBack.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) })
                     }
                 }
@@ -55,7 +59,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        game.appOpened()
         // Purchases made on another device, approved while away, or refunded
         game.refreshPurchases()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        game.appClosed()
     }
 }

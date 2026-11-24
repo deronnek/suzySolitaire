@@ -9,12 +9,14 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.doubleClick
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
@@ -246,6 +248,33 @@ class TableScreenTest {
         Thread.sleep(500)
         val saved = SavedGame.decode(File(context.filesDir, "SavedGame.json").readText())!!.game!!
         assertEquals(3, saved.table.deal.size)
+    }
+
+    @Test
+    fun tappingTheScoreOpensTheStatsPage() {
+        start()
+        compose.onNodeWithContentDescription("New Game").performClick()
+        compose.onNodeWithContentDescription("$-90, Wins: 0, Losses: 1").performClick()
+        compose.onNodeWithText("Win Rate").assertExists()
+        compose.onNode(hasText("Losses") and hasText("1")).assertExists()
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.onNodeWithContentDescription("New Game").assertExists()
+    }
+
+    @Test
+    fun statsAreResetFromTheStatsPage() {
+        start()
+        compose.onNodeWithContentDescription("New Game").performClick()
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.onNodeWithText("Reset Wins & Losses…").assertDoesNotExist()
+        compose.onNodeWithText("Stats").performClick()
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Reset Stats…"))
+        compose.onNodeWithText("Reset Stats…").performClick()
+        compose.onNodeWithText("Reset").performClick()
+        compose.onNode(hasText("Losses") and hasText("0")).assertExists()
+        compose.onNodeWithContentDescription("Back").performClick()
+        compose.onNodeWithContentDescription("$-90, Wins: 0, Losses: 0").assertExists()
+        compose.onNodeWithContentDescription("Undo").assertIsNotEnabled()
     }
 
     private fun androidx.compose.ui.test.junit4.ComposeTestRule.onRoot() = onNode(SemanticsMatcher("root") { it.parent == null })

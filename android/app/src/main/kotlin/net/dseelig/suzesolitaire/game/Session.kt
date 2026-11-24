@@ -2,14 +2,18 @@ package net.dseelig.suzesolitaire.game
 
 import kotlin.random.Random
 
-// A game and the player's record: money, wins and losses.  Every new game costs $45, each card put up earns $5, and a
-// win earns $250.
+// A game and the player's record: money, wins and losses, and the other stats.  Every new game costs $45, each card put
+// up earns $5, and a win earns $250.  moves counts this game's card moves, or is null for a game begun before stats were
+// kept, and seconds is how long it had been played with the app open when this was taken (see Session.current).
 data class Game(
     val table: Table,
     val score: Int,
     val wins: Int,
     val losses: Int,
     val won: Boolean = false,
+    val stats: GameStats = GameStats(),
+    val moves: Int? = 0,
+    val seconds: Double = 0.0,
 ) {
     companion object {
         const val GAME_COST = 45
@@ -27,7 +31,11 @@ data class Game(
 // Without Unlimited Undo, Undo takes back only the last turn, and not one with auto moves in it.  With it, Undo steps back
 // a turn at a time to the start of the game.  Either way, right after New Game it brings back the game New Game replaced,
 // but only until the first move or deal in the new one, and a won game can't be brought back.
-class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boolean = false) {
+//
+// The game's clock runs while the app is open (see startClock) until the game is won.  Undoing a move doesn't take back
+// its time, or the move from the game's count.
+class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boolean = false,
+              private val now: () -> Long = System::currentTimeMillis) {
     var game: Game = game
         private set
     private val history = ArrayDeque<Game>()
@@ -39,6 +47,9 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     // every card left is on the lower stacks, in an order that lets them all go up
     var finishing = false
         private set
+    // Whether the app is open, and when the clock last started on this game, or null while it's stopped
+    private var clockRunning = false
+    private var clockStart: Long? = null
 
     val table: Table get() = game.table
 
@@ -47,6 +58,37 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
 
     // How many turns Undo could take back with Unlimited Undo
     val turnsRecorded: Int get() = history.size
+
+    // The game with the time on its clock up to now, for saving
+    val current: Game get() = game.copy(seconds = elapsed)
+
+    private val elapsed: Double get() = game.seconds + (clockStart?.let { (now() - it) / 1000.0 } ?: 0.0)
+
+    // MARK: Clock
+
+    // The app opened
+    fun startClock() {
+        clockRunning = true
+        if (clockStart == null) {
+            restartClock()
+        }
+    }
+
+    // The app went into the background
+    fun pauseClock() {
+        clockRunning = false
+        stopClock()
+    }
+
+    private fun stopClock() {
+        game = current
+        clockStart = null
+    }
+
+    // Starts the clock afresh on the game now on the table, if the app is open and it isn't won
+    private fun restartClock() {
+        clockStart = if (clockRunning && !game.won) now() else null
+    }
 
     // MARK: Turns
 
@@ -113,13 +155,16 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
 
     // Deals a new game.  Giving up on one that isn't won counts as a loss.
     fun newGame(random: Random = Random.Default) {
+        stopClock()
         val previous = game
         game = Game(
             Table.deal(Card.all.shuffled(random)),
             score = previous.score - Game.GAME_COST,
             wins = previous.wins,
             losses = previous.losses + if (previous.won) 0 else 1,
+            stats = if (previous.won) previous.stats else previous.stats.recording(previous, won = false),
         )
+        restartClock()
         // Undoing New Game brings back the game it replaced along with its turns, until the new game is under way (see
         // recordTurn).  A won game's turns were already let go.
         if (!previous.won) {
@@ -129,11 +174,13 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
         justDealtNewGame = !previous.won
     }
 
-    // Swaps the game for one on the given table, without counting a loss, for the Debug menu.  As after New Game, Undo
-    // brings back the game it replaced.
+    // Swaps the game for one on the given table, without counting a loss or its moves and time, for the Debug menu.  As
+    // after New Game, Undo brings back the game it replaced.
     fun replaceTable(table: Table) {
+        stopClock()
         val previous = game
-        game = previous.copy(table = table, won = false)
+        game = previous.copy(table = table, won = false, moves = null)
+        restartClock()
         if (!previous.won) {
             history.addLast(previous)
         }
@@ -153,7 +200,7 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
             Card.all.filter { it.suit == suit }.sortedBy { (it.rank - table.starter + 13) % 13 }
         }
         game = game.copy(table = table.copy(blind = emptyList(), deck = emptyList(), deal = emptyList(), upper = upper,
-                                            lower = List(4) { emptyList() }))
+                                            lower = List(4) { emptyList() }), moves = null)
         finishTurn()
         return true
     }
@@ -162,7 +209,15 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
         if (!canUndo) {
             return false
         }
-        game = history.removeLast()
+        val previous = history.removeLast()
+        // Undoing New Game brings back the game it replaced, moves and time and all; within a game, they carry on
+        if (justDealtNewGame) {
+            game = previous
+            restartClock()
+        }
+        else {
+            game = previous.copy(moves = game.moves, seconds = game.seconds)
+        }
         // The free undo is used up
         lastTurnUndoable = false
         justDealtNewGame = false
@@ -170,7 +225,7 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     }
 
     fun resetStats() {
-        game = game.copy(wins = 0, losses = 0)
+        game = game.copy(wins = 0, losses = 0, stats = GameStats())
         // Undo would otherwise bring the old counts back
         history.clear()
         lastTurnUndoable = false
@@ -180,6 +235,7 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
     // Puts a saved game on the table, with nothing to undo
     fun restore(saved: Game) {
         game = saved
+        restartClock()
         history.clear()
         lastTurnUndoable = false
         justDealtNewGame = false
@@ -197,12 +253,14 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
 
     private fun apply(move: Move) {
         val earned = if (move.to.pile == Pile.Upper) Game.CARD_UP else 0
-        game = game.copy(table = table.move(move.from, move.index, move.to), score = game.score + earned)
+        game = game.copy(table = table.move(move.from, move.index, move.to), score = game.score + earned, moves = game.moves?.plus(1))
     }
 
     private fun finishTurn() {
         if (table.isWon && !game.won) {
-            game = game.copy(won = true, score = game.score + Game.WIN_BONUS, wins = game.wins + 1)
+            stopClock()
+            game = game.copy(won = true, score = game.score + Game.WIN_BONUS, wins = game.wins + 1,
+                             stats = game.stats.recording(game, won = true))
             // A won game is over, so there's nothing to go back to
             history.clear()
             lastTurnUndoable = false

@@ -79,7 +79,7 @@ private suspend fun settle(release: MutableMap<Card, Animatable<Offset, *>>, car
 }
 
 @Composable
-fun TableScreen(vm: GameViewModel, onHowToPlay: () -> Unit, onChooseCardBack: () -> Unit) {
+fun TableScreen(vm: GameViewModel, onHowToPlay: () -> Unit, onStats: () -> Unit, onChooseCardBack: () -> Unit) {
     val colors = LocalTableColors.current
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
@@ -102,7 +102,7 @@ fun TableScreen(vm: GameViewModel, onHowToPlay: () -> Unit, onChooseCardBack: ()
         }
         val layout = remember(maxWidth, maxHeight, insets) { TableLayout(maxWidth.value, maxHeight.value, insets) }
         Table(vm, layout)
-        Controls(vm, layout, onHowToPlay, onChooseCardBack)
+        Controls(vm, layout, onHowToPlay, onStats, onChooseCardBack)
         StackSemantics(vm, layout)
     }
 }

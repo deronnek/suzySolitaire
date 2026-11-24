@@ -143,7 +143,7 @@ class SessionTest {
         while (s.autoMoveStep()) {}
         assertTrue("auto moves don't use up the undo", s.canUndo)
         s.undo()
-        assertEquals(before, s.game)
+        assertEquals("the moves still count", before.copy(moves = 2), s.game)
         assertEquals("the ace's money is taken back too", 10, s.game.score)
     }
 
@@ -221,6 +221,106 @@ class SessionTest {
         s.newGame(Random(1))
         s.resetStats()
         assertEquals(0, s.game.losses)
+        assertEquals(GameStats(), s.game.stats)
         assertFalse("undoing would bring the old counts back", s.canUndo)
+    }
+
+    // MARK: Stats
+
+    @Test
+    fun aLostGameCountsItsMovesAndMoney() {
+        val s = session(table(lower = deadLowerStacks(), deal = listOf(card(1, Suit.Clubs), card(1, Suit.Hearts)), deck = listOf(card(2, Suit.Clubs))))
+        assertTrue(s.putUp(Spot.Deal))
+        assertTrue(s.putUp(Spot.Deal))
+        s.deal()
+        assertEquals("deals don't count", 2, s.game.moves)
+        s.newGame(Random(1))
+        val stats = s.game.stats
+        assertEquals(1, stats.games)
+        assertEquals(1, stats.timedGames)
+        assertEquals(2, stats.moves)
+        assertEquals("the first card up started the upper stacks", 1, stats.cardsUp)
+        assertEquals(-40, stats.worstGame)
+        assertEquals(0, stats.streak)
+        assertEquals(0, s.game.moves)
+    }
+
+    @Test
+    fun aWinCountsItsStreakMovesAndTime() {
+        var now = 0L
+        val upper = Suit.entries.map { suit -> (1..13).map { card(it, suit) }.filter { it != card(13, Suit.Spades) } }
+        val t = Table(emptyList(), emptyList(), listOf(card(13, Suit.Spades)), upper, List(4) { emptyList() }, starter = 1)
+        val s = Session(Game(t, score = 0, wins = 0, losses = 0, moves = 15), now = { now })
+        s.startClock()
+        now = 90_000
+        assertTrue(s.putUp(Spot.Deal))
+        now = 200_000
+        val stats = s.game.stats
+        assertEquals(1, stats.streak)
+        assertEquals(1, stats.timedWins)
+        assertEquals(16, stats.winMoves)
+        assertEquals(16, stats.fewestWinMoves)
+        assertEquals(90.0, stats.fastestWin!!, 0.0)
+        assertEquals("all 52 cards up, less the starter", 5 * 51 - 45 + 250, stats.bestGame)
+        assertEquals("the clock stops at the win", 90.0, s.current.seconds, 0.0)
+        s.newGame(Random(1))
+        assertEquals("a won game isn't counted twice", 1, s.game.stats.games)
+    }
+
+    @Test
+    fun undoingANewGameTakesItsLossBackOutOfTheStats() {
+        var now = 0L
+        val s = Session(Game(table(lower = deadLowerStacks(), deal = listOf(card(1, Suit.Clubs))), -45, 0, 0), now = { now })
+        s.startClock()
+        s.putUp(Spot.Deal)
+        now = 30_000
+        s.newGame(Random(1))
+        assertEquals(1, s.game.stats.games)
+        now = 50_000
+        s.undo()
+        assertEquals(GameStats(), s.game.stats)
+        assertEquals(1, s.game.moves)
+        assertEquals("the new game's time is let go", 30.0, s.current.seconds, 0.0)
+    }
+
+    @Test
+    fun undoingAMoveKeepsItsCountAndTime() {
+        var now = 0L
+        val s = Session(Game(table(lower = deadLowerStacks(), deal = listOf(card(1, Suit.Clubs))), -45, 0, 0), now = { now })
+        s.startClock()
+        s.putUp(Spot.Deal)
+        now = 10_000
+        s.undo()
+        assertEquals(1, s.game.moves)
+        assertEquals(10.0, s.current.seconds, 0.0)
+    }
+
+    @Test
+    fun theGameClockOnlyRunsWhileTheAppIsOpen() {
+        var now = 0L
+        val s = Session(Game(Table.deal(Card.all.shuffled(Random(3))), -45, 0, 0), now = { now })
+        now = 5_000
+        assertEquals("not until the app opens", 0.0, s.current.seconds, 0.0)
+        s.startClock()
+        now = 8_000
+        s.pauseClock()
+        now = 60_000
+        s.startClock()
+        now = 61_000
+        assertEquals(4.0, s.current.seconds, 0.0)
+        s.newGame(Random(1))
+        now = 63_000
+        assertEquals(4.0, s.game.stats.seconds, 0.0)
+        assertEquals("the new game starts its own clock", 2.0, s.current.seconds, 0.0)
+    }
+
+    @Test
+    fun gamesFromTheDebugMenuArentTimed() {
+        val s = session()
+        s.replaceTable(DebugAccess.ALMOST_WON)
+        assertEquals(null, s.game.moves)
+        s.newGame(Random(1))
+        assertEquals(1, s.game.stats.games)
+        assertEquals(0, s.game.stats.timedGames)
     }
 }

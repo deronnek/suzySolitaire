@@ -99,7 +99,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     // What loadSavedGame found, for init
     private var autoMovesFromSave = false
-    private var restoredRecord: Triple<Int, Int, Int>? = null
+    private var restored: SavedGame.Loaded? = null
 
     // When the player last touched the screen or cards were dealt, which the no-moves banner waits a few seconds after
     private var lastTouchAt = System.currentTimeMillis()
@@ -111,9 +111,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val loaded = loadSavedGame()
         session = Session(loaded ?: Game.first(), autoMoves = autoMovesFromSave)
         if (loaded == null) {
-            restoredRecord?.let { (score, wins, losses) ->
+            restored?.let {
                 // The saved game had been won (or couldn't be read), so deal a new one
-                session.restore(Game(Table.deal(Card.all.shuffled()), score - Game.GAME_COST, wins, losses))
+                session.restore(Game(Table.deal(Card.all.shuffled()), it.score - Game.GAME_COST, it.wins, it.losses, stats = it.stats))
             }
         }
         viewModelScope.launch {
@@ -329,7 +329,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun resetStats() {
         session.resetStats()
         publish()
-        announce("Wins and losses reset")
+        announce("Stats reset")
+    }
+
+    // The game's clock runs only while the app is open
+    fun appOpened() {
+        session.startClock()
+    }
+
+    fun appClosed() {
+        session.pauseClock()
+        save()
     }
 
     // Crops a chosen photo to card proportions, as the iOS app does, and keeps it as the card back; its corners are
@@ -475,12 +485,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val text = runCatching { savedGameFile.readText() }.getOrNull() ?: return null
         val loaded = SavedGame.decode(text) ?: return null
         autoMovesFromSave = loaded.autoMoves
-        restoredRecord = Triple(loaded.score, loaded.wins, loaded.losses)
+        restored = loaded
         return loaded.game
     }
 
     private fun save() {
-        val text = SavedGame.encode(session.game, session.autoMoves)
+        val text = SavedGame.encode(session.current, session.autoMoves)
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 val temp = File(savedGameFile.parentFile, savedGameFile.name + ".tmp")

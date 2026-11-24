@@ -89,12 +89,12 @@ import kotlin.math.roundToInt
 // "nothing to play" banner above them.  These are Material 3 filled tonal icon buttons, Android's counterpart to the iOS
 // app's glass buttons.
 @Composable
-fun Controls(vm: GameViewModel, layout: TableLayout, onHowToPlay: () -> Unit, onChooseCardBack: () -> Unit) {
+fun Controls(vm: GameViewModel, layout: TableLayout, onHowToPlay: () -> Unit, onStats: () -> Unit, onChooseCardBack: () -> Unit) {
     val iconSize = if (layout.roomy) 28.dp else 24.dp
     CornerButton(layout.newGame, "New Game", R.drawable.ic_new_game, iconSize, order = 0f, onClick = vm::newGame)
     CornerButton(layout.undo, "Undo", R.drawable.ic_undo, iconSize, order = 1f, enabled = vm.canUndo, onClick = vm::undo)
     var showUnlock by remember { mutableStateOf(false) }
-    Score(vm, layout, onLongPress = { showUnlock = true })
+    Score(vm, layout, onTap = onStats, onLongPress = { showUnlock = true })
     if (showUnlock) {
         DebugUnlock(vm) { showUnlock = false }
     }
@@ -104,7 +104,7 @@ fun Controls(vm: GameViewModel, layout: TableLayout, onHowToPlay: () -> Unit, on
         .semantics { traversalIndex = 4f }) {
         var open by remember { mutableStateOf(false) }
         CornerButton(Box(0f, 0f, layout.buttonSize, layout.buttonSize), "More", R.drawable.ic_more, iconSize, order = 4f) { open = true }
-        Menu(vm, open, onDismiss = { open = false }, onHowToPlay, onChooseCardBack)
+        Menu(vm, open, onDismiss = { open = false }, onHowToPlay, onStats, onChooseCardBack)
     }
     NoMovesBanner(vm, layout)
     Dialogs(vm)
@@ -127,9 +127,10 @@ private fun CornerButton(box: Box, label: String, icon: Int, iconSize: androidx.
 }
 
 // The score, wins and losses on the felt beside the menu button: following the font size set in Settings, up to twice as
-// big, and shrinking to fit when they'd run into the button.  A long press on it unlocks the Debug menu (see DebugAccess).
+// big, and shrinking to fit when they'd run into the button.  A tap on it shows the Stats page, and a long press unlocks
+// the Debug menu (see DebugAccess).
 @Composable
-private fun Score(vm: GameViewModel, layout: TableLayout, onLongPress: () -> Unit) {
+private fun Score(vm: GameViewModel, layout: TableLayout, onTap: () -> Unit, onLongPress: () -> Unit) {
     val colors = LocalTableColors.current
     val game = vm.game
     val scale = LocalDensity.current.fontScale
@@ -143,9 +144,13 @@ private fun Score(vm: GameViewModel, layout: TableLayout, onLongPress: () -> Uni
     Box(Modifier
         .offset(layout.score.left.dp, layout.score.top.dp)
         .size(layout.score.width.dp, layout.score.height.dp)
-        .pointerInput(Unit) { detectTapGestures(onLongPress = { onLongPress() }) }
+        .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }, onLongPress = { onLongPress() }) }
         .semantics { traversalIndex = 3f }
-        .clearAndSetSemantics { contentDescription = "$money, Wins: ${game.wins}, Losses: ${game.losses}" },
+        .clearAndSetSemantics {
+            contentDescription = "$money, Wins: ${game.wins}, Losses: ${game.losses}"
+            role = Role.Button
+            onClick(label = "Show stats") { onTap(); true }
+        },
         contentAlignment = Alignment.CenterStart) {
         BasicText(text, maxLines = 1, style = TextStyle(fontFamily = ScoreFont),
             autoSize = TextAutoSize.StepBased(minFontSize = (size * 0.5f).sp, maxFontSize = size.sp, stepSize = 0.5.sp))
@@ -174,10 +179,9 @@ private fun ScoreFloat(amount: String, size: Float) {
 }
 
 @Composable
-private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowToPlay: () -> Unit, onChooseCardBack: () -> Unit) {
+private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowToPlay: () -> Unit, onStats: () -> Unit, onChooseCardBack: () -> Unit) {
     val activity = LocalActivity.current
     val upgrade by vm.store.state.collectAsStateWithLifecycle()
-    var confirmReset by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
     // Which page of the menu is showing; it opens on the first
     var page by remember(open) { mutableStateOf(MenuPage.Main) }
@@ -186,18 +190,9 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
             MenuPage.Cards -> CardsPage(vm, onBack = { page = MenuPage.Main }, onPage = { page = it })
             MenuPage.Artwork -> ArtworkPage(vm, onBack = { page = MenuPage.Cards })
             MenuPage.Back -> BackPage(vm, onDismiss, onChooseCardBack, onBack = { page = MenuPage.Cards })
-            MenuPage.Main -> MainPage(vm, onDismiss, onHowToPlay, onPage = { page = it }, onReset = { confirmReset = true },
+            MenuPage.Main -> MainPage(vm, onDismiss, onHowToPlay, onStats, onPage = { page = it },
                 onAbout = { showAbout = true }, buy = { activity?.let(vm::buyUnlimitedUndo) }, upgrade = upgrade)
         }
-    }
-    if (confirmReset) {
-        AlertDialog(
-            onDismissRequest = { confirmReset = false },
-            title = { Text("Reset Wins & Losses?") },
-            text = { Text("Your wins and losses will go back to zero. Your money and the current game won't change.") },
-            confirmButton = { TextButton({ confirmReset = false; vm.resetStats() }) { Text("Reset") } },
-            dismissButton = { TextButton({ confirmReset = false }) { Text("Cancel") } },
-        )
     }
     if (showAbout) {
         val context = LocalContext.current
@@ -214,17 +209,17 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
 private enum class MenuPage { Main, Cards, Artwork, Back }
 
 @Composable
-private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -> Unit, onPage: (MenuPage) -> Unit, onReset: () -> Unit,
+private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -> Unit, onStats: () -> Unit, onPage: (MenuPage) -> Unit,
                      onAbout: () -> Unit, buy: () -> Unit, upgrade: UpgradeState) {
     MenuItem("Hint", onDismiss, vm::showHint)
     MenuItem("How to Play", onDismiss, onHowToPlay)
+    MenuItem("Stats", onDismiss, onStats)
     HorizontalDivider()
     ToggleItem("Auto Moves", vm.autoMoves, vm::toggleAutoMoves)
     ToggleItem("Show When Stuck", vm.showsNoMoves, vm::toggleShowsNoMoves)
     ToggleItem("Highlight Drop Spot", vm.highlightsDrops, vm::toggleHighlightsDrops)
     HorizontalDivider()
     PageItem("Cards") { onPage(MenuPage.Cards) }
-    MenuItem("Reset Wins & Losses…", onDismiss, onReset)
     HorizontalDivider()
     when {
         upgrade.owned -> DropdownMenuItem(
