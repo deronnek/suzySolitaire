@@ -31,10 +31,13 @@ extension ViewController {
             return
         }
         let frames = self.cardFrames()
+        // Undoing a New Game brings back the game it replaced, with its moves and time; any other undo keeps counting them
+        let undoesNewGame = self.gameBeforeNewGame != nil
         self.clearTable()
         self.score  = game.score
         self.wins   = game.wins
         self.losses = game.losses
+        self.restoreStats(from: game, game: undoesNewGame)
         if !self.restoreBoard(board, suitStackStarter: game.suitStackStarter) {
             // Shouldn't happen, since the snapshot came from a live table; at least leave a playable one
             self.initTable()

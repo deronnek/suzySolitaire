@@ -196,6 +196,8 @@ extension ViewController {
         self.lastMove   = nil
         self.deckTaps   = 0
         self.accessibilitySelection = nil
+        // Not a real game, so its moves and time stay out of the stats
+        self.gameMoves  = nil
         self.redrawTable()
         self.lastTouchDate = Date()
         self.updateNoMovesBanner()

@@ -302,7 +302,7 @@ final class Suze_SolitaireTests: XCTestCase {
     func testHowToPlayIsInTheMenu() throws {
         let menu = try XCTUnwrap(vc.menuButton.menu)
         let inline = try XCTUnwrap(menu.children.first as? UIMenu)
-        XCTAssertEqual(inline.children.map { $0.title }, ["Hint", "How to Play"])
+        XCTAssertEqual(inline.children.map { $0.title }, ["Hint", "How to Play", "Stats"])
     }
 
     func testDarkModeDimsTheOutlinesButNotTheCards() throws {
@@ -477,17 +477,20 @@ final class Suze_SolitaireTests: XCTestCase {
 
     func testResetStatsClearsWinsAndLosses() throws {
         let menu  = try XCTUnwrap(vc.menuButton.menu)
-        let reset = try XCTUnwrap(menu.children.compactMap { $0 as? UIAction }.first { $0.title.hasPrefix("Reset Wins") })
-        XCTAssertTrue(reset.attributes.contains(.destructive))
+        let items = menu.children.flatMap { ($0 as? UIMenu)?.children ?? [$0] }.compactMap { $0 as? UIAction }
+        XCTAssertNotNil(items.first { $0.title == "Stats" }, "Stats is in the menu")
+        XCTAssertNil(items.first { $0.title.hasPrefix("Reset") }, "resetting moved to the Stats page")
 
         vc.wins   = 3
         vc.losses = 7
         vc.score  = 120
         vc.startNewGameWithSender(sender: self)
         XCTAssertNotNil(vc.gameBeforeNewGame)
+        XCTAssertEqual(vc.stats.games, 1)
         vc.resetStats()
         XCTAssertEqual(vc.wins, 0)
         XCTAssertEqual(vc.losses, 0)
+        XCTAssertEqual(vc.stats, GameStats())
         XCTAssertEqual(vc.score, 75, "money is kept")
         // The New Game undo can't bring the old counts back
         XCTAssertNil(vc.gameBeforeNewGame)
@@ -736,6 +739,117 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.autoMoves = true
         vc.finishTurn()
         waitUntil { self.vc.justWon }
+    }
+
+    // MARK: Stats
+
+    func testALostGameCountsItsMovesAndMoney() {
+        vc.stats = GameStats()
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        vc.startGameStats()
+        vc.gameSeconds = 90
+        vc.performMove(card: vc.deal!.cards.last!, from: vc.deal!, to: vc.cardStacks[0]!)
+        vc.tapDeck()
+        XCTAssertEqual(vc.gameMoves, 1, "deals aren't moves")
+        vc.startNewGameWithSender(sender: self)
+        XCTAssertEqual(vc.stats.games, 1)
+        XCTAssertEqual(vc.stats.timedGames, 1)
+        XCTAssertEqual(vc.stats.moves, 1)
+        XCTAssertEqual(vc.stats.seconds, 90, accuracy: 1)
+        XCTAssertEqual(vc.stats.streak, 0)
+        XCTAssertEqual(vc.stats.worstGame, -45, "nothing went up")
+        XCTAssertEqual(vc.stats.timedWins, 0)
+        XCTAssertNil(vc.stats.fastestWin)
+        // The new game counts from zero
+        XCTAssertEqual(vc.gameMoves, 0)
+        XCTAssertLessThan(vc.gameElapsed, 1)
+    }
+
+    func testAWinCountsItsStreakMovesAndTime() {
+        vc.stats = GameStats(games: 1, streak: 2, bestStreak: 2)
+        vc.dealAlmostWon()
+        vc.gameMoves   = 0
+        vc.gameSeconds = 30
+        vc.autoMoves = true
+        vc.finishTurn()
+        waitUntil { self.vc.justWon }
+        XCTAssertEqual(vc.stats.games, 2)
+        XCTAssertEqual(vc.stats.streak, 3)
+        XCTAssertEqual(vc.stats.bestStreak, 3)
+        XCTAssertEqual(vc.stats.winMoves, 16, "the cards Auto Moves put up count")
+        XCTAssertEqual(vc.stats.fewestWinMoves, 16)
+        XCTAssertEqual(vc.stats.bestGame, 5 * 51 - 45 + 250)
+        XCTAssertEqual(try XCTUnwrap(vc.stats.fastestWin), 30, accuracy: 5)
+        // The clock stops once the game is won
+        XCTAssertNil(vc.gameClockStart)
+    }
+
+    func testUndoingANewGameTakesItsLossBackOutOfTheStats() {
+        vc.stats = GameStats()
+        setUpBoard(lower: deadLowerStacks(), deal: [take(4, .Hearts)])
+        vc.startGameStats()
+        vc.performMove(card: vc.deal!.cards.last!, from: vc.deal!, to: vc.cardStacks[0]!)
+        vc.startNewGameWithSender(sender: self)
+        XCTAssertEqual(vc.stats.games, 1)
+        vc.undoMove(self)
+        XCTAssertEqual(vc.stats, GameStats())
+        XCTAssertEqual(vc.gameMoves, 1, "the game comes back with its moves")
+    }
+
+    func testStatsAndTheGamesMovesAndTimeAreSaved() throws {
+        vc.stats = GameStats(games: 4, streak: 1, bestStreak: 3)
+        vc.gameMoves   = 12
+        vc.gameSeconds = 200
+        vc.gameClockStart = nil
+        let saved = try XCTUnwrap(vc.currentGame())
+        let decoded = try JSONDecoder().decode(ViewController.SavedGame.self, from: JSONEncoder().encode(saved))
+        XCTAssertEqual(decoded.stats, vc.stats)
+        XCTAssertEqual(decoded.gameMoves, 12)
+        XCTAssertEqual(decoded.gameSeconds, 200)
+        // A game saved before stats were kept counts its result, but not its moves and time
+        let old = try JSONDecoder().decode(ViewController.SavedGame.self, from: Data(#"{"score":5,"wins":1,"losses":2,"autocomplete":false,"suitStackStarter":1}"#.utf8))
+        vc.restoreStats(from: old, game: true)
+        XCTAssertNil(vc.gameMoves)
+        vc.recordGame(won: false)
+        XCTAssertEqual(vc.stats.games, 1)
+        XCTAssertEqual(vc.stats.timedGames, 0)
+    }
+
+    func testTheGameClockOnlyRunsWhileTheAppIsOpen() {
+        vc.startGameStats()
+        vc.gameClockStart = Date(timeIntervalSinceNow: -10)
+        vc.pauseGameClock()
+        XCTAssertEqual(vc.gameElapsed, 10, accuracy: 0.5)
+        let paused = XCTestExpectation(description: "time passes while paused")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { paused.fulfill() }
+        wait(for: [paused], timeout: 2)
+        XCTAssertEqual(vc.gameElapsed, 10, accuracy: 0.1)
+        vc.startGameClock()
+        XCTAssertNotNil(vc.gameClockStart)
+    }
+
+    func testTappingTheScoreOpensTheStatsPage() throws {
+        let tap = try XCTUnwrap(vc.chalkLine.gestureRecognizers?.first { $0 is UITapGestureRecognizer })
+        XCTAssertTrue(tap.isEnabled)
+        XCTAssertTrue(vc.chalkLine.accessibilityTraits.contains(.button))
+        vc.wins = 3
+        vc.losses = 1
+        vc.stats = GameStats(games: 2, streak: 1, bestStreak: 2, cardsUp: 30, bestGame: 460, worstGame: -45,
+                             timedGames: 2, timedWins: 1, moves: 150, winMoves: 90, seconds: 400, fewestWinMoves: 90, fastestWin: 185)
+        vc.showStats()
+        let page = try XCTUnwrap(vc.navigationController?.topViewController as? StatsViewController)
+        page.loadViewIfNeeded()
+        func value(_ section: Int, _ row: Int) -> String? {
+            let cell = page.tableView(page.tableView, cellForRowAt: IndexPath(row: row, section: section))
+            return (cell.contentConfiguration as? UIListContentConfiguration)?.secondaryText
+        }
+        XCTAssertEqual(value(0, 2), "75%")
+        XCTAssertEqual(value(1, 1), "$460")
+        XCTAssertEqual(value(1, 3), "15.0")
+        XCTAssertEqual(value(2, 0), "75")
+        XCTAssertEqual(value(3, 0), "3:20")
+        XCTAssertEqual(value(3, 1), "3:05")
+        XCTAssertEqual(StatsViewController.duration(3725), "1:02:05")
     }
 
     func waitUntil(_ condition: @escaping () -> Bool) {
@@ -1682,7 +1796,7 @@ final class Suze_SolitaireTests: XCTestCase {
         let chalk = vc.chalkLine
         XCTAssertTrue(window.hitTest(chalk.convert(CGPoint(x: chalk.bounds.midX, y: chalk.bounds.midY), to: window), with: nil) === chalk,
                       "nothing covers the score")
-        let press = try XCTUnwrap(chalk.gestureRecognizers?.first as? UILongPressGestureRecognizer)
+        let press = try XCTUnwrap(chalk.gestureRecognizers?.compactMap { $0 as? UILongPressGestureRecognizer }.first)
         XCTAssertTrue(press.isEnabled)
         press.state = .began
         vc.scorePressed(press)

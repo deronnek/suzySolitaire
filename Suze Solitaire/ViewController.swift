@@ -132,6 +132,12 @@ class ViewController: UIViewController {
     // When the player last touched the screen or cards were dealt, and the timer that shows the no-moves banner once it's
     // been a few seconds
     var lastTouchDate: Date? = nil
+    // Stats over finished games, and this game's moves and time so far (see ViewController+Stats.swift).  gameMoves is
+    // nil for a game begun before stats were kept, and the clock runs from gameClockStart while the app is open.
+    var stats = GameStats()
+    var gameMoves: Int? = 0
+    var gameSeconds: TimeInterval = 0
+    var gameClockStart: Date? = nil
     var noMovesBannerTimer: DispatchWorkItem? = nil
     // Outlines where the card being dragged would land (see ViewController+Hints.swift)
     var dropHighlight: UIView? = nil
@@ -204,6 +210,8 @@ class ViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
         
         self.setUpChalk()
+        self.setUpStatsTap()
+        self.setUpGameClock()
         self.setUpDebugAccess()
         self.setUpEdgeSwipes()
         // New Game is a plus, like the New Game button in the "No moves left" banner
@@ -245,10 +253,12 @@ class ViewController: UIViewController {
                 self.wins   = saved.wins
                 self.losses = saved.losses
                 self.autoMoves = saved.autocomplete
+                self.restoreStats(from: saved, game: true)
                 if saved.board == nil || !self.restoreBoard(saved.board!, suitStackStarter: saved.suitStackStarter) {
                     // The saved game had been won (or couldn't be read), so deal a new one
                     self.score -= 45
                     self.initTable()
+                    self.startGameStats()
                 }
             }
             else {
@@ -258,6 +268,7 @@ class ViewController: UIViewController {
                 self.losses = 0
                 self.autoMoves = false
                 self.initTable()
+                self.startGameStats()
             }
             self.doInitTable = false;
         }
@@ -300,6 +311,10 @@ class ViewController: UIViewController {
         var suitStackStarter: Int
         // nil if the game was just won; the next launch deals a new game
         var board:            Board?
+        // nil in games saved before stats were kept
+        var stats:            GameStats? = nil
+        var gameMoves:        Int?       = nil
+        var gameSeconds:      Double?    = nil
     }
     
     static var savedGameURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("SavedGame.json")
@@ -313,7 +328,8 @@ class ViewController: UIViewController {
         let board = SavedGame.Board(fub: tags(fub), deck: tags(deck), deal: tags(deal),
                                     suitStacks: self.suitStacks.map(tags), cardStacks: self.cardStacks.map(tags))
         return SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoMoves,
-                         suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board)
+                         suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board,
+                         stats: self.stats, gameMoves: self.gameMoves, gameSeconds: self.gameElapsed)
     }
     
     @objc func saveGame() {
@@ -456,6 +472,10 @@ class ViewController: UIViewController {
     @IBAction func startNewGameWithSender(sender: AnyObject) {
         // A game that's already won has nothing to lose, so only unfinished games can be brought back
         let previousGame = self.justWon ? nil : self.currentGame()
+        if !self.justWon {
+            // Counted while its cards are still on the table
+            self.recordGame(won: false)
+        }
         
         self.clearTable()
         
@@ -469,6 +489,7 @@ class ViewController: UIViewController {
         
         self.score -= 45
         self.initTable()
+        self.startGameStats()
         // MARK: Debug trivial table
         // self.initTableTrivial()
         self.activeCard = nil
@@ -531,6 +552,7 @@ class ViewController: UIViewController {
         let countBefore = destination.cards.count
         self.moveCardBetweenStacks(cardToMove: card, sourceStack: source, destinationStack: destination)
         self.lastMove = (Array(destination.cards[countBefore...]), source, destination)
+        self.countMove()
         self.deckTaps = 0
         self.gameBeforeNewGame = nil
         self.canUndo = true
@@ -1246,6 +1268,7 @@ class ViewController: UIViewController {
             self.announce("You won! $250")
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             self.activeCard = nil
+            self.recordGame(won: true)
             self.score += 250
             self.wins += 1
             // A won game is over, so there's nothing to go back to

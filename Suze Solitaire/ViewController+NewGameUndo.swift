@@ -27,6 +27,7 @@ extension ViewController {
         self.wins      = previousGame.wins
         self.losses    = previousGame.losses
         self.autoMoves = previousGame.autocomplete
+        self.restoreStats(from: previousGame, game: true)
         if !self.restoreBoard(board, suitStackStarter: previousGame.suitStackStarter) {
             // Shouldn't happen, since the snapshot came from a live table; at least leave a playable one
             self.initTable()

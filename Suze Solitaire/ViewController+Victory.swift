@@ -98,6 +98,7 @@ extension ViewController {
         _ = self.acceptCardMove(sourceStack: move.from, destinationStack: move.to, onTopOfCard: move.to.cards.last)
         self.activeCard = nil
         self.moveCardBetweenStacks(cardToMove: move.card, sourceStack: move.from, destinationStack: move.to)
+        self.countMove()
         return true
     }
 

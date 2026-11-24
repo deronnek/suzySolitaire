@@ -44,9 +44,8 @@ extension ViewController: PHPickerViewControllerDelegate {
         let cards = UIMenu(title: "Cards", image: UIImage(systemName: "rectangle.portrait.on.rectangle.portrait"),
                            children: [self.artworkMenu(), back])
 
-        let resetStats = UIAction(title: "Reset Wins & Losses…", image: UIImage(systemName: "arrow.counterclockwise.circle"),
-                                  attributes: .destructive) { _ in
-            self.confirmResetStats()
+        let stats = UIAction(title: "Stats", image: UIImage(systemName: "chart.bar")) { _ in
+            self.showStats()
         }
 
         let about = UIAction(title: "About", image: UIImage(systemName: "info.circle")) { _ in
@@ -55,7 +54,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         let howToPlay = UIAction(title: "How to Play", image: UIImage(systemName: "questionmark.circle")) { _ in
             self.showHowToPlay()
         }
-        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay]), auto, noMoves, drops, cards, resetStats,
+        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay, stats]), auto, noMoves, drops, cards,
                                        self.unlimitedUndoMenu(), about, self.debugMenu()]
         return UIMenu(children: items.compactMap { $0 })
     }
@@ -146,30 +145,6 @@ extension ViewController: PHPickerViewControllerDelegate {
     }
 
     // MARK: Wins and losses
-
-    func confirmResetStats() {
-        let alert = UIAlertController(title: "Reset Wins & Losses?",
-                                      message: "Your wins and losses will go back to zero. Your money and the current game won't change.",
-                                      preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Reset", style: .destructive) { _ in
-            self.resetStats()
-        })
-        self.present(alert, animated: true)
-    }
-
-    func resetStats() {
-        // Undoing a New Game would bring the old counts back
-        self.undoHistory.removeAll()
-        if self.gameBeforeNewGame != nil {
-            self.gameBeforeNewGame = nil
-            self.canUndo = false
-        }
-        self.wins   = 0
-        self.losses = 0
-        self.saveGame()
-        self.announce("Wins and losses reset")
-    }
 
     // MARK: About
 
