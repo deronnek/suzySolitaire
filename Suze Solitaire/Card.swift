@@ -77,14 +77,13 @@ enum CardFaces: String, CaseIterable {
         (self == .smallArial || self == .smallAbril ? 10 : 7.11) / 167.0869141
     }
 
-    // The faces the game shows on a table of either size
-    static func standard(large: Bool) -> CardFaces {
-        large ? .largeArial : .smallArial
-    }
+    // The faces the game shows unless the player picks others: big ranks in Abril Fatface, the set most our own, on a
+    // table of any size
+    static let standard = CardFaces.smallAbril
 
     static let pickedKey = "CardFaces"
 
-    // The faces picked in the Cards menu, or nil for Automatic, the game's own choice by the table's size
+    // The faces picked in the Cards menu, or nil for Default, the game's own (see standard)
     static var picked: CardFaces? {
         get { UserDefaults.standard.string(forKey: self.pickedKey).flatMap(CardFaces.init(rawValue:)) }
         set { UserDefaults.standard.set(newValue?.rawValue, forKey: self.pickedKey) }
@@ -182,9 +181,8 @@ class Card: NSObject {
     var backImage: UIImage {
         Card.backImage
     }
-    // The faces every card shows, which change with the table's size (see ViewController.updateCardFaces); the table
-    // can change size at any time, as when iPhone Duo folds
-    static var faces = CardFaces.smallArial
+    // The faces every card shows, which change when the player picks others (see ViewController.updateCardFaces)
+    static var faces = CardFaces.standard
     // Each set's image, loaded when first shown, so a card's face stays the same image while it's showing
     private var faceImages = [CardFaces: UIImage]()
     var faceImage: UIImage {

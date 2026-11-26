@@ -46,7 +46,7 @@ final class Suze_SolitaireTests: XCTestCase {
         try? FileManager.default.removeItem(at: Card.customBackImageURL)
         Card.customBackImage = nil
         CardStack.isDark     = false
-        Card.faces           = .smallArial
+        Card.faces           = .standard
         UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
@@ -167,7 +167,7 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.view.layoutIfNeeded()
         let top = try XCTUnwrap(vc.fub!.cards.last)
         let under = vc.fub!.cards[0]
-        XCTAssertEqual(Card.faces, .smallArial)
+        XCTAssertEqual(Card.faces, .standard)
         let smallFace = try XCTUnwrap(top.view.image)
         XCTAssertTrue(smallFace === top.faceImage)
         let compactWidth = top.view.frame.width
@@ -175,9 +175,8 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.view.frame = CGRect(x: 0, y: 0, width: 820, height: 760)
         vc.view.layoutIfNeeded()
         XCTAssertTrue(vc.roomyTable)
-        XCTAssertEqual(Card.faces, .largeArial)
+        XCTAssertEqual(Card.faces, .standard, "the same faces on a table of any size")
         XCTAssertTrue(top.view.image === top.faceImage)
-        XCTAssertFalse(top.view.image === smallFace)
         XCTAssertTrue(under.view.image === Card.blankFaceImage, "covered cards stay blank")
         XCTAssertTrue(vc.deck!.cards.last!.view.image === vc.deck!.cards.last!.backImage, "face-down cards stay face down")
         XCTAssertGreaterThan(top.view.frame.width, compactWidth)
@@ -189,7 +188,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // and back when it folds
         vc.view.frame = CGRect(x: 0, y: 0, width: 402, height: 874)
         vc.view.layoutIfNeeded()
-        XCTAssertEqual(Card.faces, .smallArial)
+        XCTAssertEqual(Card.faces, .standard)
         XCTAssertTrue(top.view.image === smallFace)
         XCTAssertEqual(top.view.frame.width, compactWidth, accuracy: 0.5)
     }
@@ -696,23 +695,23 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(cards.children.map { $0.title }, ["Artwork", "Back"])
         let artwork = try XCTUnwrap(cards.children.first as? UIMenu)
         let choices = artwork.children.compactMap { $0 as? UIMenu }.flatMap { $0.children }.compactMap { $0 as? UIAction }
-        XCTAssertEqual(choices.map { $0.title }, ["Automatic"] + CardFaces.allCases.map { $0.title })
-        XCTAssertEqual(choices.first?.state, .on, "Automatic is the default")
+        XCTAssertEqual(choices.map { $0.title }, ["Default"] + CardFaces.allCases.map { $0.title })
+        XCTAssertEqual(choices.first?.state, .on, "Default is picked to begin with")
         XCTAssertTrue(choices.dropFirst().allSatisfy { $0.image != nil }, "each set shows its king")
     }
 
     func testTheCardsMenuSwitchesArtwork() throws {
         let top = try XCTUnwrap(vc.fub!.cards.last)
-        XCTAssertEqual(Card.faces, .smallArial)
+        XCTAssertEqual(Card.faces, .smallAbril)
         UserDefaults.standard.set(CardFaces.largeAbril.rawValue, forKey: CardFaces.pickedKey)
         vc.updateCardFaces()
         XCTAssertEqual(Card.faces, .largeAbril, "the player's pick wins over the table's size")
         XCTAssertTrue(top.view.image === top.faceImage)
         XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage, "covered cards stay blank")
-        // Automatic goes back to the game's own choice
+        // Default goes back to the game's own
         UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         vc.updateCardFaces()
-        XCTAssertEqual(Card.faces, CardFaces.standard(large: vc.roomyTable))
+        XCTAssertEqual(Card.faces, .standard)
     }
 
     func testEachSetOfFacesHasItsOwnCorners() throws {

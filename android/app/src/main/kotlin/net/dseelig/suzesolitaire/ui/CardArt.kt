@@ -17,7 +17,8 @@ import java.io.File
 // The four sets of card faces, made from the same SVGs as the iOS app's (see scripts/import-cards.py, CardVectors and
 // VectorArt): big corner ranks for the small cards of a phone-sized table, or the full design for a roomy table's big
 // cards, each with its ranks in Roboto or Abril Fatface.  Roboto stands in for the iOS app's Arial, which Android
-// doesn't have.  The game uses the Roboto ones unless the player picks others in the menu's Cards › Artwork.  Each set
+// doesn't have.  The game uses big ranks in Abril Fatface, the set most our own, unless the player picks others in the
+// menu's Cards › Artwork.  Each set
 // has its own corner radius, as a fraction of the card's width: the small cards' corners have a radius of 10 of the
 // card's 167 units, and the large ones' 6.86 inside a 0.25 margin, so their curve is centred 7.11 in from each edge.
 enum class CardFaces(val title: String, val cornerFraction: Float, val files: IntArray) {
@@ -27,8 +28,8 @@ enum class CardFaces(val title: String, val cornerFraction: Float, val files: In
     LargeAbril("Classic, Abril Fatface", 7.11f / 167.0869141f, CardVectors.largeAbril);
 
     companion object {
-        // The faces the game shows on a table of either size
-        fun standard(roomy: Boolean) = if (roomy) LargeRoboto else SmallRoboto
+        // The faces the game shows on a table of any size, unless the player picks others
+        val standard = SmallAbril
     }
 }
 

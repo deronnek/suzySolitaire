@@ -222,7 +222,7 @@ class TableScreenTest {
         compose.onNodeWithText("Cards").performClick()
         compose.onNodeWithText("Back").assertExists()
         compose.onNodeWithText("Artwork").performClick()
-        compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Automatic"))
+        compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Default"))
         compose.onNodeWithText("Classic, Abril Fatface").performClick()
         compose.waitForIdle()
         assertEquals("LargeAbril", context.getSharedPreferences("settings", 0).getString(GameViewModel.CARD_FACES_KEY, null))

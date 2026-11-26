@@ -250,17 +250,17 @@ private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -
 @Composable
 private fun CardsPage(vm: GameViewModel, onBack: () -> Unit, onPage: (MenuPage) -> Unit) {
     BackItem("Cards", onBack)
-    PageItem("Artwork", vm.pickedCardFaces?.title ?: "Automatic") { onPage(MenuPage.Artwork) }
+    PageItem("Artwork", vm.pickedCardFaces?.title ?: "Default") { onPage(MenuPage.Artwork) }
     PageItem("Back", if (vm.hasCustomBack) "Photo" else "Default") { onPage(MenuPage.Back) }
 }
 
-// Which of the four sets of card faces to show, or Automatic for the game's own by the table's size, each with its king
+// Which of the four sets of card faces to show, or Default for the game's own (big ranks in Abril Fatface), each with its king
 // of hearts to show what it looks like.  The menu stays open, so the table behind it shows the pick.
 @Composable
 private fun ArtworkPage(vm: GameViewModel, onBack: () -> Unit) {
     BackItem("Artwork", onBack)
     val picked = vm.pickedCardFaces
-    RadioItem("Automatic", picked == null, "Big ranks on small cards, classic on large ones") { vm.pickCardFaces(null) }
+    RadioItem("Default", picked == null, CardFaces.standard.title) { vm.pickCardFaces(null) }
     HorizontalDivider()
     for (faces in CardFaces.entries) {
         RadioItem(faces.title, picked == faces, preview = { ArtworkPreview(faces) }) { vm.pickCardFaces(faces) }

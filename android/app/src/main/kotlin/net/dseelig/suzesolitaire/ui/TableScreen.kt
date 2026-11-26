@@ -119,7 +119,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
 
     // The card art, drawn at the size it's shown.  The last set stays up while a new size or set is drawn.
     val widthPx = with(density) { layout.cardWidth.dp.roundToPx() }
-    val cardFaces = vm.cardFaces(layout.roomy)
+    val cardFaces = vm.cardFaces
     var faces by remember { mutableStateOf<CardArt.Faces?>(null) }
     LaunchedEffect(widthPx, cardFaces, vm.cardBackVersion) {
         faces = withContext(Dispatchers.Default) {

@@ -59,7 +59,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         return UIMenu(children: items.compactMap { $0 })
     }
 
-    // Which of the four sets of card faces to show, or Automatic for the game's own choice by the table's size, each with
+    // Which of the four sets of card faces to show, or Default for the game's own (big ranks in Abril Fatface), each with
     // its king of hearts to show what it looks like
     func artworkMenu() -> UIMenu {
         let picked = CardFaces.picked
@@ -69,7 +69,7 @@ extension ViewController: PHPickerViewControllerDelegate {
             self.redrawTable()
             self.updateMenu()
         }
-        let automatic = UIAction(title: "Automatic", subtitle: "Big ranks on small cards, classic on large ones",
+        let automatic = UIAction(title: "Default", subtitle: CardFaces.standard.title,
                                  image: UIImage(systemName: "wand.and.stars"), state: picked == nil ? .on : .off) { _ in
             choose(nil)
         }
@@ -78,7 +78,7 @@ extension ViewController: PHPickerViewControllerDelegate {
                 choose(faces)
             }
         }
-        return UIMenu(title: "Artwork", subtitle: picked?.title ?? "Automatic", image: UIImage(systemName: "suit.heart"),
+        return UIMenu(title: "Artwork", subtitle: picked?.title ?? "Default", image: UIImage(systemName: "suit.heart"),
                       children: [UIMenu(options: .displayInline, children: [automatic]), UIMenu(options: .displayInline, children: sets)])
     }
 

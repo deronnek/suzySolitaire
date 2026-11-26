@@ -375,13 +375,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     val isDebuggable = application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     var debugUnlocked by mutableStateOf(isDebuggable || DebugAccess.isValid(prefs.getString(DebugAccess.UNLOCK_KEY, null) ?: "", deviceCode))
         private set
-    // The card faces picked in the menu's Cards › Artwork, or null for Automatic, the game's own by the table's size
+    // The card faces picked in the menu's Cards › Artwork, or null for Default, the game's own
     var pickedCardFaces by mutableStateOf(
         prefs.getString(CARD_FACES_KEY, null)?.let { name -> CardFaces.entries.firstOrNull { it.name == name } })
         private set
 
-    // The faces to show on a table of this size
-    fun cardFaces(roomy: Boolean) = pickedCardFaces ?: CardFaces.standard(roomy)
+    // The faces to show
+    val cardFaces: CardFaces get() = pickedCardFaces ?: CardFaces.standard
 
     // Takes an unlock made by scripts/debug-unlock.sh for this phone's code; false if it doesn't fit
     fun unlockDebug(unlock: String): Boolean {

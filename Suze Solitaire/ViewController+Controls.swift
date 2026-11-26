@@ -34,10 +34,10 @@ extension ViewController {
         (self.navigationController?.navigationBar.frame.height ?? 44) < 1
     }
 
-    // Switches every card to the faces for this table, keeping covered and face-down cards as they are: big corner ranks
-    // on a phone-sized table and the full design on a roomy one, unless the player picked others in the Cards menu
+    // Switches every card to the faces picked in the Cards menu, or the game's own, keeping covered and face-down cards
+    // as they are
     func updateCardFaces() {
-        let faces = CardFaces.picked ?? CardFaces.standard(large: self.roomyTable)
+        let faces = CardFaces.picked ?? CardFaces.standard
         guard faces != Card.faces else {
             return
         }
