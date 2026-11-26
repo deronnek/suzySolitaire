@@ -4,11 +4,21 @@ Attached to our reply in App Store Connect. It was recorded on an iPhone running
 2. PURPOSE AND AUDIENCE
 Suze Solitaire is a single-player card game, a Canfield-style solitaire for anyone who enjoys a quick game of patience. It's a relaxing, offline pastime with no ads, accounts or data collection. Its value is a clean, accessible game (full VoiceOver support, larger text, dark mode, haptics) that works the same on every iPhone and iPad size, in portrait and landscape.
 
+WHAT MAKES IT DIFFERENT
+This is not a template or a reskin of another app, and no other solitaire games come from this account. The app is named for our Aunt Suze, who learned this game as a child, and it was written for this one game:
+- The rules are a specific Canfield variant: a 13-card blind, upper stacks that all start from the rank of the card dealt and wrap from King to Ace, and empty lower stacks that only the blind can fill until it runs out.
+- The score is a running money total that carries over from game to game ($45 per game, $5 per card put up, $250 for a win). There is no real money, wagering or prizes; it's a score.
+- A Stats page (tap the score) tracks wins and losses, win rate, streaks, best and worst games, and average moves and time per game.
+- Undo can take back New Game, and Unlimited Undo steps back through every move, including the automatic ones.
+- Show When Stuck works out whether any move is left, even deep in the deck, and says so only after the player has stopped touching the screen for a few seconds.
+- It is fully usable with VoiceOver, with custom actions to pick up and place cards.
+
 3. HOW TO USE IT
 No login, setup or sample files are needed. Launch the app and a game is dealt.
 - Tap the deck (top left) or anywhere on the table to deal three cards. Drag cards and runs between stacks, or double-tap a card to send it to the upper stacks. The rules are in the ••• menu > How to Play.
 - Top corners: New Game (left) and Undo (right). Undo takes back the last move for free.
-- ••• menu (bottom right): Hint, How to Play, Auto Moves, Show When Stuck, Highlight Drop Spot, Cards (Artwork: choose the card design; Back: choose a photo from the photo library for the card back), Reset Wins & Losses, Unlimited Undo, Restore Purchase, About.
+- ••• menu (bottom right): Hint, How to Play, Stats, Auto Moves, Show When Stuck, Highlight Drop Spot, Cards (Artwork: choose the card design; Back: choose a photo from the photo library for the card back), Unlimited Undo, Restore Purchase, About.
+- Tapping the score line (beside the ••• menu) also opens Stats, which has Reset Stats at the bottom.
 - Swipe from the left screen edge to undo, or from the right edge for a hint.
 - Paid content: the one In-App Purchase, "Unlimited Undo" (non-consumable, net.dseelig.SuzeSolitaire product unlimited_undo), is in the ••• menu. It lets Undo take back every move, not just the last one. "Restore Purchase" is right below it in the same menu.
 - A long press on the score shows a diagnostic code used only by the developer to turn on a test menu on our own devices. It needs a key that only the developer has and does nothing for anyone else; there is no hidden content for users.

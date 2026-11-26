@@ -1,1 +1,1 @@
-A Canfield-style solitaire
+Canfield with a 13-card blind

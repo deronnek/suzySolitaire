@@ -1,1 +1,1 @@
-Classic Canfield-style solitaire with a 13-card blind, three-card deals and Vegas-style scoring. No ads, no accounts, nothing collected.
+Canfield-style solitaire with a running money score, a Stats page to track your streaks, and Undo that can take back every move. No ads, no accounts.
