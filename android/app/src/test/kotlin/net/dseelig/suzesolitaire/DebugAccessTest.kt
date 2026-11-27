@@ -70,5 +70,7 @@ class DebugAccessTest {
             assertEquals(faces.name, 52, faces.files.toSet().size)
         }
         assertEquals(CardFaces.SmallAbril, CardFaces.standard)
+        // Only the café racer deck brings a back of its own
+        assertEquals(listOf(CardFaces.Racer), CardFaces.entries.filter { it.back != null })
     }
 }

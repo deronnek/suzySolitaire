@@ -729,6 +729,41 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage)
     }
 
+    func testTheRacerDeckBringsItsOwnBackAndPaper() throws {
+        let back = try XCTUnwrap(vc.deck!.cards.last)
+        let usualBack = Card.backImage
+        UserDefaults.standard.set(CardFaces.racer.rawValue, forKey: CardFaces.pickedKey)
+        vc.redrawTable()
+        let racerBack = Card.backImage
+        XCTAssertNotNil(UIImage(named: "RacerBack"))
+        XCTAssertFalse(racerBack === usualBack)
+        XCTAssertTrue(back.view.image === racerBack)
+        XCTAssertEqual(middle(Card.blankFaceImage), [0xe2, 0xed, 0xf2, 0xff], "blank faces in the deck's cream")
+
+        // A photo still wins over the deck's own back, and the deck's comes back without it
+        vc.setCardBack(Card.cardBackImage(from: UIImage(systemName: "star")!))
+        XCTAssertFalse(back.view.image === racerBack)
+        vc.setCardBack(nil)
+        XCTAssertTrue(back.view.image === Card.backImage)
+        XCTAssertFalse(Card.backImage === usualBack)
+
+        // The watercolor deck has the usual back, on its own paper
+        UserDefaults.standard.set(CardFaces.watercolor.rawValue, forKey: CardFaces.pickedKey)
+        vc.redrawTable()
+        XCTAssertEqual(middle(Card.blankFaceImage), [0xdd, 0xee, 0xf5, 0xff])
+        UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
+        vc.redrawTable()
+
+        // The middle pixel's channels, smallest first, so the renderer's byte order doesn't matter
+        func middle(_ image: UIImage) -> [UInt8] {
+            guard let cg = image.cgImage, let pixels = cg.dataProvider?.data as Data? else {
+                return []
+            }
+            let at = cg.height / 2 * cg.bytesPerRow + cg.width / 2 * 4
+            return Array(pixels[at..<at + 4]).sorted()
+        }
+    }
+
     func testAlmostWonIsOneMoveFromWinning() {
         let losses = vc.losses
         vc.dealAlmostWon()

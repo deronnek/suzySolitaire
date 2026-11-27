@@ -209,7 +209,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
             .graphicsLayer { rotationZ = shake }
             .then(if (p.shadowed || dragging) Modifier.dropShadow(corner, Shadow(radius = 3.dp, color = Color.Black.copy(alpha = 0.35f))) else Modifier)
             .clip(corner)
-            .background(Color.White)
+            .background(cardFaces.paper)
             .border(0.5.dp, Color.Black.copy(alpha = 0.8f), corner)
             .then(if (p.card in selected) Modifier.border(3.dp, colors.dropHighlight, corner) else Modifier)
             .clearAndSetSemantics {}) {
@@ -217,7 +217,7 @@ private fun Table(vm: GameViewModel, layout: TableLayout) {
                 Image(image, contentDescription = null, contentScale = ContentScale.FillBounds, modifier = Modifier.fillMaxSize())
             }
             if (blank > 0f) {
-                Box(Modifier.fillMaxSize().graphicsLayer { alpha = blank }.background(Color.White))
+                Box(Modifier.fillMaxSize().graphicsLayer { alpha = blank }.background(cardFaces.paper))
             }
         }
     }

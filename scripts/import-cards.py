@@ -4,13 +4,15 @@ vector images they draw at any card size.
 
     scripts/import-cards.py [path to svg-playing-cards]    # defaults to ~/code/svg-playing-cards
 
-Four decks go into each app:
+Six decks go into each app:
 
     Small..., SmallAbril   big corner ranks, for the small cards of a phone-sized table
     Large..., LargeAbril   the full card design, for the big cards of a roomy table
+    Watercolor, Racer      the repo's two decks of original artwork, laid out like the small ones
 
-the first of each in Arial on iOS, which comes with the phone, and Roboto on Android, which doesn't have Arial; Roboto
-is close to it and freely licensed.
+the first of each pair in Arial on iOS, which comes with the phone, and Roboto on Android, which doesn't have Arial;
+Roboto is close to it and freely licensed.  The café racer deck brings its own back too, racer/back.svg: RacerBack in
+the asset catalog, and card_back_racer in res/raw.
 
 iOS gets them as vector images in Assets.xcassets/Cards, each deck a folder that names its images
 (Cards/SmallArial/queen_of_hearts).  Android gets them in android/app/src/main/res/raw (card_smallroboto_queen_of_hearts),
@@ -40,9 +42,12 @@ ANDROID_RAW = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'res', 'raw')
 ANDROID_LIST = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'kotlin', 'net', 'dseelig', 'suzesolitaire', 'ui',
                             'CardVectors.kt')
 DECKS = {'SmallArial': 'arial/small', 'SmallRoboto': 'roboto/small', 'SmallAbril': 'small',
-         'LargeArial': 'arial', 'LargeRoboto': 'roboto', 'LargeAbril': '.'}
-IOS_DECKS = ['SmallArial', 'SmallAbril', 'LargeArial', 'LargeAbril']
-ANDROID_DECKS = ['SmallRoboto', 'SmallAbril', 'LargeRoboto', 'LargeAbril']
+         'LargeArial': 'arial', 'LargeRoboto': 'roboto', 'LargeAbril': '.', 'Watercolor': 'watercolor', 'Racer': 'racer'}
+IOS_DECKS = ['SmallArial', 'SmallAbril', 'LargeArial', 'LargeAbril', 'Watercolor', 'Racer']
+ANDROID_DECKS = ['SmallRoboto', 'SmallAbril', 'LargeRoboto', 'LargeAbril', 'Watercolor', 'Racer']
+# Decks with a back of their own, shown unless the player picks a photo: the file in the deck's folder, and its name in
+# each app
+BACKS = {'Racer': ('back.svg', 'RacerBack', 'card_back_racer')}
 CARD_W, CARD_H = 167.0869141, 242.6669922
 SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king']
@@ -107,6 +112,20 @@ def main():
                     'info': INFO,
                     'properties': {'preserves-vector-representation': True},
                 })
+    for deck, (file, ios_name, android_name) in BACKS.items():
+        with open(os.path.join(source, DECKS[deck], file), encoding='utf-8') as f:
+            svg = f.read()
+        write(os.path.join(android_svgs, f'{android_name}.svg'), svg)
+        imageset = os.path.join(IOS_CARDS, f'{ios_name}.imageset')
+        os.makedirs(imageset)
+        svg = re.sub(r'(<svg\b[^>]*?)\swidth="[^"]*"', rf'\1 width="{NATURAL_WIDTH}pt"', svg, count=1)
+        svg = re.sub(r'(<svg\b[^>]*?)\sheight="[^"]*"', rf'\1 height="{NATURAL_WIDTH * CARD_H / CARD_W:.3f}pt"', svg, count=1)
+        write(os.path.join(imageset, f'{ios_name}.svg'), svg)
+        write_json(os.path.join(imageset, 'Contents.json'), {
+            'images': [{'filename': f'{ios_name}.svg', 'idiom': 'universal'}],
+            'info': INFO,
+            'properties': {'preserves-vector-representation': True},
+        })
     import_android(android_svgs)
     shutil.rmtree(android_svgs)
     print(f'Imported {len(IOS_DECKS) * 52} cards into {os.path.relpath(IOS_CARDS, ROOT)} and {len(ANDROID_DECKS) * 52} into '
@@ -262,7 +281,7 @@ def import_android(svgs):
     # The app looks the files up through this list, which also keeps the release build's resource shrinking from
     # dropping the ones the game doesn't show by default
     lines = ['package net.dseelig.suzesolitaire.ui', '', 'import net.dseelig.suzesolitaire.R', '',
-             '// Made by scripts/import-cards.py: each set of card faces, in Card number order (see Card)',
+             '// Made by scripts/import-cards.py: each set of card faces, in Card number order (see Card), and the backs that come with them',
              'object CardVectors {']
     for deck in ANDROID_DECKS:
         lines.append(f'    val {deck[0].lower() + deck[1:]} = intArrayOf(')
@@ -270,6 +289,8 @@ def import_android(svgs):
             for rank in RANKS:
                 lines.append(f'        R.raw.card_{deck.lower()}_{rank}_of_{suit},')
         lines.append('    )')
+    for deck, (_, _, android_name) in BACKS.items():
+        lines.append(f'    val {deck[0].lower() + deck[1:]}Back = R.raw.{android_name}')
     lines.append('}')
     write(ANDROID_LIST, '\n'.join(lines) + '\n')
 

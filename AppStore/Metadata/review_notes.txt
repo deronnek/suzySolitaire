@@ -29,4 +29,4 @@ None besides Apple's own frameworks. The app makes no network requests of its ow
 None. The app works the same in every region; only the In-App Purchase's local price differs. It is in English.
 
 6. THIRD-PARTY MATERIAL
-The app is not in a regulated industry. The card artwork is based on "Vector Playing Cards" by Byron Knoll, released into the public domain. The Abril Fatface font is used under the SIL Open Font License 1.1. The default card-back photo was taken by the app's original author, Kevin DeRonne.
+The app is not in a regulated industry. The card artwork is based on "Vector Playing Cards" by Byron Knoll, released into the public domain. The watercolor and café racer decks are original. The Abril Fatface, Federo and Jost fonts are used under the SIL Open Font License 1.1. The default card-back photo was taken by the app's original author, Kevin DeRonne.

@@ -254,7 +254,7 @@ private fun CardsPage(vm: GameViewModel, onBack: () -> Unit, onPage: (MenuPage) 
     PageItem("Back", if (vm.hasCustomBack) "Photo" else "Default") { onPage(MenuPage.Back) }
 }
 
-// Which of the four sets of card faces to show, or Default for the game's own (big ranks in Abril Fatface), each with its king
+// Which set of card faces to show, or Default for the game's own (big ranks in Abril Fatface), each with its king
 // of hearts to show what it looks like.  The menu stays open, so the table behind it shows the pick.
 @Composable
 private fun ArtworkPage(vm: GameViewModel, onBack: () -> Unit) {

@@ -59,7 +59,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         return UIMenu(children: items.compactMap { $0 })
     }
 
-    // Which of the four sets of card faces to show, or Default for the game's own (big ranks in Abril Fatface), each with
+    // Which set of card faces to show, or Default for the game's own (big ranks in Abril Fatface), each with
     // its king of hearts to show what it looks like
     func artworkMenu() -> UIMenu {
         let picked = CardFaces.picked
