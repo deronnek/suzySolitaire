@@ -11,8 +11,9 @@ Six decks go into each app:
     Watercolor, Racer      the repo's two decks of original artwork, laid out like the small ones
 
 the first of each pair in Arial on iOS, which comes with the phone, and Roboto on Android, which doesn't have Arial;
-Roboto is close to it and freely licensed.  The café racer deck brings its own back too, racer/back.svg: RacerBack in
-the asset catalog, and card_back_racer in res/raw.
+Roboto is close to it and freely licensed.  Our own decks bring their own backs too, watercolor/back.svg and
+racer/back.svg: WatercolorBack and RacerBack in the asset catalog, and card_back_watercolor and card_back_racer in
+res/raw.
 
 iOS gets them as vector images in Assets.xcassets/Cards, each deck a folder that names its images
 (Cards/SmallArial/queen_of_hearts).  Android gets them in android/app/src/main/res/raw (card_smallroboto_queen_of_hearts),
@@ -47,7 +48,7 @@ IOS_DECKS = ['SmallArial', 'SmallAbril', 'LargeArial', 'LargeAbril', 'Watercolor
 ANDROID_DECKS = ['SmallRoboto', 'SmallAbril', 'LargeRoboto', 'LargeAbril', 'Watercolor', 'Racer']
 # Decks with a back of their own, shown unless the player picks a photo: the file in the deck's folder, and its name in
 # each app
-BACKS = {'Racer': ('back.svg', 'RacerBack', 'card_back_racer')}
+BACKS = {'Watercolor': ('back.svg', 'WatercolorBack', 'card_back_watercolor'), 'Racer': ('back.svg', 'RacerBack', 'card_back_racer')}
 CARD_W, CARD_H = 167.0869141, 242.6669922
 SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king']

@@ -328,5 +328,6 @@ object CardVectors {
         R.raw.card_racer_queen_of_spades,
         R.raw.card_racer_king_of_spades,
     )
+    val watercolorBack = R.raw.card_back_watercolor
     val racerBack = R.raw.card_back_racer
 }

@@ -30,7 +30,7 @@ enum class CardFaces(val title: String, val cornerFraction: Float, val files: In
     SmallAbril("Big Ranks, Abril Fatface", 10f / 167.0869141f, CardVectors.smallAbril),
     LargeRoboto("Classic, Roboto", 7.11f / 167.0869141f, CardVectors.largeRoboto),
     LargeAbril("Classic, Abril Fatface", 7.11f / 167.0869141f, CardVectors.largeAbril),
-    Watercolor("Watercolor", 10f / 167.0869141f, CardVectors.watercolor, Color(0xFFF5EEDD)),
+    Watercolor("Watercolor", 10f / 167.0869141f, CardVectors.watercolor, Color(0xFFF5EEDD), CardVectors.watercolorBack),
     Racer("Café Racer", 10f / 167.0869141f, CardVectors.racer, Color(0xFFF2EDE2), CardVectors.racerBack);
 
     companion object {

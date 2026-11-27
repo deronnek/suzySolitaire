@@ -729,7 +729,7 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage)
     }
 
-    func testTheRacerDeckBringsItsOwnBackAndPaper() throws {
+    func testOurOwnDecksBringTheirOwnBacksAndPaper() throws {
         let back = try XCTUnwrap(vc.deck!.cards.last)
         let usualBack = Card.backImage
         UserDefaults.standard.set(CardFaces.racer.rawValue, forKey: CardFaces.pickedKey)
@@ -747,9 +747,12 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertTrue(back.view.image === Card.backImage)
         XCTAssertFalse(Card.backImage === usualBack)
 
-        // The watercolor deck has the usual back, on its own paper
+        // The watercolor deck has its own back too, and its own paper
         UserDefaults.standard.set(CardFaces.watercolor.rawValue, forKey: CardFaces.pickedKey)
         vc.redrawTable()
+        XCTAssertNotNil(UIImage(named: "WatercolorBack"))
+        XCTAssertFalse(Card.backImage === usualBack)
+        XCTAssertFalse(Card.backImage === racerBack)
         XCTAssertEqual(middle(Card.blankFaceImage), [0xdd, 0xee, 0xf5, 0xff])
         UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         vc.redrawTable()

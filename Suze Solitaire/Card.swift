@@ -93,7 +93,11 @@ enum CardFaces: String, CaseIterable {
 
     // The back that comes with the faces, shown unless the player picks a photo, or nil for the game's usual back
     var backImageName: String? {
-        self == .racer ? "RacerBack" : nil
+        switch self {
+            case .watercolor: "WatercolorBack"
+            case .racer:      "RacerBack"
+            default:          nil
+        }
     }
 
     // The faces the game shows unless the player picks others: big ranks in Abril Fatface, the set most our own, on a
