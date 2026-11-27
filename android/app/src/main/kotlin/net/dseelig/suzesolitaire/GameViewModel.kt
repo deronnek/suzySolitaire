@@ -377,7 +377,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         private set
     // The card faces picked in the menu's Cards › Artwork, or null for Default, the game's own
     var pickedCardFaces by mutableStateOf(
-        prefs.getString(CARD_FACES_KEY, null)?.let { name -> CardFaces.entries.firstOrNull { it.name == name } })
+        prefs.getString(CARD_FACES_KEY, null)?.let { name ->
+            // The Roboto sets that were, as their Abril Fatface twins
+            val renamed = mapOf("SmallRoboto" to "SmallAbril", "LargeRoboto" to "LargeAbril")[name] ?: name
+            CardFaces.entries.firstOrNull { it.name == renamed }
+        })
         private set
 
     // The faces to show

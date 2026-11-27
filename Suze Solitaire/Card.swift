@@ -54,22 +54,18 @@ enum cardColor {
 
 // The sets of card faces, vector images in Assets.xcassets/Cards (see scripts/import-cards.py): big corner ranks for
 // the small cards of a phone-sized table, or the full design for a roomy table's big cards, each with its ranks in
-// Arial or Abril Fatface, and two of our own artwork laid out like the small ones, in watercolor and in a café racer's
-// Bauhaus colors.  The game shows big ranks in Abril Fatface unless the player picks others in Cards › Artwork.
+// Abril Fatface, and two of our own artwork laid out like the small ones, in watercolor and in a café racer's Bauhaus
+// colors.  The game shows big ranks unless the player picks others in Cards › Artwork.
 enum CardFaces: String, CaseIterable {
-    case smallArial = "SmallArial"
     case smallAbril = "SmallAbril"
-    case largeArial = "LargeArial"
     case largeAbril = "LargeAbril"
     case watercolor = "Watercolor"
     case racer      = "Racer"
 
     var title: String {
         switch self {
-            case .smallArial: "Big Ranks, Arial"
-            case .smallAbril: "Big Ranks, Abril Fatface"
-            case .largeArial: "Classic, Arial"
-            case .largeAbril: "Classic, Abril Fatface"
+            case .smallAbril: "Classic Large"
+            case .largeAbril: "Classic"
             case .watercolor: "Watercolor"
             case .racer:      "Café Racer"
         }
@@ -79,7 +75,7 @@ enum CardFaces: String, CaseIterable {
     // own decks', have a radius of 10 of the card's 167 units, and the large ones' 6.86 inside a 0.25 margin, so their
     // curve is centred 7.11 in from each edge
     var cornerRadiusFraction: CGFloat {
-        (self == .largeArial || self == .largeAbril ? 7.11 : 10) / 167.0869141
+        (self == .largeAbril ? 7.11 : 10) / 167.0869141
     }
 
     // The color of the cards' paper, for the blank faces covered cards show
@@ -108,7 +104,11 @@ enum CardFaces: String, CaseIterable {
 
     // The faces picked in the Cards menu, or nil for Default, the game's own (see standard)
     static var picked: CardFaces? {
-        get { UserDefaults.standard.string(forKey: self.pickedKey).flatMap(CardFaces.init(rawValue:)) }
+        get {
+            // The Arial sets that were, as their Abril Fatface twins
+            let renamed = ["SmallArial": "SmallAbril", "LargeArial": "LargeAbril"]
+            return UserDefaults.standard.string(forKey: self.pickedKey).flatMap { CardFaces(rawValue: renamed[$0] ?? $0) }
+        }
         set { UserDefaults.standard.set(newValue?.rawValue, forKey: self.pickedKey) }
     }
 }

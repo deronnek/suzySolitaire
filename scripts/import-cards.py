@@ -4,24 +4,22 @@ vector images they draw at any card size.
 
     scripts/import-cards.py [path to svg-playing-cards]    # defaults to ~/code/svg-playing-cards
 
-Six decks go into each app:
+Four decks go into each app, the same on both:
 
-    Small..., SmallAbril   big corner ranks, for the small cards of a phone-sized table
-    Large..., LargeAbril   the full card design, for the big cards of a roomy table
+    SmallAbril             big corner ranks in Abril Fatface, for the small cards of a phone-sized table
+    LargeAbril             the full card design, for the big cards of a roomy table
     Watercolor, Racer      the repo's two decks of original artwork, laid out like the small ones
 
-the first of each pair in Arial on iOS, which comes with the phone, and Roboto on Android, which doesn't have Arial;
-Roboto is close to it and freely licensed.  Our own decks bring their own backs too, watercolor/back.svg and
+Our own decks bring their own backs too, watercolor/back.svg and
 racer/back.svg: WatercolorBack and RacerBack in the asset catalog, and card_back_watercolor and card_back_racer in
 res/raw.
 
 iOS gets them as vector images in Assets.xcassets/Cards, each deck a folder that names its images
-(Cards/SmallArial/queen_of_hearts).  Android gets them in android/app/src/main/res/raw (card_smallroboto_queen_of_hearts),
+(Cards/SmallAbril/queen_of_hearts).  Android gets them in android/app/src/main/res/raw (card_smallabril_queen_of_hearts),
 first converted with Android Studio's own converter (scripts/svg2vector), which flattens each card into plain paths,
 clips and gradients, then written as numbers the app draws straight from (see VectorArt.kt), where reading the SVGs or
 even the converter's XML took seconds; CardVectors.kt lists them.
-The games use the Arial or Roboto ones; the Cards menu can switch to any of them (see CardFaces in Card.swift and
-CardArt.kt).
+The games use SmallAbril; the Cards menu can switch to any of them (see CardFaces in Card.swift and CardArt.kt).
 
 The large decks' face art is written more compactly on the way in, with tools/make_small.py's rounding, which needs
 fontTools and svgpathtools (pip install fonttools svgpathtools).  The Android conversion needs the JDK that
@@ -42,10 +40,8 @@ IOS_CARDS = os.path.join(ROOT, 'Suze Solitaire', 'Assets.xcassets', 'Cards')
 ANDROID_RAW = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'res', 'raw')
 ANDROID_LIST = os.path.join(ROOT, 'android', 'app', 'src', 'main', 'kotlin', 'net', 'dseelig', 'suzesolitaire', 'ui',
                             'CardVectors.kt')
-DECKS = {'SmallArial': 'arial/small', 'SmallRoboto': 'roboto/small', 'SmallAbril': 'small',
-         'LargeArial': 'arial', 'LargeRoboto': 'roboto', 'LargeAbril': '.', 'Watercolor': 'watercolor', 'Racer': 'racer'}
-IOS_DECKS = ['SmallArial', 'SmallAbril', 'LargeArial', 'LargeAbril', 'Watercolor', 'Racer']
-ANDROID_DECKS = ['SmallRoboto', 'SmallAbril', 'LargeRoboto', 'LargeAbril', 'Watercolor', 'Racer']
+DECKS = {'SmallAbril': 'small', 'LargeAbril': '.', 'Watercolor': 'watercolor', 'Racer': 'racer'}
+IOS_DECKS = ANDROID_DECKS = list(DECKS)
 # Decks with a back of their own, shown unless the player picks a photo: the file in the deck's folder, and its name in
 # each app
 BACKS = {'Watercolor': ('back.svg', 'WatercolorBack', 'card_back_watercolor'), 'Racer': ('back.svg', 'RacerBack', 'card_back_racer')}

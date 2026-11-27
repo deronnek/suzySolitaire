@@ -708,6 +708,11 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(Card.faces, .largeAbril, "the player's pick wins over the table's size")
         XCTAssertTrue(top.view.image === top.faceImage)
         XCTAssertTrue(vc.fub!.cards[0].view.image === Card.blankFaceImage, "covered cards stay blank")
+        // The Arial sets that were come back as their Abril Fatface twins
+        UserDefaults.standard.set("LargeArial", forKey: CardFaces.pickedKey)
+        XCTAssertEqual(CardFaces.picked, .largeAbril)
+        UserDefaults.standard.set("SmallArial", forKey: CardFaces.pickedKey)
+        XCTAssertEqual(CardFaces.picked, .smallAbril)
         // Default goes back to the game's own
         UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         vc.updateCardFaces()
@@ -721,7 +726,7 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertEqual(top.view.layer.cornerRadius, top.view.bounds.width * 10 / 167.0869141, accuracy: 0.01)
 
         // The large cards' corners are tighter, and the outline, backs and blank faces follow them
-        UserDefaults.standard.set(CardFaces.largeArial.rawValue, forKey: CardFaces.pickedKey)
+        UserDefaults.standard.set(CardFaces.largeAbril.rawValue, forKey: CardFaces.pickedKey)
         vc.redrawTable()
         XCTAssertEqual(top.view.layer.cornerRadius, top.view.bounds.width * 7.11 / 167.0869141, accuracy: 0.01)
         XCTAssertTrue(back.view.image === Card.backImage)

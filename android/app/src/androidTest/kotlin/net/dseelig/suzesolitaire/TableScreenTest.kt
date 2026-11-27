@@ -223,10 +223,10 @@ class TableScreenTest {
         compose.onNodeWithText("Back").assertExists()
         compose.onNodeWithText("Artwork").performClick()
         compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Default"))
-        compose.onNodeWithText("Classic, Abril Fatface").performClick()
+        compose.onNodeWithText("Classic").performClick()
         compose.waitForIdle()
         assertEquals("LargeAbril", context.getSharedPreferences("settings", 0).getString(GameViewModel.CARD_FACES_KEY, null))
-        compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Classic, Abril Fatface"))
+        compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assert(hasText("Classic"))
     }
 
     @Test

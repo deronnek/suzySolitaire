@@ -32,7 +32,7 @@ These are the App Store screenshots, made by `scripts/screenshots.sh` from the g
   folded or unfolded. New Game is always top left, Undo top right and "…" bottom right, with the score along the bottom.
 - **Accessibility:** full VoiceOver support, with actions to select and move cards, and a score that follows the text
   size set in Settings.
-- **Personal touches:** dark mode with a dimmer table, a choice of card artwork (big ranks or the classic design, in Arial (Roboto on Android) or Abril Fatface, or our own watercolor and café racer decks, each with a back of its own), any photo as the card back, and gentle haptics.
+- **Personal touches:** dark mode with a dimmer table, a choice of card artwork (the classic design, with big ranks or small, or our own watercolor and café racer decks, each with a back of its own), any photo as the card back, and gentle haptics.
 - **Saved automatically:** the game, score, wins and losses survive quitting the app.
 
 No ads, no accounts, and no data collected; see the [privacy policy](AppStore/PRIVACY.md).
@@ -76,7 +76,7 @@ needs no Apple Account; the app doesn't check the real App Store while it hosts 
 | `scripts/screenshots.sh` | Regenerates the App Store screenshots: 6.9" iPhone, 13" iPad in landscape, and iPhone Duo folded. |
 | `scripts/layout-screenshots.sh` | Screenshots every layout (iPhone and iPad in both orientations, iPhone Duo folded and unfolded) for checking. |
 | `scripts/appstore-metadata.py` | Uploads the listing in `AppStore/Metadata`, the screenshots and the newest build to the App Store version being prepared. It never submits anything. |
-| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into both apps as vector images (`Assets.xcassets/Cards` and `android/app/src/main/res/raw`): big-rank cards for phone-sized tables and the full design for roomy ones, each in Abril Fatface and in Arial (iOS) or Roboto (Android, which has no Arial), and the watercolor and café racer decks, with their backs. |
+| `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into both apps as vector images (`Assets.xcassets/Cards` and `android/app/src/main/res/raw`): big-rank cards for phone-sized tables and the full design for roomy ones, both in Abril Fatface, and the watercolor and café racer decks, with their backs. |
 | `scripts/debug-unlock.sh` | Signs a phone's code (long-press the score to see it) to unlock the Debug menu on that phone, iOS or Android, with a private key kept outside the repo. |
 | `scripts/appstore-iap.py` | Sets up the Unlimited Undo in-app purchase in App Store Connect: name, description, price, territories and review screenshot. |
 
@@ -99,7 +99,7 @@ policy](AppStore/PRIVACY.md) covers both versions.
 - **Icon:** an adaptive icon drawn from the same layers as `AppIcon.icon`, with a monochrome layer for themed icons.
 - **Font:** the score is in [Jost](https://github.com/indestructible-type/Jost), an open-source font after Futura
   (licensed under the SIL Open Font License, in `android/licenses`).
-- **Card faces** are the same SVGs as the iOS app's, with Roboto ranks in place of Arial, which Android doesn't have.
+- **Card faces** are the same SVGs as the iOS app's.
   `scripts/import-cards.py` flattens them with Android Studio's SVG
   converter and stores them as compact path data in `res/raw`, which the app draws at the size each card is shown
   (`VectorArt.kt`).
@@ -137,7 +137,7 @@ They sign in with a Play Console service account key named in the git-ignored `s
 Written by Kevin DeRonne, and updated in 2026 by David Seelig. The default card back is a photo Kevin took; the card
 faces come from [svg-playing-cards](https://github.com/seeligd/svg-playing-cards), based on Byron Knoll's
 public-domain [Vector Playing Cards](https://code.google.com/archive/p/vector-playing-cards/), apart from the
-watercolor and café racer decks, which are our own.  The ranks are in Abril Fatface, Roboto, Sorts Mill Goudy
+watercolor and café racer decks, which are our own.  The ranks are in Abril Fatface, Sorts Mill Goudy
 (watercolor) and Jost (café racer), all under the SIL Open Font License.  The watercolor back's Matterhorn is
 painted from swissALTI3D terrain, © swisstopo.
 
