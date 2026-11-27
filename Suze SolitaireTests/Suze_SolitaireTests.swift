@@ -1668,17 +1668,26 @@ final class Suze_SolitaireTests: XCTestCase {
         XCTAssertNotNil(card.view.layer.animation(forKey: "hint"))
     }
 
-    func testUndoSwipesStartOnlyBelowTheCards() {
-        let bottom = vc.cardsBottom()
-        let below = CGPoint(x: 4, y: bottom + 20), among = CGPoint(x: 4, y: bottom - 20)
+    func testUndoSwipesDontStartBesideTheLeftmostCards() {
+        // An iPad in landscape, where there's little room below the cards
+        vc.view.frame = CGRect(x: 0, y: 0, width: 1180, height: 820)
+        vc.redrawTable()
+        let leftmost = vc.leftmostStacks()
+        XCTAssertFalse(leftmost.isEmpty)
+        let column = leftmost.max { $0.maxY < $1.maxY }!
+        let below = CGPoint(x: 4, y: column.maxY + 40), among = CGPoint(x: 4, y: column.midY)
         XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
         XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: among))
+        // Level with the columns of cards further in, the swipe still starts
+        XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: CGPoint(x: 4, y: vc.cardStacks[0]!.view.frame.midY)))
         // Hints come from anywhere along the right edge
         XCTAssertTrue(vc.edgeSwipeCanBegin(from: .right, at: CGPoint(x: vc.view.bounds.width - 4, y: among.y)))
     }
 
     func testEdgeSwipesWaitOutTheCelebration() {
-        let below = CGPoint(x: 4, y: vc.cardsBottom() + 20)
+        vc.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+        vc.redrawTable()
+        let below = CGPoint(x: 4, y: vc.leftmostStacks().map(\.maxY).max()! + 40)
         XCTAssertTrue(vc.edgeSwipeCanBegin(from: .left, at: below))
         restoreWonTable(vc)
         vc.finishTurn()

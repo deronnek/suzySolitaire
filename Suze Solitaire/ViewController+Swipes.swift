@@ -5,8 +5,7 @@
 
 import UIKit
 
-// Shortcuts for the buttons: swiping in from the left edge of the screen, below the cards, to the middle undoes, as the
-// Undo button does,
+// Shortcuts for the buttons: swiping in from the left edge of the screen to the middle undoes, as the Undo button does,
 // and swiping in from the right edge to the middle shows a hint, as Hint in the "..." menu does.  A pill across the top
 // of the table fills from the side the swipe came from as the finger comes in, and lights up, with a tick, once letting
 // go would do it; going back toward the edge before letting go calls it off.
@@ -28,19 +27,24 @@ extension ViewController {
         self.edgeSwipe(from: swipe.edges, state: swipe.state, at: swipe.location(in: self.view))
     }
 
-    // Whether an edge swipe can start: not while the cards celebrate a win, or over an alert or the menu.  Undo starts
-    // only below the cards, so a swipe near them can't take back a move by mistake.
+    // Whether an edge swipe can start: not while the cards celebrate a win, or over an alert or the menu.  Undo doesn't
+    // start beside the cards nearest the left edge, so grabbing one there can't take back a move by mistake.
     func edgeSwipeCanBegin(from edge: UIRectEdge, at point: CGPoint) -> Bool {
         guard !self.justWon && self.presentedViewController == nil else {
             return false
         }
-        return !edge.contains(.left) || point.y > self.cardsBottom()
+        return !edge.contains(.left) || !self.leftmostStacks().contains { frame in
+            (frame.minY - ViewController.swipeSlack ... frame.maxY + ViewController.swipeSlack).contains(point.y)
+        }
     }
 
-    // The bottom of the lowest card or empty stack's outline on the table
-    func cardsBottom() -> CGFloat {
-        let stacks = ([self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks).compactMap { $0?.view }
-        return stacks.map { $0.frame.maxY }.max() ?? 0
+    // The frames of the stacks in the column nearest the left edge, such as the deck and the first column of cards
+    func leftmostStacks() -> [CGRect] {
+        let frames = ([self.fub, self.deck, self.deal] + self.suitStacks + self.cardStacks).compactMap { $0?.view.frame }
+        guard let left = frames.map(\.minX).min() else {
+            return []
+        }
+        return frames.filter { $0.minX < left + $0.width / 2 }
     }
 
     // Follows a swipe in from an edge, and undoes or hints if it ends at the middle
