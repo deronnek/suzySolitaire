@@ -2,11 +2,12 @@ package net.dseelig.suzesolitaire.game
 
 import kotlin.random.Random
 
-// Deals that can be won, for Winnable Deals Only: the ones scripts/winnable-deals.py found a way to win, one per line as
-// 52 letters, each a card id (A-Z then a-z) in the order Table.deal takes them.  Each is dealt with its ranks turned round
-// by a random amount and its suits swapped about at random, keeping each card's color matched with the others.  Neither
-// changes which moves can be made, as the upper stacks start from whatever rank is dealt and a King sits below an Ace,
-// so each line gives 104 different-looking games that can all be won.
+// Deals a person can win, for Winnable Deals Only: the ones scripts/winnable-deals.py won playing as a player could,
+// without peeking at covered cards or taking moves back.  One per line as 52 letters, each a card id (A-Z then a-z) in
+// the order Table.deal takes them.  Each is dealt with its ranks turned round by a random amount and its suits swapped
+// about at random, keeping each card's color matched with the others.  Neither changes which moves can be made, as the
+// upper stacks start from whatever rank is dealt and a King sits below an Ace, so each line gives 104 different-looking
+// games that can all be won.
 class WinnableDeals(private val lines: List<String>) {
     val count: Int get() = lines.size
 

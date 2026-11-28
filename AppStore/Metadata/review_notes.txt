@@ -6,7 +6,7 @@ Suze Solitaire is a single-player Canfield-style solitaire for anyone who enjoys
 
 WHAT MAKES IT DIFFERENT
 This is not a template or a reskin, and no other solitaire games come from this account. It's named for our Aunt Suze, who learned this game as a child, and was written for this one game:
-- Winnable Deals Only: with it on, every new game can be won. We wrote a solver for these rules, ran it over 3,400 shuffled deals, and ship the 2,952 it played through to a win. Our tests replay its winning moves under the app's own rules.
+- Winnable Deals Only: with it on, every new game is one a person can win. We wrote a computer player for these rules that sees only what a player sees (never the covered cards) and never undoes a move. It played 5,400 shuffled deals, and we ship the 1,514 it won. Our tests replay its winning moves under the app's own rules.
 - Original artwork: two decks drawn for this app, each with its own back. Watercolor has Art Nouveau cards in layered washes and a Matterhorn back rendered from real Swiss terrain data; Café Racer has Bauhaus-style cards and a motorcycle rider on the back.
 - The rules are a specific variant: a 13-card blind, upper stacks that start from the rank dealt and wrap from King to Ace, and empty lower stacks only the blind can fill until it runs out.
 - A running money score carries over between games ($45 per game, $5 per card up, $250 per win). No real money, wagering or prizes.
