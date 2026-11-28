@@ -8,24 +8,37 @@ import kotlin.random.Random
 
 class WinnableDealsTest {
 
-    private val text = generateSequence(File("").absoluteFile) { it.parentFile }
-        .map { File(it, "app/src/main/res/raw/winnable_deals.txt") }.first { it.exists() }.readText()
-    private val lines = text.lines().filter { it.isNotBlank() }
+    private val kinds = listOf("theory", "cunning")
 
-    // Each deal with the moves scripts/winnable-deals.py found to win it: D deals, and card>U or card>L<i> moves a
-    // card up or to a lower stack
-    private val solutions = javaClass.classLoader!!.getResource("winnable_solutions.txt")!!.readText().lines().filter { it.isNotBlank() }
+    private fun text(kind: String) = generateSequence(File("").absoluteFile) { it.parentFile }
+        .map { File(it, "app/src/main/res/raw/deals_$kind.txt") }.first { it.exists() }.readText()
+    private fun lines(kind: String) = text(kind).lines().filter { it.isNotBlank() }
+
+    // Each deal with the moves scripts/winnable-deals.py won it with: D deals, and card>U or card>L<i> moves a card up
+    // or to a lower stack
+    private fun solutions(kind: String) =
+        javaClass.classLoader!!.getResource("solutions_$kind.txt")!!.readText().lines().filter { it.isNotBlank() }
 
     @Test
     fun everyDealIsAWholeDeck() {
-        assertTrue(lines.size > 1000)
-        for (line in lines) {
-            assertEquals(line, 52, WinnableDeals.decode(line).toSet().size)
+        for (kind in kinds) {
+            assertTrue(kind, lines(kind).size > 1000)
+            for (line in lines(kind)) {
+                assertEquals(line, 52, WinnableDeals.decode(line).toSet().size)
+            }
         }
+        // Those a player won without peeking can be won in theory too, so there are fewer of them
+        assertTrue(lines("cunning").size < lines("theory").size)
     }
 
     @Test
     fun theFoundMovesWinUnderTheAppsRules() {
+        for (kind in kinds) {
+            playThrough(lines(kind), solutions(kind))
+        }
+    }
+
+    private fun playThrough(lines: List<String>, solutions: List<String>) {
         assertEquals(100, solutions.size)
         solutions.forEachIndexed { i, solution ->
             val (deal, moves) = solution.split(" | ")
@@ -73,7 +86,8 @@ class WinnableDealsTest {
 
     @Test
     fun newGameDealsOneOfThem() {
-        val deals = WinnableDeals.parse(text)
+        val lines = lines("cunning")
+        val deals = WinnableDeals.parse(text("cunning"))
         val session = Session(Game.first(Random(1)))
         session.newGame(Random(2), winnable = deals)
         val table = session.table

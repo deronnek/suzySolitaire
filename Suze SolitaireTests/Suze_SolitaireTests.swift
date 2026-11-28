@@ -33,7 +33,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Most tests exercise the banner, which a fresh install has turned off (see testHintsAreOffOnAFreshInstall)
         UserDefaults.standard.set(true, forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
-        UserDefaults.standard.removeObject(forKey: ViewController.winnableOnlyKey)
+        UserDefaults.standard.removeObject(forKey: ViewController.dealingKey)
         CardStack.isDark = false
         vc = try self.makeViewController()
         vc.score  = -45
@@ -51,7 +51,7 @@ final class Suze_SolitaireTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
-        UserDefaults.standard.removeObject(forKey: ViewController.winnableOnlyKey)
+        UserDefaults.standard.removeObject(forKey: ViewController.dealingKey)
         vc = nil
         navigationControllers = []
     }
@@ -1700,15 +1700,18 @@ final class Suze_SolitaireTests: XCTestCase {
     // MARK: Winnable Deals Only
 
     func testWinnableDealsAreTheAndroidAppsAndWholeDecks() throws {
-        let lines = WinnableDeals.shared.lines
-        XCTAssertGreaterThan(lines.count, 1000)
-        for line in lines {
-            XCTAssertEqual(Set(WinnableDeals.decode(line)).count, 52, line)
+        for (dealing, kind) in [(Dealing.theory, "theory"), (.cunning, "cunning")] {
+            let lines = try XCTUnwrap(dealing.deals).lines
+            XCTAssertGreaterThan(lines.count, 1000)
+            for line in lines {
+                XCTAssertEqual(Set(WinnableDeals.decode(line)).count, 52, line)
+            }
+            // The Android app plays them through with the solver's moves (WinnableDealsTest), so both apps need the same lists
+            let android = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+                .appendingPathComponent("android/app/src/main/res/raw/deals_\(kind).txt")
+            XCTAssertEqual(WinnableDeals(text: try String(contentsOf: android, encoding: .utf8)).lines, lines)
         }
-        // The Android app plays them through with the solver's moves (WinnableDealsTest), so both apps need the same list
-        let android = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("android/app/src/main/res/raw/winnable_deals.txt")
-        XCTAssertEqual(WinnableDeals(text: try String(contentsOf: android, encoding: .utf8)).lines, lines)
+        XCTAssertNil(Dealing.random.deals)
     }
 
     func testRelabellingMatchesTheAndroidApp() {
@@ -1724,13 +1727,16 @@ final class Suze_SolitaireTests: XCTestCase {
     }
 
     func testNewGameDealsAWinnableDealWhenAsked() {
-        vc.winnableOnly = true
-        vc.startNewGameWithSender(sender: vc)
-        let dealt = tags(vc.fub) + tags(vc.suitStacks[0]) + tags(vc.deck) + vc.cardStacks.flatMap(tags)
-        let variants = WinnableDeals.shared.lines.flatMap { line in
-            (0..<13).flatMap { shift in (0..<8).map { WinnableDeals.variant(line, shift: shift, swap: $0) } }
+        XCTAssertEqual(vc.dealing, .random, "deals are random on a fresh install")
+        for dealing in [Dealing.theory, .cunning] {
+            vc.dealing = dealing
+            vc.startNewGameWithSender(sender: vc)
+            let dealt = tags(vc.fub) + tags(vc.suitStacks[0]) + tags(vc.deck) + vc.cardStacks.flatMap(tags)
+            let variants = dealing.deals!.lines.flatMap { line in
+                (0..<13).flatMap { shift in (0..<8).map { WinnableDeals.variant(line, shift: shift, swap: $0) } }
+            }
+            XCTAssertTrue(variants.contains(dealt), dealing.title)
         }
-        XCTAssertTrue(variants.contains(dealt))
     }
 
     func testRulesTextIsNumberedWithoutAsterisks() {

@@ -23,6 +23,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.dseelig.suzesolitaire.game.Card
+import net.dseelig.suzesolitaire.game.Dealing
 import net.dseelig.suzesolitaire.game.Game
 import net.dseelig.suzesolitaire.game.Pile
 import net.dseelig.suzesolitaire.game.PlayState
@@ -68,11 +69,20 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         private set
     var highlightsDrops by mutableStateOf(prefs.getBoolean(HIGHLIGHTS_DROPS, false))
         private set
-    // Whether New Game deals only games that can be won (see WinnableDeals)
-    var winnableOnly by mutableStateOf(prefs.getBoolean(WINNABLE_ONLY, false))
+    // How New Game deals (see WinnableDeals)
+    var dealing by mutableStateOf(prefs.getString(DEALING, null)?.let { name -> Dealing.entries.firstOrNull { it.name == name } } ?: Dealing.Random)
         private set
-    private val winnableDeals by lazy {
-        WinnableDeals.parse(application.resources.openRawResource(R.raw.winnable_deals).bufferedReader().use { it.readText() })
+    private val winnableDeals = mutableMapOf<Dealing, WinnableDeals>()
+
+    private fun winnableDeals(dealing: Dealing): WinnableDeals? {
+        val file = when (dealing) {
+            Dealing.Random -> return null
+            Dealing.Theory -> R.raw.deals_theory
+            Dealing.Cunning -> R.raw.deals_cunning
+        }
+        return winnableDeals.getOrPut(dealing) {
+            WinnableDeals.parse(getApplication<Application>().resources.openRawResource(file).bufferedReader().use { it.readText() })
+        }
     }
     // Changes whenever the card back does, so the art is decoded again
     var cardBackVersion by mutableIntStateOf(0)
@@ -171,7 +181,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
         val wasWon = game.won
         stopAutoMoves()
-        session.newGame(Random.Default, winnable = if (winnableOnly) winnableDeals else null)
+        session.newGame(Random.Default, winnable = winnableDeals(dealing))
         lastTouchAt = System.currentTimeMillis()
         serial += 1
         scoreFloat = "-$${Game.GAME_COST}" to serial
@@ -329,9 +339,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // From the next new game
-    fun toggleWinnableOnly() {
-        winnableOnly = !winnableOnly
-        prefs.edit().putBoolean(WINNABLE_ONLY, winnableOnly).apply()
+    fun pickDealing(dealing: Dealing) {
+        this.dealing = dealing
+        prefs.edit().putString(DEALING, dealing.name).apply()
     }
 
     fun toggleHighlightsDrops() {
@@ -520,7 +530,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val SHOWS_NO_MOVES = "ShowsNoMoves"
         const val HIGHLIGHTS_DROPS = "HighlightsDrops"
-        const val WINNABLE_ONLY = "WinnableDealsOnly"
+        const val DEALING = "Dealing"
         const val CARD_FACES_KEY = "CardFaces"
         const val NO_MOVES_DELAY_MS = 8_000L
         // How often the next card goes up as a won game finishes itself, or by Auto Moves

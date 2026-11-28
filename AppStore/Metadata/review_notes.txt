@@ -6,7 +6,7 @@ Suze Solitaire is a single-player Canfield-style solitaire for anyone who enjoys
 
 WHAT MAKES IT DIFFERENT
 This is not a template or a reskin, and no other solitaire games come from this account. It's named for our Aunt Suze, who learned this game as a child, and was written for this one game:
-- Winnable Deals Only: with it on, every new game is one a person can win. We wrote a computer player for these rules that sees only what a player sees (never the covered cards) and never undoes a move. It played 5,400 shuffled deals, and we ship the 1,514 it won. Our tests replay its winning moves under the app's own rules.
+- Dealing, with three choices: Totally Random; Winnable in Theory, the 2,952 of 3,400 deals our solver for these rules won knowing every card; and Winnable with Cunning, the 1,514 of 5,400 won by our computer player that sees only what a person sees and never undoes a move. Our tests replay the winning moves under the app's own rules.
 - Original artwork: two decks drawn for this app, each with its own back. Watercolor has Art Nouveau cards in layered washes and a Matterhorn back rendered from real Swiss terrain data; Café Racer has Bauhaus-style cards and a motorcycle rider on the back.
 - The rules are a specific variant: a 13-card blind, upper stacks that start from the rank dealt and wrap from King to Ace, and empty lower stacks only the blind can fill until it runs out.
 - A running money score carries over between games ($45 per game, $5 per card up, $250 per win). No real money, wagering or prizes.
@@ -18,7 +18,7 @@ This is not a template or a reskin, and no other solitaire games come from this 
 No login, setup or sample files are needed; a game is dealt at launch.
 - Tap the deck (top left) or the table to deal three cards. Drag cards and runs, or double-tap a card to send it up. Rules: ••• menu > How to Play.
 - Top corners: New Game (left) and Undo (right, free for the last move).
-- ••• menu (bottom right): Hint, How to Play, Stats, Auto Moves, Show When Stuck, Highlight Drop Spot, Winnable Deals Only (applies from the next New Game), Cards (Artwork: Classic, Classic Large, Watercolor, Café Racer; Back: a photo from the library), Unlimited Undo, Restore Purchase, About.
+- ••• menu (bottom right): Hint, How to Play, Stats, Auto Moves, Show When Stuck, Highlight Drop Spot, Dealing (applies from the next New Game), Cards (Artwork: Classic, Classic Large, Watercolor, Café Racer; Back: a photo from the library), Unlimited Undo, Restore Purchase, About.
 - Swipe in from the left edge to undo, or the right edge for a hint.
 - Paid content: the one In-App Purchase, "Unlimited Undo" (non-consumable, product unlimited_undo), in the ••• menu, with "Restore Purchase" below it.
 - A long press on the score shows a code the developer uses to turn on a test menu on our own devices. It needs a key only the developer has; there is no hidden content for users.

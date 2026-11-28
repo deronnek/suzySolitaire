@@ -77,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.dseelig.suzesolitaire.DebugAccess
 import net.dseelig.suzesolitaire.GameViewModel
 import net.dseelig.suzesolitaire.R
+import net.dseelig.suzesolitaire.game.Dealing
 import net.dseelig.suzesolitaire.game.Pile
 import net.dseelig.suzesolitaire.game.PlayState
 import net.dseelig.suzesolitaire.game.Spot
@@ -187,6 +188,7 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
     var page by remember(open) { mutableStateOf(MenuPage.Main) }
     DropdownMenu(expanded = open, onDismissRequest = onDismiss) {
         when (page) {
+            MenuPage.Dealing -> DealingPage(vm, onBack = { page = MenuPage.Main })
             MenuPage.Cards -> CardsPage(vm, onBack = { page = MenuPage.Main }, onPage = { page = it })
             MenuPage.Artwork -> ArtworkPage(vm, onBack = { page = MenuPage.Cards })
             MenuPage.Back -> BackPage(vm, onDismiss, onChooseCardBack, onBack = { page = MenuPage.Cards })
@@ -206,7 +208,7 @@ private fun Menu(vm: GameViewModel, open: Boolean, onDismiss: () -> Unit, onHowT
     }
 }
 
-private enum class MenuPage { Main, Cards, Artwork, Back }
+private enum class MenuPage { Main, Dealing, Cards, Artwork, Back }
 
 @Composable
 private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -> Unit, onStats: () -> Unit, onPage: (MenuPage) -> Unit,
@@ -218,8 +220,8 @@ private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -
     ToggleItem("Auto Moves", vm.autoMoves, vm::toggleAutoMoves)
     ToggleItem("Show When Stuck", vm.showsNoMoves, vm::toggleShowsNoMoves)
     ToggleItem("Highlight Drop Spot", vm.highlightsDrops, vm::toggleHighlightsDrops)
-    ToggleItem("Winnable Deals Only", vm.winnableOnly, vm::toggleWinnableOnly)
     HorizontalDivider()
+    PageItem("Dealing", vm.dealing.title) { onPage(MenuPage.Dealing) }
     PageItem("Cards") { onPage(MenuPage.Cards) }
     HorizontalDivider()
     when {
@@ -245,6 +247,17 @@ private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -
     if (vm.debugUnlocked) {
         DebugItems(vm, onDismiss)
     }
+}
+
+// How New Game deals, from the next new game on, as the iOS app's Dealing submenu
+@Composable
+private fun DealingPage(vm: GameViewModel, onBack: () -> Unit) {
+    BackItem("Dealing", onBack)
+    for (dealing in Dealing.entries) {
+        RadioItem(dealing.title, vm.dealing == dealing, dealing.detail) { vm.pickDealing(dealing) }
+    }
+    HorizontalDivider()
+    DropdownMenuItem(text = { Text("From the next new game", style = MaterialTheme.typography.bodySmall) }, onClick = {}, enabled = false)
 }
 
 // The cards' artwork and back, each a page of its own, as the iOS app's Cards submenu

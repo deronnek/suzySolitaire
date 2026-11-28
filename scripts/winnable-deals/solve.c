@@ -1,17 +1,20 @@
-// Plays Suze Solitaire deals as a careful player would, for scripts/winnable-deals.py, to find the ones a person can win.
+// Finds Suze Solitaire deals that can be won, for scripts/winnable-deals.py, in one of two ways:
 //
-// It never peeks.  It knows only what a player can see: the lower and upper stacks, the top of the blind, and every
-// card that has come to the top of the deal, since a player can deal through the deck as often as they like to see
-// those.  The covered cards in the blind, and deck cards that have never been on top of the deal, are unknown to it.
+//   solve theory [nodes]           Whether the deal can be won at all, knowing where every card is: a depth-first
+//                                  search that remembers the tables it has seen, giving up after nodes of them
+//   solve cunning [ways] [nodes]   Whether a careful player wins it without peeking (below)
 //
-// Before each move it imagines a few ways the unknown cards might lie, works out how to win each of those (a
-// depth-first search that remembers the tables it has seen), and makes the move that wins the most of them.  It never
-// takes a move back.  Once every card it hasn't put up is known, it plays out the win if there is one.  A player who
-// made the same moves would win every deal it wins, without knowing anything they couldn't see.
+// Played with cunning, it knows only what a player can see: the lower and upper stacks, the top of the blind, and
+// every card that has come to the top of the deal, since a player can deal through the deck as often as they like to
+// see those.  The covered cards in the blind, and deck cards that have never been on top of the deal, are unknown to
+// it.  Before each move it imagines ways the unknown cards might lie, searches each for a win as above, and makes the
+// move that wins the most of them.  It never takes a move back.  Once every card it hasn't put up is known, it plays
+// out the win if there is one.  A player who made the same moves would win every deal it wins, without knowing
+// anything they couldn't see.
 //
 // Reads deals (52 card ids, the shuffled order Table.deal takes) one per line on stdin, and for each writes
 //   W <ids> | <moves>     (won; moves are D for a deal, or card>U / card>L<i>)
-//   L <ids>               (lost)
+//   L <ids>               (lost, or in theory, the search gave up)
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -58,7 +61,7 @@ static int safeUp(const St *s, int c) {
 }
 
 // ---- tables seen in one search.  Each search has its own generation, so the table needn't be cleared between them.
-#define TBITS 22
+#define TBITS 23
 typedef struct { uint64_t hash; uint32_t gen; } Seen;
 static Seen *table;
 static uint32_t generation;
@@ -291,10 +294,13 @@ static void writePath(const St *start) {
     }
 }
 
-// solve [ways to imagine the unknown cards before each move] [nodes to search in each]
 int main(int argc, char **argv) {
-    if (argc > 1) samples = atoi(argv[1]);
-    if (argc > 2) sampleLimit = atol(argv[2]);
+    int cunning = argc < 2 || strcmp(argv[1], "theory") != 0;
+    if (cunning) {
+        if (argc > 2) samples = atoi(argv[2]);
+        if (argc > 3) sampleLimit = atol(argv[3]);
+    }
+    else if (argc > 2) finalLimit = atol(argv[2]);
     table = calloc(1ULL << TBITS, sizeof(Seen));
     int ids[52];
     char line[1024];
@@ -316,7 +322,15 @@ int main(int argc, char **argv) {
         for (int i = 0; i < 52; i++) rng = mix(rng ^ ids[i]);
         rng |= 1;
         St start = s;
-        int r = play(&s);
+        int r;
+        if (cunning) {
+            r = play(&s);
+        }
+        else {
+            r = search(&s, finalLimit);
+            playedCount = depth;
+            memcpy(played, path, sizeof(Mv) * depth);
+        }
         putchar(r ? 'W' : 'L');
         for (int i = 0; i < 52; i++) printf(" %d", ids[i]);
         if (r) { printf(" |"); writePath(&start); }

@@ -674,7 +674,7 @@ class ViewController: UIViewController {
             var generator = SeededGenerator(seed: UInt64(UserDefaults.standard.integer(forKey: "ScreenshotSeed")))
             self.cards.shuffle(using: &generator)
         }
-        else if self.winnableOnly, let tags = WinnableDeals.shared.shuffledTags() {
+        else if let tags = self.dealing.deals?.shuffledTags() {
             // createCards made them in tag order
             self.cards = tags.map { self.cards[$0] }
         }
