@@ -1,32 +1,33 @@
 1. SCREEN RECORDING
-Attached to our reply in App Store Connect. Recorded on an iPhone running the latest iOS, it starts at launch and shows: dealing and playing a game, Undo, Hint, Auto Moves, the Cards menu (artwork and choosing a photo for the card back), How to Play, and buying Unlimited Undo, the app's only paid feature. The app has no accounts, no login and no user-generated content.
+Attached to our reply in App Store Connect. Recorded on an iPhone running the latest iOS, it starts at launch and shows dealing and playing a game, Undo, Hint, Auto Moves, the Cards menu (artwork and a photo for the card back), How to Play, and buying Unlimited Undo, the only paid feature. There are no accounts, login or user-generated content.
 
 2. PURPOSE AND AUDIENCE
-Suze Solitaire is a single-player card game, a Canfield-style solitaire for anyone who enjoys a quick game of patience. It's a relaxing, offline pastime with no ads, accounts or data collection. Its value is a clean, accessible game (full VoiceOver support, larger text, dark mode, haptics) that works the same on every iPhone and iPad size, in portrait and landscape.
+Suze Solitaire is a single-player Canfield-style solitaire for anyone who enjoys a quick game of patience: offline, with no ads, accounts or data collection, full VoiceOver support, larger text and dark mode, on every iPhone and iPad size.
 
 WHAT MAKES IT DIFFERENT
-This is not a template or a reskin of another app, and no other solitaire games come from this account. The app is named for our Aunt Suze, who learned this game as a child, and it was written for this one game:
-- The rules are a specific Canfield variant: a 13-card blind, upper stacks that all start from the rank of the card dealt and wrap from King to Ace, and empty lower stacks that only the blind can fill until it runs out.
-- The score is a running money total that carries over from game to game ($45 per game, $5 per card put up, $250 for a win). There is no real money, wagering or prizes; it's a score.
-- A Stats page (tap the score) tracks wins and losses, win rate, streaks, best and worst games, and average moves and time per game.
-- Undo can take back New Game, and Unlimited Undo steps back through every move, including the automatic ones.
-- Show When Stuck works out whether any move is left, even deep in the deck, and says so only after the player has stopped touching the screen for a few seconds.
+This is not a template or a reskin, and no other solitaire games come from this account. It's named for our Aunt Suze, who learned this game as a child, and was written for this one game:
+- Winnable Deals Only: with it on, every new game can be won. We wrote a solver for these rules, ran it over 3,400 shuffled deals, and ship the 2,952 it played through to a win. Our tests replay its winning moves under the app's own rules.
+- Original artwork: two decks drawn for this app, each with its own back. Watercolor has Art Nouveau cards in layered washes and a Matterhorn back rendered from real Swiss terrain data; Café Racer has Bauhaus-style cards and a motorcycle rider on the back.
+- The rules are a specific variant: a 13-card blind, upper stacks that start from the rank dealt and wrap from King to Ace, and empty lower stacks only the blind can fill until it runs out.
+- A running money score carries over between games ($45 per game, $5 per card up, $250 per win). No real money, wagering or prizes.
+- Stats (tap the score) tracks wins, losses, streaks, best and worst games, and moves and time per game.
+- Undo can take back New Game; Unlimited Undo steps back through every move, even automatic ones.
+- Show When Stuck works out whether any move is left, even deep in the deck.
 
 3. HOW TO USE IT
-No login, setup or sample files are needed. Launch the app and a game is dealt.
-- Tap the deck (top left) or anywhere on the table to deal three cards. Drag cards and runs between stacks, or double-tap a card to send it to the upper stacks. The rules are in the ••• menu > How to Play.
-- Top corners: New Game (left) and Undo (right). Undo takes back the last move for free.
-- ••• menu (bottom right): Hint, How to Play, Stats, Auto Moves, Show When Stuck, Highlight Drop Spot, Cards (Artwork: choose the card design; Back: choose a photo from the photo library for the card back), Unlimited Undo, Restore Purchase, About.
-- Tapping the score line (beside the ••• menu) also opens Stats, which has Reset Stats at the bottom.
-- Swipe from the left screen edge to undo, or from the right edge for a hint.
-- Paid content: the one In-App Purchase, "Unlimited Undo" (non-consumable, net.dseelig.SuzeSolitaire product unlimited_undo), is in the ••• menu. It lets Undo take back every move, not just the last one. "Restore Purchase" is right below it in the same menu.
-- A long press on the score shows a diagnostic code used only by the developer to turn on a test menu on our own devices. It needs a key that only the developer has and does nothing for anyone else; there is no hidden content for users.
+No login, setup or sample files are needed; a game is dealt at launch.
+- Tap the deck (top left) or the table to deal three cards. Drag cards and runs, or double-tap a card to send it up. Rules: ••• menu > How to Play.
+- Top corners: New Game (left) and Undo (right, free for the last move).
+- ••• menu (bottom right): Hint, How to Play, Stats, Auto Moves, Show When Stuck, Highlight Drop Spot, Winnable Deals Only (applies from the next New Game), Cards (Artwork: Classic, Classic Large, Watercolor, Café Racer; Back: a photo from the library), Unlimited Undo, Restore Purchase, About.
+- Swipe in from the left edge to undo, or the right edge for a hint.
+- Paid content: the one In-App Purchase, "Unlimited Undo" (non-consumable, product unlimited_undo), in the ••• menu, with "Restore Purchase" below it.
+- A long press on the score shows a code the developer uses to turn on a test menu on our own devices. It needs a key only the developer has; there is no hidden content for users.
 
 4. EXTERNAL SERVICES
-None besides Apple's own frameworks. The app makes no network requests of its own. It uses StoreKit for the In-App Purchase and the system photo picker (PHPicker) for an optional card-back photo, which stays on the device. No analytics, ads, accounts, AI or third-party SDKs.
+None besides Apple's frameworks; the app makes no network requests of its own. StoreKit handles the purchase and the system photo picker (PHPicker) an optional card-back photo, which stays on the device. No analytics, ads, accounts, AI or third-party SDKs.
 
 5. REGIONAL DIFFERENCES
-None. The app works the same in every region; only the In-App Purchase's local price differs. It is in English.
+None; only the purchase's local price differs. English only.
 
 6. THIRD-PARTY MATERIAL
-Not a regulated industry. The card artwork is based on "Vector Playing Cards" by Byron Knoll, released into the public domain. The watercolor and café racer decks are original (terrain © swisstopo). The Abril Fatface, Sorts Mill Goudy and Jost fonts are used under the SIL Open Font License 1.1. The default card-back photo was taken by the app's original author, Kevin DeRonne.
+Not a regulated industry. The Classic decks are based on "Vector Playing Cards" by Byron Knoll (public domain). The Watercolor and Café Racer decks are original (terrain © swisstopo). Fonts: Abril Fatface, Sorts Mill Goudy and Jost, under the SIL Open Font License 1.1. The default card-back photo was taken by the app's original author, Kevin DeRonne.

@@ -1,1 +1,1 @@
-canfield,demon,patience,card game,cards,stats,streak,undo,vegas scoring,offline,no ads,voiceover
+canfield,demon,patience,card game,winnable,stats,streak,undo,vegas scoring,offline,no ads,voiceover
