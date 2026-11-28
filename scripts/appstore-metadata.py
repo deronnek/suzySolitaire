@@ -7,6 +7,7 @@
 #     (the first version can't have release notes)
 #   Metadata/subtitle.txt, privacy_policy_url.txt and copyright.txt
 #   Metadata/age_rating.json, the answers to the age rating questions
+#   Metadata/review_notes.txt, the Notes in App Review Information
 #   Screenshots/iPhone-6.9.png, iPad-13.png and iPhone-Duo.png (from scripts/screenshots.sh), replacing the ones already
 #     there
 #
@@ -113,10 +114,16 @@ def main():
         patch("ageRatingDeclarations", info["id"], json.load(f))
     print("  age rating")
 
+    review = call("GET", f"/v1/appStoreVersions/{version['id']}/appStoreReviewDetail")["data"]
+    patch("appStoreReviewDetails", review["id"], {"notes": text("review_notes.txt")})
+    print("  App Review notes")
+
     builds = call("GET", "/v1/builds", query={"filter[app]": app["id"], "filter[preReleaseVersion.version]": version_string,
                                                "filter[processingState]": "VALID", "sort": "-uploadedDate", "limit": 200})["data"]
     wanted = os.environ.get("BUILD")
-    build = next((b for b in builds if b["attributes"]["version"] == wanted), None) if wanted else (builds[0] if builds else None)
+    # App Store Connect drops leading zeros, so 20261124.0601 comes back as 20261124.601
+    number = lambda v: [int(part) for part in v.split(".")]
+    build = next((b for b in builds if number(b["attributes"]["version"]) == number(wanted)), None) if wanted else (builds[0] if builds else None)
     if build:
         call("PATCH", f"/v1/appStoreVersions/{version['id']}/relationships/build", {"data": {"type": "builds", "id": build["id"]}})
         print(f"  build {build['attributes']['version']}")

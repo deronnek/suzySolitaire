@@ -1,1 +1,1 @@
-canfield,demon,patience,card game,cards,classic,vegas,offline,no ads,single player,blind,deal three
+canfield,demon,patience,card game,winnable,stats,streak,undo,vegas scoring,offline,no ads,voiceover

@@ -1,25 +1,44 @@
-Suze Solitaire is a classic Canfield-style solitaire, built for quick games on iPhone and iPad.
+Suze Solitaire is Canfield-style patience with a money score that carries over from game to game. Every new game costs $45, every card you put up earns $5, and a win pays $250. Can you stay out of the red?
 
-Thirteen cards start face up in the blind beside the deck. One card is dealt to the upper stacks, and its rank starts all four of them. Build the upper stacks up by suit, wrapping from King to Ace, and build the four lower stacks down in alternating colors. Deal from the deck three cards at a time, as often as you like. Each card you put up earns $5, and a win earns $250.
+It's named for Aunt Suze, who learned this game as a child.
 
-PLAY YOUR WAY
-• Drag cards and runs, or double-tap a card to send it to an upper stack
-• Tap anywhere on the table to deal
-• Undo your last move, or undo New Game if you tapped it by mistake
-• Unlimited Undo, an optional in-app purchase, takes back as many moves as you like, even auto moves
+HOW IT PLAYS
+Thirteen cards start face up in the blind beside the deck. One card is dealt to the upper stacks, and its rank starts all four of them, so every game builds from a different card. Build the upper stacks up by suit, wrapping from King to Ace, and the four lower stacks down in alternating colors. Empty lower stacks fill from the blind while it lasts. Deal from the deck three cards at a time, as often as you like.
+
+DEALS YOU CAN WIN
+Turn on Winnable Deals Only and every new game is one that can be won. We ran a solver over thousands of deals ahead of time and kept only the ones it could play through to a win, so if you get stuck, it's the play and not the cards.
+
+ORIGINAL CARD ARTWORK
+Two decks designed for Suze Solitaire, each with its own card back:
+• Watercolor: Art Nouveau cards in soft, layered washes with gold fans in the corners, and a Matterhorn card back painted from real Swiss terrain data
+• Café Racer: bold Bauhaus-style cards in flat color, with a rider on a café racer motorcycle on the back
+Or play with Classic or Classic Large, whose big corner ranks are easy to read on a phone.
+
+TRACK HOW YOU'RE DOING
+Tap the score to open Stats:
+• Wins, losses, win rate, and your current and best streaks
+• Total money, your best and worst games, and cards put up per game
+• Average moves per game and per win, and your fewest moves in a win
+• Average time per game and your fastest win, counting only time spent playing
+
+UNDO, YOUR WAY
+• Undo your last move for free, or undo New Game if you tapped it by mistake
+• Unlimited Undo, an optional one-time purchase, steps back through every move to the start of the game, even auto moves
+• Swipe in from the left edge to undo, or from the right edge for a hint
+
+HELP WHEN YOU WANT IT
+• Hint points out a move, or tells you to deal
 • Auto Moves puts cards up for you as soon as they can go
-• Ask for a Hint when you're stuck
-
-OPTIONAL HELP, OFF UNTIL YOU WANT IT
+• Show When Stuck lets you know when only the deck has a play, or when the game can't be won, once you've stopped to look
 • Highlight Drop Spot outlines where a card will land as you drag it
-• Show When Stuck tells you when only the deck has something to play, or when the game can't be won
+All of these, and Winnable Deals Only, are off until you turn them on.
 
-MADE FOR YOUR DEVICE
-• Portrait and landscape on iPhone and iPad, including Split View and Slide Over
-• Dark mode with a dimmer table
-• Pick any photo as your card back
-• Gentle haptics as you pick up and drag cards
-• Full VoiceOver support, with actions to select and move cards
-• Your game, score, wins and losses are saved automatically
+MADE FOR iPHONE AND iPAD
+• Drag cards and runs, double-tap to send a card up, tap the table to deal
+• Portrait and landscape, Split View and Slide Over
+• Use any photo as your card back
+• Dark mode with a dimmer table, and gentle haptics
+• Full VoiceOver support, with actions to pick up and place cards, and larger text
+• Your game and stats are saved automatically and play fully offline
 
 No ads, no accounts, and no data collected. Your game never leaves your device.

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The dimmer dark-mode felt: 0.090, 0.220, 0.098 -->
+    <color name="felt">#173819</color>
+</resources>

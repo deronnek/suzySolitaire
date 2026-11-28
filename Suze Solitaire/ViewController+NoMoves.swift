@@ -7,7 +7,9 @@ import UIKit
 
 // After each turn, a banner points out when nothing on the table can be played: it offers to deal when a card the deck
 // would turn up can be played, and a new game when going through the whole deck wouldn't help either.  It can be
-// turned on in the "..." menu (it's off on a fresh install, like the other hints).  It goes away whenever cards are dealt, and waits a few seconds before coming back.
+// turned on in the "..." menu (it's off on a fresh install, like the other hints).  It goes away whenever cards are dealt,
+// and only comes up once the screen has gone untouched for a few seconds, so it doesn't interrupt a player still looking
+// for a move.
 extension ViewController {
 
     enum PlayState: Equatable {
@@ -20,7 +22,7 @@ extension ViewController {
     }
 
     static let showsNoMovesKey = "ShowsNoMoves"
-    // How long after cards are dealt before saying there's nothing to play, so the player gets a look at them first
+    // How long the screen goes untouched, and cards undealt, before saying there's nothing to play
     static let noMovesBannerDelay: TimeInterval = 8
 
     var showsNoMoves: Bool {
@@ -65,7 +67,7 @@ extension ViewController {
                         continue
                     }
                     if destination.stackType == .suitstack {
-                        return (card, source, destination)
+                        return (card, source, self.upperStack(for: card, from: source) ?? destination)
                     }
                     if let below = below {
                         // Uncovers a card that isn't part of the run, frees one to go up, or splits the run into an
@@ -95,7 +97,10 @@ extension ViewController {
 
     // An upper or lower stack that card, at the top of source, could go to
     func destination(for card: Card, from source: CardStack) -> CardStack? {
-        return (self.suitStacks + self.cardStacks).compactMap { $0 }.first { destination in
+        if let upper = self.upperStack(for: card, from: source) {
+            return upper
+        }
+        return self.cardStacks.compactMap { $0 }.first { destination in
             self.destinationAccepts(card, from: source.stackType, to: destination, onTopOfCard: destination.cards.last)
         }
     }
@@ -132,12 +137,13 @@ extension ViewController {
         self.noMovesBannerTimer?.cancel()
         self.noMovesBannerTimer = nil
         var state = self.justWon || !(self.showsNoMoves || forHint) ? .canPlay : self.playState()
-        if state != .canPlay, !forHint, let dealt = self.dealtDate, -dealt.timeIntervalSinceNow < ViewController.noMovesBannerDelay {
+        // A touch since the timer was set pushes the banner back: it runs this again, which waits out the rest
+        if state != .canPlay, !forHint, let touched = self.lastTouchDate, -touched.timeIntervalSinceNow < ViewController.noMovesBannerDelay {
             let timer = DispatchWorkItem { [weak self] in
                 self?.updateNoMovesBanner()
             }
             self.noMovesBannerTimer = timer
-            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.noMovesBannerDelay + dealt.timeIntervalSinceNow, execute: timer)
+            DispatchQueue.main.asyncAfter(deadline: .now() + ViewController.noMovesBannerDelay + touched.timeIntervalSinceNow, execute: timer)
             state = .canPlay
         }
         let message: String?
@@ -179,5 +185,36 @@ extension ViewController {
         self.noMovesBanner = banner
         self.updateAccessibility()
         self.announce(message)
+    }
+}
+
+// Notes every touch anywhere in the view it's added to, including drags that are let go without moving a card, without
+// ever recognizing a gesture, so the touches still reach the cards and controls as before
+class TouchWatcher: UIGestureRecognizer {
+    private let touched: () -> Void
+
+    init(touched: @escaping () -> Void) {
+        self.touched = touched
+        super.init(target: nil, action: nil)
+        self.cancelsTouchesInView = false
+        self.delaysTouchesEnded   = false
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.touched()
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.touched()
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.touched()
+        self.state = .failed
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.touched()
+        self.state = .failed
     }
 }

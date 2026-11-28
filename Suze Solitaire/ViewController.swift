@@ -129,9 +129,15 @@ class ViewController: UIViewController {
     }
     // The banner saying there's nothing to play (see ViewController+NoMoves.swift)
     var noMovesBanner: UIView? = nil
-    // When cards were last dealt, by a new game or the deck, and the timer that shows the no-moves banner once it's been a
-    // few seconds
-    var dealtDate: Date? = nil
+    // When the player last touched the screen or cards were dealt, and the timer that shows the no-moves banner once it's
+    // been a few seconds
+    var lastTouchDate: Date? = nil
+    // Stats over finished games, and this game's moves and time so far (see ViewController+Stats.swift).  gameMoves is
+    // nil for a game begun before stats were kept, and the clock runs from gameClockStart while the app is open.
+    var stats = GameStats()
+    var gameMoves: Int? = 0
+    var gameSeconds: TimeInterval = 0
+    var gameClockStart: Date? = nil
     var noMovesBannerTimer: DispatchWorkItem? = nil
     // Outlines where the card being dragged would land (see ViewController+Hints.swift)
     var dropHighlight: UIView? = nil
@@ -149,6 +155,14 @@ class ViewController: UIViewController {
     
     var deckTaps   = 0
     var justWon    = false
+    // Whether the cards are going up on their own to win (see finishWin)
+    var finishingWin = false
+    // Whether Auto Moves is putting cards up, and which run of them it is, so one that Undo or New Game stopped doesn't
+    // carry on (see startAutoMoves)
+    var autoMoving = false
+    var autoMoveRun = 0
+    // Where each card sliding is going, by view tag, so a layout that leaves it going there lets it get there
+    var slideTargets = [Int: CGRect]()
     // The celebration of a win, over the table until New Game (see ViewController+Victory.swift)
     var victoryView: VictoryView? = nil
     // The pill showing what an edge swipe will do, and whether letting go now would do it (see ViewController+Swipes.swift)
@@ -188,11 +202,16 @@ class ViewController: UIViewController {
         // Quick taps on the deck or the table each deal, rather than the second being taken as a double tap
         tapGesture.delegate = self
         self.view.addGestureRecognizer(tapGesture)
+        self.view.addGestureRecognizer(TouchWatcher { [weak self] in
+            self?.lastTouchDate = Date()
+        })
         self.setUpAppearance()
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.saveGame), name: UIScene.didEnterBackgroundNotification, object: nil)
         
         self.setUpChalk()
+        self.setUpStatsTap()
+        self.setUpGameClock()
         self.setUpDebugAccess()
         self.setUpEdgeSwipes()
         // New Game is a plus, like the New Game button in the "No moves left" banner
@@ -212,10 +231,14 @@ class ViewController: UIViewController {
             self.view.window?.windowScene?.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
         }
         #if DEBUG
-        // scripts/win-video.sh passes -FinishTurnAfter <seconds> to play out the saved game's auto moves untouched
+        // scripts/win-video.sh passes -FinishTurnAfter <seconds> to put up the saved game's next card untouched, which
+        // the rest follow up when the win is certain
         let finishAfter = UserDefaults.standard.double(forKey: "FinishTurnAfter")
         if finishAfter > 0 && self.doInitTable {
             DispatchQueue.main.asyncAfter(deadline: .now() + finishAfter) {
+                if let move = self.findMove(), move.to.stackType == .suitstack {
+                    self.putUp(card: move.card, from: move.from)
+                }
                 self.finishTurn()
             }
         }
@@ -230,10 +253,12 @@ class ViewController: UIViewController {
                 self.wins   = saved.wins
                 self.losses = saved.losses
                 self.autoMoves = saved.autocomplete
+                self.restoreStats(from: saved, game: true)
                 if saved.board == nil || !self.restoreBoard(saved.board!, suitStackStarter: saved.suitStackStarter) {
                     // The saved game had been won (or couldn't be read), so deal a new one
                     self.score -= 45
                     self.initTable()
+                    self.startGameStats()
                 }
             }
             else {
@@ -243,6 +268,7 @@ class ViewController: UIViewController {
                 self.losses = 0
                 self.autoMoves = false
                 self.initTable()
+                self.startGameStats()
             }
             self.doInitTable = false;
         }
@@ -285,6 +311,10 @@ class ViewController: UIViewController {
         var suitStackStarter: Int
         // nil if the game was just won; the next launch deals a new game
         var board:            Board?
+        // nil in games saved before stats were kept
+        var stats:            GameStats? = nil
+        var gameMoves:        Int?       = nil
+        var gameSeconds:      Double?    = nil
     }
     
     static var savedGameURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("SavedGame.json")
@@ -298,7 +328,8 @@ class ViewController: UIViewController {
         let board = SavedGame.Board(fub: tags(fub), deck: tags(deck), deal: tags(deal),
                                     suitStacks: self.suitStacks.map(tags), cardStacks: self.cardStacks.map(tags))
         return SavedGame(score: self.score, wins: self.wins, losses: self.losses, autocomplete: self.autoMoves,
-                         suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board)
+                         suitStackStarter: self.suitStackStarter, board: self.justWon ? nil : board,
+                         stats: self.stats, gameMoves: self.gameMoves, gameSeconds: self.gameElapsed)
     }
     
     @objc func saveGame() {
@@ -402,19 +433,34 @@ class ViewController: UIViewController {
     @discardableResult
     func putUp(card: Card, from sourceStack: CardStack) -> Bool {
         self.activeCard = card
-        for i in 0..<4 {
-            let topCard = self.suitStacks[i]!.cards.last
-            if self.acceptCardMove(sourceStack: sourceStack, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
-                self.performMove(card: card, from: sourceStack, to: self.suitStacks[i]!)
-                return true
-            }
+        guard let destination = self.upperStack(for: card, from: sourceStack),
+              self.acceptCardMove(sourceStack: sourceStack, destinationStack: destination, onTopOfCard: destination.cards.last) else {
+            return false
         }
-        return false
+        self.performMove(card: card, from: sourceStack, to: destination)
+        return true
+    }
+
+    // The upper stack card would go to, if any will take it.  A card starting a stack goes where the colors keep
+    // alternating across the upper stacks: the leftmost empty stack at odds with the fewest cards already up.
+    func upperStack(for card: Card, from sourceStack: CardStack) -> CardStack? {
+        let uppers = self.suitStacks.compactMap { $0 }
+        func conflicts(_ i: Int) -> Int {
+            return uppers.indices.filter { j in
+                guard let up = uppers[j].cards.first else {
+                    return false
+                }
+                return (up.color == card.color) != ((i - j) % 2 == 0)
+            }.count
+        }
+        let candidates = uppers.indices.filter { self.destinationAccepts(card, from: sourceStack.stackType, to: uppers[$0], onTopOfCard: uppers[$0].cards.last) }
+        return candidates.min { conflicts($0) < conflicts($1) }.map { uppers[$0] }
     }
 
     
     // Removes every stack and its cards from the screen
     func clearTable() {
+        self.stopAutoMoves()
         self.cards.removeAll()
         
         for viewContainer in [self.deck, self.deal, self.fub] + self.suitStacks + self.cardStacks {
@@ -426,6 +472,10 @@ class ViewController: UIViewController {
     @IBAction func startNewGameWithSender(sender: AnyObject) {
         // A game that's already won has nothing to lose, so only unfinished games can be brought back
         let previousGame = self.justWon ? nil : self.currentGame()
+        if !self.justWon {
+            // Counted while its cards are still on the table
+            self.recordGame(won: false)
+        }
         
         self.clearTable()
         
@@ -439,11 +489,14 @@ class ViewController: UIViewController {
         
         self.score -= 45
         self.initTable()
+        self.startGameStats()
         // MARK: Debug trivial table
         // self.initTableTrivial()
         self.activeCard = nil
         self.redrawTable()
-        self.dealtDate = Date()
+        self.lastTouchDate = Date()
+        // Over the new table
+        self.floatOffScore("-$45", red: true)
         print("Found \(self.suitStacks.count) suitstacks")
         
         self.gameBeforeNewGame = nil
@@ -456,6 +509,7 @@ class ViewController: UIViewController {
     
     // The storyboard connects the undo button to undoMove:, so the parameter must be unlabeled
     @IBAction func undoMove(_ sender: Any) {
+        self.stopAutoMoves()
         if self.hasUnlimitedUndo {
             self.undoTurn()
             return
@@ -498,6 +552,7 @@ class ViewController: UIViewController {
         let countBefore = destination.cards.count
         self.moveCardBetweenStacks(cardToMove: card, sourceStack: source, destinationStack: destination)
         self.lastMove = (Array(destination.cards[countBefore...]), source, destination)
+        self.countMove()
         self.deckTaps = 0
         self.gameBeforeNewGame = nil
         self.canUndo = true
@@ -507,12 +562,17 @@ class ViewController: UIViewController {
     
     // MARK: Animation
     
-    // Where every card on the table is, in the main view's coordinates, by view tag
+    // Where every card on the table is on screen, partway through a slide or not, in the main view's coordinates, by
+    // view tag
     func cardFrames() -> [Int: CGRect] {
         var frames = [Int: CGRect]()
         for case let card? in self.viewTagToCard.values {
             if let superview = card.view.superview {
-                frames[card.view.tag] = self.view.convert(card.view.frame, from: superview)
+                var frame = card.view.frame
+                if card.view.layer.animation(forKey: "position") != nil, let center = card.view.layer.presentation()?.position {
+                    frame.origin = CGPoint(x: center.x - frame.width / 2, y: center.y - frame.height / 2)
+                }
+                frames[card.view.tag] = self.view.convert(frame, from: superview)
             }
         }
         return frames
@@ -520,8 +580,10 @@ class ViewController: UIViewController {
     
     static let slideDuration: TimeInterval = 0.2
 
-    // Lays out the table, then slides each card that moved from where it was (see cardFrames) to its new place
-    func layOutAndSlide(from oldFrames: [Int: CGRect]) {
+    // Lays out the table, then slides each card that moved from where it was (see cardFrames) to its new place.  A card
+    // still sliding from an earlier move, such as when the deck is tapped quickly or Auto Moves is putting cards up,
+    // carries on to where it was going, or turns from where it is toward its new place.
+    func layOutAndSlide(from oldFrames: [Int: CGRect], duration: TimeInterval = ViewController.slideDuration) {
         self.redrawTable()
         if UIAccessibility.isReduceMotionEnabled {
             return
@@ -530,23 +592,22 @@ class ViewController: UIViewController {
             guard let superview = card.view.superview, let old = oldFrames[card.view.tag] else {
                 return nil
             }
-            let start = superview.convert(old, from: self.view)
-            return start.origin == card.view.frame.origin ? nil : (card, start, card.view.frame)
-        }
-        // Cards still sliding from the last move, such as when the deck is tapped quickly, jump to where they were
-        // going.  A layout that moves nothing, like the one at the end of each turn, leaves them to finish.
-        if !moved.isEmpty {
-            for case let card? in self.viewTagToCard.values {
-                card.view.layer.removeAnimation(forKey: "position")
-                card.view.layer.removeAnimation(forKey: "bounds")
+            let end = card.view.frame
+            if card.view.layer.animation(forKey: "position") != nil && self.slideTargets[card.view.tag] == end {
+                return nil
             }
+            let start = superview.convert(old, from: self.view)
+            return start.origin == end.origin ? nil : (card, start, end)
         }
         for (card, start, end) in moved {
             let superview = card.view.superview!
             // Keep the moving card above the stacks it passes over
             self.view.bringSubviewToFront(superview)
+            card.view.layer.removeAnimation(forKey: "position")
+            card.view.layer.removeAnimation(forKey: "bounds")
             card.view.frame = start
-            UIView.animate(withDuration: ViewController.slideDuration, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+            self.slideTargets[card.view.tag] = end
+            UIView.animate(withDuration: duration, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
                 card.view.frame = end
             }
         }
@@ -612,6 +673,10 @@ class ViewController: UIViewController {
         if UserDefaults.standard.object(forKey: "ScreenshotSeed") != nil {
             var generator = SeededGenerator(seed: UInt64(UserDefaults.standard.integer(forKey: "ScreenshotSeed")))
             self.cards.shuffle(using: &generator)
+        }
+        else if self.winnableOnly, let tags = WinnableDeals.shared.shuffledTags() {
+            // createCards made them in tag order
+            self.cards = tags.map { self.cards[$0] }
         }
         else {
             self.cards.shuffle()
@@ -1097,7 +1162,7 @@ class ViewController: UIViewController {
         self.gameBeforeNewGame = nil
         self.lastMove   = nil
         self.activeCard = nil
-        self.dealtDate  = Date()
+        self.lastTouchDate  = Date()
         
         // Refresh the appropriate rectangles (if used the moveCardBetweenStacks function above this wouldn't be necessary, but it needs to be smarter about 
         // things like parent relationships first)
@@ -1111,28 +1176,17 @@ class ViewController: UIViewController {
     
     // Everything that happens after the player moves: automatic moves, layout, and checking for a win
     func finishTurn() {
-        let frames = self.cardFrames()
-        // Make all possible moves to suitstacks
-        if self.autoMoves {
-            while self.findCardForSuitstack() {
-                self.canUndo = false
-            }
+        // A card put up once every card is out on the table: the rest follow it up, one by one
+        if !self.finishingWin, self.lastMove?.to.stackType == .suitstack, self.winIsCertain() {
+            self.finishWin()
+            return
         }
-        
         // Re-lay out so stacks that grew squeeze to fit above the toolbar
-        self.layOutAndSlide(from: frames)
-        
-        // Check to see if we've just won
-        var won = true
-        for i in 0..<self.suitStacks.count {
-            if self.suitStacks[i]!.cards.count != 13 {
-                won = false
-            }
+        self.layOutAndSlide(from: self.cardFrames())
+        if self.autoMoves && !self.finishingWin {
+            self.startAutoMoves()
         }
-        
-        if won {
-            self.runVictory()
-        }
+        self.checkForWin()
         self.updateNoMovesBanner()
     }
     
@@ -1206,11 +1260,19 @@ class ViewController: UIViewController {
 
     }
     
+    // Wins once every card is up
+    func checkForWin() {
+        if self.suitStacks.allSatisfy({ $0!.cards.count == 13 }) {
+            self.runVictory()
+        }
+    }
+
     func runVictory() {
         if !self.justWon {
             self.announce("You won! $250")
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             self.activeCard = nil
+            self.recordGame(won: true)
             self.score += 250
             self.wins += 1
             // A won game is over, so there's nothing to go back to
@@ -1220,50 +1282,6 @@ class ViewController: UIViewController {
             self.celebrateWin()
         }
         self.justWon = true
-    }
-    
-    func findCardForSuitstack() -> Bool {
-       let backupActive = self.activeCard;
-        
-        // Over all suitstacks, check each source
-        for i in 0..<self.suitStacks.count {
-            let topCard = self.suitStacks[i]!.cards.last
-            //NSLog(@"TopCard: %p",topCard);
-            
-            // Check cardstacks
-            for j in 0..<self.cardStacks.count {
-                
-                self.activeCard = self.cardStacks[j]!.cards.last
-                
-                if self.acceptCardMove(sourceStack: self.cardStacks[j]!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
-                    // Make the move
-                    self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.cardStacks[j]!, destinationStack: self.suitStacks[i]!)
-                    self.activeCard = backupActive
-                    return true
-                }
-            }
-            
-            // Check fub
-            self.activeCard = self.fub!.cards.last
-            if self.acceptCardMove(sourceStack: self.fub!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
-                // Make the move
-                self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.fub!, destinationStack: self.suitStacks[i]!)
-                self.activeCard = backupActive;
-                return true;
-            }
-            
-            // Check deal
-            self.activeCard = self.deal!.cards.last
-            if self.acceptCardMove(sourceStack: self.deal!, destinationStack: self.suitStacks[i]!, onTopOfCard: topCard) {
-                // Make the move
-                self.moveCardBetweenStacks(cardToMove: self.activeCard!, sourceStack: self.deal!, destinationStack: self.suitStacks[i]!)
-                self.activeCard = backupActive;
-                return true;
-            }
-        }
-        
-        self.activeCard = backupActive
-        return false
     }
     
     // This function checks to see if an attempted card move is valid

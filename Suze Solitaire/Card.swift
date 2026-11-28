@@ -52,34 +52,64 @@ enum cardColor {
     case Black
 }
 
-// The four sets of card faces, vector images in Assets.xcassets/Cards (see scripts/import-cards.py): big corner ranks
-// for the small cards of a phone-sized table, or the full design for a roomy table's big cards, each with its ranks in
-// Arial or Abril Fatface.  The game uses the Arial ones; the Debug menu can show any of them.
+// The sets of card faces, vector images in Assets.xcassets/Cards (see scripts/import-cards.py): big corner ranks for
+// the small cards of a phone-sized table, or the full design for a roomy table's big cards, each with its ranks in
+// Abril Fatface, and two of our own artwork laid out like the small ones, in watercolor and in a café racer's Bauhaus
+// colors.  The game shows big ranks unless the player picks others in Cards › Artwork.
 enum CardFaces: String, CaseIterable {
-    case smallArial = "SmallArial"
     case smallAbril = "SmallAbril"
-    case largeArial = "LargeArial"
     case largeAbril = "LargeAbril"
+    case watercolor = "Watercolor"
+    case racer      = "Racer"
 
     var title: String {
         switch self {
-            case .smallArial: "Small, Arial"
-            case .smallAbril: "Small, Abril Fatface"
-            case .largeArial: "Large, Arial"
-            case .largeAbril: "Large, Abril Fatface"
+            case .smallAbril: "Classic Large"
+            case .largeAbril: "Classic"
+            case .watercolor: "Watercolor"
+            case .racer:      "Café Racer"
         }
     }
 
-    // The corner radius of the card shape in the images, as a fraction of their width: the small cards' corners have a
-    // radius of 10 of the card's 167 units, and the large ones' 6.86 inside a 0.25 margin, so their curve is centred
-    // 7.11 in from each edge
+    // The corner radius of the card shape in the images, as a fraction of their width: the small cards' corners, and our
+    // own decks', have a radius of 10 of the card's 167 units, and the large ones' 6.86 inside a 0.25 margin, so their
+    // curve is centred 7.11 in from each edge
     var cornerRadiusFraction: CGFloat {
-        (self == .smallArial || self == .smallAbril ? 10 : 7.11) / 167.0869141
+        (self == .largeAbril ? 7.11 : 10) / 167.0869141
     }
 
-    // The faces the game shows on a table of either size
-    static func standard(large: Bool) -> CardFaces {
-        large ? .largeArial : .smallArial
+    // The color of the cards' paper, for the blank faces covered cards show
+    var paper: UIColor {
+        switch self {
+            case .watercolor: UIColor(red: 0xf5 / 255.0, green: 0xee / 255.0, blue: 0xdd / 255.0, alpha: 1)
+            case .racer:      UIColor(red: 0xf2 / 255.0, green: 0xed / 255.0, blue: 0xe2 / 255.0, alpha: 1)
+            default:          .white
+        }
+    }
+
+    // The back that comes with the faces, shown unless the player picks a photo, or nil for the game's usual back
+    var backImageName: String? {
+        switch self {
+            case .watercolor: "WatercolorBack"
+            case .racer:      "RacerBack"
+            default:          nil
+        }
+    }
+
+    // The faces the game shows unless the player picks others: big ranks in Abril Fatface, the set most our own, on a
+    // table of any size
+    static let standard = CardFaces.smallAbril
+
+    static let pickedKey = "CardFaces"
+
+    // The faces picked in the Cards menu, or nil for Default, the game's own (see standard)
+    static var picked: CardFaces? {
+        get {
+            // The Arial sets that were, as their Abril Fatface twins
+            let renamed = ["SmallArial": "SmallAbril", "LargeArial": "LargeAbril"]
+            return UserDefaults.standard.string(forKey: self.pickedKey).flatMap { CardFaces(rawValue: renamed[$0] ?? $0) }
+        }
+        set { UserDefaults.standard.set(newValue?.rawValue, forKey: self.pickedKey) }
     }
 }
 
@@ -102,7 +132,7 @@ class Card: NSObject {
         if let image = Card.blankFaces[Card.faces] {
             return image
         }
-        let image = Card.blankFace(.white)
+        let image = Card.blankFace(Card.faces.paper)
         Card.blankFaces[Card.faces] = image
         return image
     }
@@ -127,21 +157,24 @@ class Card: NSObject {
         }
     }
 
-    // The back every card shows, the player's or the default, with the corners of the faces showing.  Backs may come
-    // with corners already cut, at up to the small cards' radius, so the picture is drawn 2% bigger than the card to
-    // reach past them into the large cards' tighter corners.
+    // The back every card shows, the player's, the faces' own or the default, with the corners of the faces showing.
+    // Photo and default backs may come with corners already cut, at up to the small cards' radius, so they're drawn 2%
+    // bigger than the card to reach past them into the large cards' tighter corners.  A deck's own back is drawn to fit,
+    // since it has its corners already.
     static var backImage: UIImage {
         if let image = Card.backImages[Card.faces] {
             return image
         }
-        let source = Card.customBackImage ?? UIImage(imageLiteralResourceName: "cardback.png")
+        let ownBack = Card.customBackImage == nil ? Card.faces.backImageName.flatMap { UIImage(named: $0) } : nil
+        let source = Card.customBackImage ?? ownBack ?? UIImage(imageLiteralResourceName: "cardback.png")
         let size   = CGSize(width: 500, height: 500 * Card.aspectRatio)
         let format = UIGraphicsImageRendererFormat()
         format.scale  = 1
         format.opaque = false
         let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * Card.cornerRadiusFraction).addClip()
-            source.draw(in: CGRect(origin: .zero, size: size).insetBy(dx: -size.width * 0.01, dy: -size.height * 0.01))
+            let card = CGRect(origin: .zero, size: size)
+            UIBezierPath(roundedRect: card, cornerRadius: size.width * Card.cornerRadiusFraction).addClip()
+            source.draw(in: ownBack != nil ? card : card.insetBy(dx: -size.width * 0.01, dy: -size.height * 0.01))
         }
         Card.backImages[Card.faces] = image
         return image
@@ -174,9 +207,8 @@ class Card: NSObject {
     var backImage: UIImage {
         Card.backImage
     }
-    // The faces every card shows, which change with the table's size (see ViewController.updateCardFaces); the table
-    // can change size at any time, as when iPhone Duo folds
-    static var faces = CardFaces.smallArial
+    // The faces every card shows, which change when the player picks others (see ViewController.updateCardFaces)
+    static var faces = CardFaces.standard
     // Each set's image, loaded when first shown, so a card's face stays the same image while it's showing
     private var faceImages = [CardFaces: UIImage]()
     var faceImage: UIImage {

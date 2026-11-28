@@ -1,6 +1,6 @@
 #!/bin/zsh
-# Records a video of winning a game in the simulator: AppStore/Screenshots/game-almost-won.json, with Auto Moves
-# putting up the last cards on its own, then the celebration through to the New Game button.
+# Records a video of winning a game in the simulator: AppStore/Screenshots/game-almost-won.json, with a card put up
+# and the rest following it up one by one, then the celebration through to the New Game button.
 #
 #   scripts/win-video.sh [output.mp4] [simulator name or UDID] [portrait|landscape]
 #
@@ -36,7 +36,7 @@ xcrun simctl launch "$SIM" "$BUNDLE_ID" -ScreenshotOrientation "$ORIENTATION" -F
 sleep 5.2
 xcrun simctl io "$SIM" recordVideo --codec h264 --force "$raw" >/dev/null 2>&1 &
 recorder=$!
-sleep 9
+sleep 12
 kill -INT $recorder
 wait $recorder || true
 xcrun simctl uninstall "$SIM" "$BUNDLE_ID"
