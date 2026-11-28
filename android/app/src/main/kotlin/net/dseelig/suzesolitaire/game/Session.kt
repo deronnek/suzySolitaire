@@ -153,12 +153,12 @@ class Session(game: Game, var autoMoves: Boolean = false, var unlimitedUndo: Boo
         return true
     }
 
-    // Deals a new game.  Giving up on one that isn't won counts as a loss.
-    fun newGame(random: Random = Random.Default) {
+    // Deals a new game, one of winnable if it's given.  Giving up on one that isn't won counts as a loss.
+    fun newGame(random: Random = Random.Default, winnable: WinnableDeals? = null) {
         stopClock()
         val previous = game
         game = Game(
-            Table.deal(Card.all.shuffled(random)),
+            Table.deal(winnable?.shuffled(random) ?: Card.all.shuffled(random)),
             score = previous.score - Game.GAME_COST,
             wins = previous.wins,
             losses = previous.losses + if (previous.won) 0 else 1,

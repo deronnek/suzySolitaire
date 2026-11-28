@@ -218,6 +218,7 @@ private fun MainPage(vm: GameViewModel, onDismiss: () -> Unit, onHowToPlay: () -
     ToggleItem("Auto Moves", vm.autoMoves, vm::toggleAutoMoves)
     ToggleItem("Show When Stuck", vm.showsNoMoves, vm::toggleShowsNoMoves)
     ToggleItem("Highlight Drop Spot", vm.highlightsDrops, vm::toggleHighlightsDrops)
+    ToggleItem("Winnable Deals Only", vm.winnableOnly, vm::toggleWinnableOnly)
     HorizontalDivider()
     PageItem("Cards") { onPage(MenuPage.Cards) }
     HorizontalDivider()

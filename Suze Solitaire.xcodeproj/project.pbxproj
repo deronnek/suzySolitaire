@@ -19,6 +19,7 @@
 		0BAA5E1A2E9C00000000001B /* ViewController+Victory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000001A /* ViewController+Victory.swift */; };
 		0BAA5E1A2E9C00000000001D /* ViewController+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000001C /* ViewController+Debug.swift */; };
 		0BAA5E1A2E9C00000000001F /* ViewController+Swipes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C00000000001E /* ViewController+Swipes.swift */; };
+		0BAA5E1A2E9C0000000000F3 /* WinnableDeals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C0000000000F2 /* WinnableDeals.swift */; };
 		0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */; };
 		0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */; };
 		0B1A2B601CD297C6008C7B87 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */; };
@@ -63,6 +64,7 @@
 		0BAA5E1A2E9C00000000001A /* ViewController+Victory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Victory.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C00000000001C /* ViewController+Debug.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Debug.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C00000000001E /* ViewController+Swipes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Swipes.swift"; sourceTree = "<group>"; };
+		0BAA5E1A2E9C0000000000F2 /* WinnableDeals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WinnableDeals.swift; sourceTree = "<group>"; };
 		0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Appearance.swift"; sourceTree = "<group>"; };
 		0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Controls.swift"; sourceTree = "<group>"; };
 		0B1A2B5F1CD297C6008C7B87 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				0BAA5E1A2E9C00000000001A /* ViewController+Victory.swift */,
 				0BAA5E1A2E9C00000000001C /* ViewController+Debug.swift */,
 				0BAA5E1A2E9C00000000001E /* ViewController+Swipes.swift */,
+				0BAA5E1A2E9C0000000000F2 /* WinnableDeals.swift */,
 				0BAA5E1A2E9C000000000010 /* ViewController+Appearance.swift */,
 				0BAA5E1A2E9C000000000012 /* ViewController+Controls.swift */,
 				0BAA5E1A2E9C000000000008 /* ViewController+Accessibility.swift */,
@@ -312,6 +315,7 @@
 				0BAA5E1A2E9C00000000001B /* ViewController+Victory.swift in Sources */,
 				0BAA5E1A2E9C00000000001D /* ViewController+Debug.swift in Sources */,
 				0BAA5E1A2E9C00000000001F /* ViewController+Swipes.swift in Sources */,
+				0BAA5E1A2E9C0000000000F3 /* WinnableDeals.swift in Sources */,
 				0BAA5E1A2E9C000000000011 /* ViewController+Appearance.swift in Sources */,
 				0BAA5E1A2E9C000000000013 /* ViewController+Controls.swift in Sources */,
 				0BAA5E1A2E9C000000000009 /* ViewController+Accessibility.swift in Sources */,

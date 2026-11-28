@@ -77,6 +77,7 @@ needs no Apple Account; the app doesn't check the real App Store while it hosts 
 | `scripts/layout-screenshots.sh` | Screenshots every layout (iPhone and iPad in both orientations, iPhone Duo folded and unfolded) for checking. |
 | `scripts/appstore-metadata.py` | Uploads the listing in `AppStore/Metadata`, the screenshots and the newest build to the App Store version being prepared. It never submits anything. |
 | `scripts/import-cards.py` | Copies the card faces from a checkout of [svg-playing-cards](https://github.com/seeligd/svg-playing-cards) into both apps as vector images (`Assets.xcassets/Cards` and `android/app/src/main/res/raw`): big-rank cards for phone-sized tables and the full design for roomy ones, both in Abril Fatface, and the watercolor and café racer decks, with their backs. |
+| `scripts/winnable-deals.py` | Finds deals that can be won for Winnable Deals Only, with the solver in `scripts/winnable-deals/solve.c`, and writes them into both apps (`Assets.xcassets/WinnableDeals.dataset` and `android/app/src/main/res/raw/winnable_deals.txt`), with the moves that win the first 100 for the Android tests to play through. |
 | `scripts/debug-unlock.sh` | Signs a phone's code (long-press the score to see it) to unlock the Debug menu on that phone, iOS or Android, with a private key kept outside the repo. |
 | `scripts/appstore-iap.py` | Sets up the Unlimited Undo in-app purchase in App Store Connect: name, description, price, territories and review screenshot. |
 

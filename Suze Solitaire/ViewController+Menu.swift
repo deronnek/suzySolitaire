@@ -6,7 +6,7 @@
 import PhotosUI
 import UIKit
 
-// The "..." menu in the bottom corner: a hint, auto moves, the no-moves banner, the drop highlight, the cards' artwork and back, resetting wins and losses,
+// The "..." menu in the bottom corner: a hint, auto moves, the no-moves banner, the drop highlight, winnable deals, the cards' artwork and back, resetting wins and losses,
 // Unlimited Undo, the About box, and on engineers' phones the Debug menu (see ViewController+Debug.swift)
 extension ViewController: PHPickerViewControllerDelegate {
 
@@ -25,6 +25,11 @@ extension ViewController: PHPickerViewControllerDelegate {
 
         let drops = UIAction(title: "Highlight Drop Spot", image: UIImage(systemName: "scope"), state: self.highlightsDrops ? .on : .off) { _ in
             self.highlightsDrops.toggle()
+        }
+
+        let winnable = UIAction(title: "Winnable Deals Only", subtitle: "From the next new game", image: UIImage(systemName: "checkmark.seal"),
+                                state: self.winnableOnly ? .on : .off) { _ in
+            self.winnableOnly.toggle()
         }
 
         let choosePhoto = UIAction(title: "Choose Photo…", image: UIImage(systemName: "photo.on.rectangle")) { _ in
@@ -54,7 +59,7 @@ extension ViewController: PHPickerViewControllerDelegate {
         let howToPlay = UIAction(title: "How to Play", image: UIImage(systemName: "questionmark.circle")) { _ in
             self.showHowToPlay()
         }
-        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay, stats]), auto, noMoves, drops, cards,
+        let items: [UIMenuElement?] = [UIMenu(options: .displayInline, children: [hint, howToPlay, stats]), auto, noMoves, drops, winnable, cards,
                                        self.unlimitedUndoMenu(), about, self.debugMenu()]
         return UIMenu(children: items.compactMap { $0 })
     }

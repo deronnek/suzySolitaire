@@ -33,6 +33,7 @@ final class Suze_SolitaireTests: XCTestCase {
         // Most tests exercise the banner, which a fresh install has turned off (see testHintsAreOffOnAFreshInstall)
         UserDefaults.standard.set(true, forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
+        UserDefaults.standard.removeObject(forKey: ViewController.winnableOnlyKey)
         CardStack.isDark = false
         vc = try self.makeViewController()
         vc.score  = -45
@@ -50,6 +51,7 @@ final class Suze_SolitaireTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: CardFaces.pickedKey)
         UserDefaults.standard.removeObject(forKey: ViewController.showsNoMovesKey)
         UserDefaults.standard.removeObject(forKey: ViewController.highlightsDropsKey)
+        UserDefaults.standard.removeObject(forKey: ViewController.winnableOnlyKey)
         vc = nil
         navigationControllers = []
     }
@@ -1693,6 +1695,42 @@ final class Suze_SolitaireTests: XCTestCase {
         vc.finishTurn()
         XCTAssertFalse(vc.edgeSwipeCanBegin(from: .left, at: below))
         XCTAssertFalse(vc.edgeSwipeCanBegin(from: .right, at: below))
+    }
+
+    // MARK: Winnable Deals Only
+
+    func testWinnableDealsAreTheAndroidAppsAndWholeDecks() throws {
+        let lines = WinnableDeals.shared.lines
+        XCTAssertGreaterThan(lines.count, 1000)
+        for line in lines {
+            XCTAssertEqual(Set(WinnableDeals.decode(line)).count, 52, line)
+        }
+        // The Android app plays them through with the solver's moves (WinnableDealsTest), so both apps need the same list
+        let android = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("android/app/src/main/res/raw/winnable_deals.txt")
+        XCTAssertEqual(WinnableDeals(text: try String(contentsOf: android, encoding: .utf8)).lines, lines)
+    }
+
+    func testRelabellingMatchesTheAndroidApp() {
+        // The Ace of Clubs, a rank higher and swapped to red, is the Two of Diamonds
+        XCTAssertEqual(WinnableDeals.relabel(0, shift: 1, swap: 4), 14)
+        // The King of Hearts, round to an Ace and swapped with Diamonds
+        XCTAssertEqual(WinnableDeals.relabel(38, shift: 1, swap: 2), 13)
+        for swap in 0..<8 {
+            for shift in 0..<13 {
+                XCTAssertEqual(Set((0..<52).map { WinnableDeals.relabel($0, shift: shift, swap: swap) }).count, 52)
+            }
+        }
+    }
+
+    func testNewGameDealsAWinnableDealWhenAsked() {
+        vc.winnableOnly = true
+        vc.startNewGameWithSender(sender: vc)
+        let dealt = tags(vc.fub) + tags(vc.suitStacks[0]) + tags(vc.deck) + vc.cardStacks.flatMap(tags)
+        let variants = WinnableDeals.shared.lines.flatMap { line in
+            (0..<13).flatMap { shift in (0..<8).map { WinnableDeals.variant(line, shift: shift, swap: $0) } }
+        }
+        XCTAssertTrue(variants.contains(dealt))
     }
 
     func testRulesTextIsNumberedWithoutAsterisks() {
